@@ -104,3 +104,6 @@ external/
 
 # Git worktrees (local development only)
 worktrees/
+
+# CK tooling artifact
+release-manifest.json
