@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #faf8f5;
+  --color-foreground: #1b1d23;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f2efea;
+  --color-border: #e6e1d8;
+  --color-input: #e6e1d8;
+  --color-ring: #7ba686;
+
+  --color-fg: #1b1d23;
+  --color-fg-muted: #5e5d63;
+  --color-fg-subtle: #8e8b87;
+
+  --color-primary: #2e3a59;
+  --color-primary-foreground: #faf8f5;
+  --color-secondary: #f2efea;
+  --color-secondary-foreground: #1b1d23;
+  --color-accent: #7ba686;
+  --color-accent-foreground: #1b1d23;
+  --color-muted: #f2efea;
+  --color-muted-foreground: #5e5d63;
+  --color-card: #ffffff;
+  --color-card-foreground: #1b1d23;
+  --color-destructive: #b4423a;
+  --color-destructive-foreground: #faf8f5;
+
+  --color-income: #2f855a;
+  --color-income-soft: #e6f2eb;
+  --color-expense: #b4423a;
+  --color-expense-soft: #f7e8e6;
+  --color-transfer: #5e5d63;
+  --color-warning: #b57b14;
+  --color-danger: #b4423a;
+
+  --radius-sm: 0.375rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1.25rem;
+  --radius-full: 9999px;
+
+  --font-sans: var(--font-jakarta), system-ui, -apple-system, sans-serif;
+  --font-serif: var(--font-fraunces), Georgia, serif;
+}
+
+.dark {
+  --color-background: #15161a;
+  --color-foreground: #edece8;
+  --color-surface: #1e2027;
+  --color-surface-muted: #262932;
+  --color-border: #2f3340;
+  --color-input: #2f3340;
+  --color-ring: #8fbe9c;
+
+  --color-fg: #edece8;
+  --color-fg-muted: #a6a39d;
+  --color-fg-subtle: #74726e;
+
+  --color-primary: #a8b6d9;
+  --color-primary-foreground: #15161a;
+  --color-secondary: #262932;
+  --color-secondary-foreground: #edece8;
+  --color-accent: #8fbe9c;
+  --color-accent-foreground: #15161a;
+  --color-muted: #262932;
+  --color-muted-foreground: #a6a39d;
+  --color-card: #1e2027;
+  --color-card-foreground: #edece8;
+  --color-destructive: #e89a92;
+  --color-destructive-foreground: #15161a;
+
+  --color-income: #7bc79b;
+  --color-income-soft: #1f3127;
+  --color-expense: #e89a92;
+  --color-expense-soft: #3a2422;
+  --color-transfer: #a6a39d;
+  --color-warning: #e0b560;
+  --color-danger: #e89a92;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
