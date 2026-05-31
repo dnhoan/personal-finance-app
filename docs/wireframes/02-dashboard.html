@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>02 · Trang chính — Tài chính Cá nhân</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#FAF8F5;--surface:#FFF;--surface-muted:#F2EFEA;--border:#E6E1D8;--fg:#1B1D23;--fg-muted:#5E5D63;--fg-subtle:#8E8B87;--primary:#2E3A59;--accent:#7BA686;--income:#2F855A;--income-soft:#E6F2EB;--expense:#B4423A;--expense-soft:#F7E8E6;--warning:#B57B14;}
+  html,body{background:var(--bg);color:var(--fg);font-family:'Plus Jakarta Sans',ui-sans-serif,system-ui,sans-serif;}
+  .font-display{font-family:'Fraunces',ui-serif,serif;font-optical-sizing:auto;}
+  .num{font-variant-numeric:tabular-nums;}
+  .wf-header{background:var(--surface);border-bottom:1px solid var(--border);}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:20px;box-shadow:0 1px 2px rgba(27,29,35,.04);}
+  .tab{background:var(--surface);border-top:1px solid var(--border);}
+  .icon-bubble{width:40px;height:40px;border-radius:9999px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .bar{height:8px;background:var(--surface-muted);border-radius:9999px;overflow:hidden;}
+  .bar-fill{height:100%;border-radius:9999px;}
+  .fab{position:fixed;bottom:88px;right:24px;width:56px;height:56px;border-radius:9999px;background:var(--primary);color:#FAF8F5;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(27,29,35,.18);}
+  .chip-month{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:9999px;padding:6px 12px;font-weight:600;font-size:13px;}
+</style>
+</head>
+<body class="min-h-screen pb-24">
+
+<header class="wf-header sticky top-0 z-40">
+  <div class="max-w-[440px] mx-auto px-5 py-3 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2 text-[12px]" style="color:var(--fg-muted)">
+      <i data-lucide="chevron-left" class="w-4 h-4"></i> Wireframe · 02 Trang chính
+    </a>
+    <a href="13-settings.html" class="w-9 h-9 rounded-full flex items-center justify-center" style="background:var(--surface-muted)">
+      <i data-lucide="user" class="w-4 h-4" style="color:var(--fg-muted)"></i>
+    </a>
+  </div>
+</header>
+
+<main class="max-w-[440px] mx-auto px-5 pt-5 pb-6 space-y-4">
+  <!-- Month switcher -->
+  <div class="flex items-center justify-between">
+    <p class="text-[11px] uppercase tracking-wider font-medium" style="color:var(--fg-subtle)">Tháng này</p>
+    <div class="flex items-center gap-2">
+      <button class="w-8 h-8 rounded-full flex items-center justify-center" style="background:var(--surface-muted)"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+      <span class="chip-month"><i data-lucide="calendar" class="w-4 h-4" style="color:var(--fg-muted)"></i> Tháng 5 / 2026</span>
+      <button class="w-8 h-8 rounded-full flex items-center justify-center" style="background:var(--surface-muted)"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+    </div>
+  </div>
+
+  <!-- Net cash flow hero -->
+  <section class="card p-5">
+    <p class="text-[11px] uppercase tracking-wider font-medium mb-2" style="color:var(--fg-subtle)">Dòng tiền thuần</p>
+    <p class="font-display text-[40px] leading-[44px] font-semibold num" style="color:var(--income)">+ 6.250.000 ₫</p>
+    <p class="text-[13px] mt-1" style="color:var(--fg-muted)">Thu nhập 18.500.000 ₫ · Chi tiêu 12.250.000 ₫</p>
+    <div class="mt-4 flex items-center gap-2">
+      <div class="flex-1 h-2 rounded-full overflow-hidden flex" style="background:var(--surface-muted)">
+        <div style="background:var(--income);width:60%"></div>
+        <div style="background:var(--expense);width:40%"></div>
+      </div>
+      <span class="text-[12px] font-medium num" style="color:var(--fg-muted)">66%</span>
+    </div>
+  </section>
+
+  <!-- Spending vs budget -->
+  <section class="card p-5">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-display text-[18px] font-semibold">Chi tiêu vs Ngân sách</h2>
+      <a href="08-budgets.html" class="text-[12px] font-medium" style="color:var(--primary)">Tất cả →</a>
+    </div>
+    <div class="space-y-4">
+      <!-- row -->
+      <div>
+        <div class="flex items-center justify-between mb-1.5 text-[13px]">
+          <div class="flex items-center gap-2 font-medium"><span class="w-2 h-2 rounded-full" style="background:var(--expense)"></span> Ăn uống</div>
+          <div class="num"><span class="font-semibold">3.450.000</span> <span style="color:var(--fg-subtle)">/ 3.000.000 ₫</span></div>
+        </div>
+        <div class="bar"><div class="bar-fill" style="background:var(--expense);width:100%"></div></div>
+        <p class="text-[11px] mt-1 num" style="color:var(--expense)">Vượt 450.000 ₫</p>
+      </div>
+      <div>
+        <div class="flex items-center justify-between mb-1.5 text-[13px]">
+          <div class="flex items-center gap-2 font-medium"><span class="w-2 h-2 rounded-full" style="background:var(--warning)"></span> Cà phê & Trà</div>
+          <div class="num"><span class="font-semibold">820.000</span> <span style="color:var(--fg-subtle)">/ 900.000 ₫</span></div>
+        </div>
+        <div class="bar"><div class="bar-fill" style="background:var(--warning);width:91%"></div></div>
+      </div>
+      <div>
+        <div class="flex items-center justify-between mb-1.5 text-[13px]">
+          <div class="flex items-center gap-2 font-medium"><span class="w-2 h-2 rounded-full" style="background:var(--primary)"></span> Giao thông</div>
+          <div class="num"><span class="font-semibold">650.000</span> <span style="color:var(--fg-subtle)">/ 1.200.000 ₫</span></div>
+        </div>
+        <div class="bar"><div class="bar-fill" style="background:var(--primary);width:54%"></div></div>
+      </div>
+      <div>
+        <div class="flex items-center justify-between mb-1.5 text-[13px]">
+          <div class="flex items-center gap-2 font-medium"><span class="w-2 h-2 rounded-full" style="background:var(--accent)"></span> Mua sắm</div>
+          <div class="num"><span class="font-semibold">1.250.000</span> <span style="color:var(--fg-subtle)">/ 2.000.000 ₫</span></div>
+        </div>
+        <div class="bar"><div class="bar-fill" style="background:var(--accent);width:62%"></div></div>
+      </div>
+      <div>
+        <div class="flex items-center justify-between mb-1.5 text-[13px]">
+          <div class="flex items-center gap-2 font-medium"><span class="w-2 h-2 rounded-full" style="background:#9788C9"></span> Giải trí</div>
+          <div class="num"><span class="font-semibold">480.000</span> <span style="color:var(--fg-subtle)">/ 800.000 ₫</span></div>
+        </div>
+        <div class="bar"><div class="bar-fill" style="background:#9788C9;width:60%"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Recent transactions -->
+  <section class="card p-5">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="font-display text-[18px] font-semibold">Gần đây</h2>
+      <a href="03-transactions-list.html" class="text-[12px] font-medium" style="color:var(--primary)">Tất cả →</a>
+    </div>
+    <ul class="divide-y" style="border-color:var(--border)">
+      <li class="flex items-center gap-3 py-3">
+        <div class="icon-bubble" style="background:var(--expense-soft);color:var(--expense)"><i data-lucide="coffee" class="w-5 h-5"></i></div>
+        <div class="flex-1 min-w-0">
+          <p class="font-medium text-[14px] truncate">Highlands Coffee</p>
+          <p class="text-[12px]" style="color:var(--fg-subtle)">Cà phê & Trà · MoMo</p>
+        </div>
+        <div class="text-right">
+          <p class="font-semibold text-[14px] num" style="color:var(--expense)">− 65.000 ₫</p>
+          <p class="text-[11px] num" style="color:var(--fg-subtle)">Hôm nay · 08:42</p>
+        </div>
+      </li>
+      <li class="flex items-center gap-3 py-3">
+        <div class="icon-bubble" style="background:var(--income-soft);color:var(--income)"><i data-lucide="briefcase" class="w-5 h-5"></i></div>
+        <div class="flex-1 min-w-0">
+          <p class="font-medium text-[14px] truncate">Lương — Tháng 5</p>
+          <p class="text-[12px]" style="color:var(--fg-subtle)">Thu nhập · Vietcombank</p>
+        </div>
+        <div class="text-right">
+          <p class="font-semibold text-[14px] num" style="color:var(--income)">+ 18.500.000 ₫</p>
+          <p class="text-[11px] num" style="color:var(--fg-subtle)">Hôm qua · 09:00</p>
+        </div>
+      </li>
+      <li class="flex items-center gap-3 py-3">
+        <div class="icon-bubble" style="background:var(--surface-muted);color:var(--fg-muted)"><i data-lucide="arrow-left-right" class="w-5 h-5"></i></div>
+        <div class="flex-1 min-w-0">
+          <p class="font-medium text-[14px] truncate">Vietcombank → MoMo</p>
+          <p class="text-[12px]" style="color:var(--fg-subtle)">Chuyển khoản</p>
+        </div>
+        <div class="text-right">
+          <p class="font-semibold text-[14px] num" style="color:var(--fg-muted)">500.000 ₫</p>
+          <p class="text-[11px] num" style="color:var(--fg-subtle)">Hôm qua · 19:12</p>
+        </div>
+      </li>
+      <li class="flex items-center gap-3 py-3">
+        <div class="icon-bubble" style="background:var(--expense-soft);color:var(--expense)"><i data-lucide="utensils" class="w-5 h-5"></i></div>
+        <div class="flex-1 min-w-0">
+          <p class="font-medium text-[14px] truncate">Phở 24</p>
+          <p class="text-[12px]" style="color:var(--fg-subtle)">Ăn uống · Tiền mặt</p>
+        </div>
+        <div class="text-right">
+          <p class="font-semibold text-[14px] num" style="color:var(--expense)">− 85.000 ₫</p>
+          <p class="text-[11px] num" style="color:var(--fg-subtle)">22/05 · 12:30</p>
+        </div>
+      </li>
+      <li class="flex items-center gap-3 py-3">
+        <div class="icon-bubble" style="background:var(--expense-soft);color:var(--expense)"><i data-lucide="zap" class="w-5 h-5"></i></div>
+        <div class="flex-1 min-w-0">
+          <p class="font-medium text-[14px] truncate">EVN — Điện</p>
+          <p class="text-[12px]" style="color:var(--fg-subtle)">Dịch vụ & Cước phí · MoMo</p>
+        </div>
+        <div class="text-right">
+          <p class="font-semibold text-[14px] num" style="color:var(--expense)">− 680.000 ₫</p>
+          <p class="text-[11px] num" style="color:var(--fg-subtle)">21/05 · 14:08</p>
+        </div>
+      </li>
+    </ul>
+  </section>
+</main>
+
+<!-- FAB -->
+<a href="04-quick-add-modal.html" class="fab" aria-label="Thêm giao dịch">
+  <i data-lucide="plus" class="w-6 h-6"></i>
+</a>
+
+<!-- Bottom tab nav -->
+<nav class="tab fixed bottom-0 left-0 right-0 z-30">
+  <div class="max-w-[440px] mx-auto px-2 py-2 grid grid-cols-5 text-center">
+    <a href="02-dashboard.html" class="py-2" style="color:var(--primary)"><i data-lucide="home" class="w-5 h-5 mx-auto"></i><p class="text-[10px] mt-1 font-semibold">Trang chủ</p></a>
+    <a href="03-transactions-list.html" class="py-2" style="color:var(--fg-subtle)"><i data-lucide="list" class="w-5 h-5 mx-auto"></i><p class="text-[10px] mt-1">Giao dịch</p></a>
+    <span></span>
+    <a href="08-budgets.html" class="py-2" style="color:var(--fg-subtle)"><i data-lucide="target" class="w-5 h-5 mx-auto"></i><p class="text-[10px] mt-1">Ngân sách</p></a>
+    <a href="12-reports.html" class="py-2" style="color:var(--fg-subtle)"><i data-lucide="bar-chart-3" class="w-5 h-5 mx-auto"></i><p class="text-[10px] mt-1">Báo cáo</p></a>
+  </div>
+</nav>
+
+<script>lucide.createIcons();</script>
+</body>
+</html>

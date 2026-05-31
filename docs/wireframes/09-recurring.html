@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>09 · Định kỳ — Tài chính Cá nhân</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#FAF8F5;--surface:#FFF;--surface-muted:#F2EFEA;--border:#E6E1D8;--fg:#1B1D23;--fg-muted:#5E5D63;--fg-subtle:#8E8B87;--primary:#2E3A59;--accent:#7BA686;--income:#2F855A;--income-soft:#E6F2EB;--expense:#B4423A;--expense-soft:#F7E8E6;--warning:#B57B14;}
+  html,body{background:var(--bg);color:var(--fg);font-family:'Plus Jakarta Sans',ui-sans-serif,system-ui,sans-serif;}
+  .font-display{font-family:'Fraunces',ui-serif,serif;font-optical-sizing:auto;}
+  .num{font-variant-numeric:tabular-nums;}
+  .wf-header{background:var(--surface);border-bottom:1px solid var(--border);}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:20px;}
+  .pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:9999px;font-size:11px;font-weight:500;background:var(--surface-muted);color:var(--fg-muted);}
+  .seg{background:var(--surface-muted);padding:4px;border-radius:9999px;display:inline-flex;gap:4px;}
+  .seg button{padding:8px 14px;border-radius:9999px;font-size:13px;font-weight:600;color:var(--fg-muted);}
+  .seg button.on{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(27,29,35,.06);}
+  .btn-add{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:48px;border:1px dashed var(--border);border-radius:14px;color:var(--fg-muted);font-weight:600;font-size:14px;}
+  .icon-bubble{width:40px;height:40px;border-radius:9999px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+</style>
+</head>
+<body class="min-h-screen pb-12">
+
+<header class="wf-header sticky top-0 z-40">
+  <div class="max-w-[440px] mx-auto px-5 py-3 flex items-center justify-between">
+    <a href="02-dashboard.html" class="flex items-center gap-2 text-[13px] font-medium">
+      <i data-lucide="chevron-left" class="w-4 h-4"></i> Định kỳ
+    </a>
+    <button class="w-9 h-9 rounded-full flex items-center justify-center" style="background:var(--surface-muted)"><i data-lucide="plus" class="w-4 h-4"></i></button>
+  </div>
+  <p class="max-w-[440px] mx-auto px-5 pb-2 text-[11px] uppercase tracking-wider" style="color:var(--fg-subtle)">Wireframe · 09</p>
+</header>
+
+<main class="max-w-[440px] mx-auto px-5 pt-5 space-y-5">
+  <!-- Summary -->
+  <section class="card p-5">
+    <p class="text-[11px] uppercase tracking-wider font-medium" style="color:var(--fg-subtle)">30 ngày tới</p>
+    <p class="font-display text-[32px] leading-[38px] font-semibold num mt-1" style="color:var(--expense)">− 8.450.000 ₫</p>
+    <p class="text-[12px] mt-1" style="color:var(--fg-muted)">6 quy tắc hoạt động · 4 sắp đến hạn</p>
+  </section>
+
+  <div class="seg">
+    <button class="on">Đang hoạt động · 6</button>
+    <button>Tạm dừng · 1</button>
+    <button>Tất cả</button>
+  </div>
+
+  <!-- Rules list -->
+  <section class="space-y-3">
+
+    <!-- Due in 2 days -->
+    <article class="card p-4">
+      <div class="flex items-start gap-3">
+        <div class="icon-bubble" style="background:var(--expense-soft);color:var(--expense)"><i data-lucide="home" class="w-5 h-5"></i></div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between gap-2">
+            <p class="font-semibold text-[15px] truncate">Tiền thuê — Căn hộ</p>
+            <p class="font-semibold text-[15px] num" style="color:var(--expense)">− 5.500.000 ₫</p>
+          </div>
+          <p class="text-[12px] mt-0.5" style="color:var(--fg-muted)">Nhà ở · Vietcombank</p>
+          <div class="flex flex-wrap items-center gap-2 mt-3">
+            <span class="pill" style="background:#FEF3C7;color:#92400E"><i data-lucide="alarm-clock" class="w-3 h-3"></i> Đến hạn sau 2 ngày · 25/05</span>
+            <span class="pill"><i data-lucide="repeat" class="w-3 h-3"></i> Hàng tháng · ngày 25</span>
+            <span class="pill" style="background:var(--income-soft);color:var(--income)"><i data-lucide="send" class="w-3 h-3"></i> Telegram · 3 ngày trước</span>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="card p-4">
+      <div class="flex items-start gap-3">
+        <div class="icon-bubble" style="background:var(--expense-soft);color:var(--expense)"><i data-lucide="tv" class="w-5 h-5"></i></div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between gap-2">
+            <p class="font-semibold text-[15px] truncate">Netflix Premium</p>
+            <p class="font-semibold text-[15px] num" style="color:var(--expense)">− 260.000 ₫</p>
+          </div>
+          <p class="text-[12px] mt-0.5" style="color:var(--fg-muted)">Giải trí · Techcombank Visa</p>
+          <div class="flex flex-wrap items-center gap-2 mt-3">
+            <span class="pill"><i data-lucide="calendar" class="w-3 h-3"></i> Hạn 28/05</span>
+            <span class="pill"><i data-lucide="repeat" class="w-3 h-3"></i> Hàng tháng</span>
+            <span class="pill" style="background:var(--income-soft);color:var(--income)"><i data-lucide="send" class="w-3 h-3"></i> Telegram · 3 ngày</span>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="card p-4">
+      <div class="flex items-start gap-3">
+        <div class="icon-bubble" style="background:var(--expense-soft);color:var(--expense)"><i data-lucide="zap" class="w-5 h-5"></i></div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between gap-2">
+            <p class="font-semibold text-[15px] truncate">FPT Internet</p>
+            <p class="font-semibold text-[15px] num" style="color:var(--expense)">− 250.000 ₫</p>
+          </div>
+          <p class="text-[12px] mt-0.5" style="color:var(--fg-muted)">Dịch vụ & Cước phí · MoMo</p>
+          <div class="flex flex-wrap items-center gap-2 mt-3">
+            <span class="pill"><i data-lucide="calendar" class="w-3 h-3"></i> Hạn 01/06</span>
+            <span class="pill"><i data-lucide="repeat" class="w-3 h-3"></i> Hàng tháng · ngày 1</span>
+            <span class="pill" style="background:var(--surface-muted);color:var(--fg-subtle)"><i data-lucide="bell-off" class="w-3 h-3"></i> Telegram tắt</span>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="card p-4">
+      <div class="flex items-start gap-3">
+        <div class="icon-bubble" style="background:var(--income-soft);color:var(--income)"><i data-lucide="briefcase" class="w-5 h-5"></i></div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between gap-2">
+            <p class="font-semibold text-[15px] truncate">Lương</p>
+            <p class="font-semibold text-[15px] num" style="color:var(--income)">+ 18.500.000 ₫</p>
+          </div>
+          <p class="text-[12px] mt-0.5" style="color:var(--fg-muted)">Thu nhập · Vietcombank</p>
+          <div class="flex flex-wrap items-center gap-2 mt-3">
+            <span class="pill"><i data-lucide="calendar" class="w-3 h-3"></i> Tiếp theo 22/06</span>
+            <span class="pill"><i data-lucide="repeat" class="w-3 h-3"></i> Hàng tháng · ngày 22</span>
+            <span class="pill" style="background:var(--income-soft);color:var(--income)"><i data-lucide="send" class="w-3 h-3"></i> Telegram · 1 ngày</span>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="card p-4">
+      <div class="flex items-start gap-3">
+        <div class="icon-bubble" style="background:var(--expense-soft);color:var(--expense)"><i data-lucide="shield" class="w-5 h-5"></i></div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between gap-2">
+            <p class="font-semibold text-[15px] truncate">Bảo hiểm sức khỏe</p>
+            <p class="font-semibold text-[15px] num" style="color:var(--expense)">− 1.200.000 ₫</p>
+          </div>
+          <p class="text-[12px] mt-0.5" style="color:var(--fg-muted)">Y tế · Vietcombank</p>
+          <div class="flex flex-wrap items-center gap-2 mt-3">
+            <span class="pill"><i data-lucide="calendar" class="w-3 h-3"></i> Tiếp theo 15/11</span>
+            <span class="pill"><i data-lucide="repeat" class="w-3 h-3"></i> 6 tháng một lần</span>
+            <span class="pill" style="background:var(--income-soft);color:var(--income)"><i data-lucide="send" class="w-3 h-3"></i> Telegram · 7 ngày</span>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="card p-4">
+      <div class="flex items-start gap-3">
+        <div class="icon-bubble" style="background:var(--expense-soft);color:var(--expense)"><i data-lucide="music" class="w-5 h-5"></i></div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between gap-2">
+            <p class="font-semibold text-[15px] truncate">Spotify Family</p>
+            <p class="font-semibold text-[15px] num" style="color:var(--expense)">− 59.000 ₫</p>
+          </div>
+          <p class="text-[12px] mt-0.5" style="color:var(--fg-muted)">Giải trí · MoMo</p>
+          <div class="flex flex-wrap items-center gap-2 mt-3">
+            <span class="pill"><i data-lucide="calendar" class="w-3 h-3"></i> Tiếp theo 10/06</span>
+            <span class="pill"><i data-lucide="repeat" class="w-3 h-3"></i> Hàng tháng · ngày 10</span>
+            <span class="pill" style="background:var(--income-soft);color:var(--income)"><i data-lucide="send" class="w-3 h-3"></i> Telegram · 3 ngày</span>
+          </div>
+        </div>
+      </div>
+    </article>
+
+  </section>
+
+  <button class="btn-add"><i data-lucide="plus" class="w-4 h-4"></i> Tạo quy tắc định kỳ mới</button>
+</main>
+
+<script>lucide.createIcons();</script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>12 · Báo cáo — Tài chính Cá nhân</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#FAF8F5;--surface:#FFF;--surface-muted:#F2EFEA;--border:#E6E1D8;--fg:#1B1D23;--fg-muted:#5E5D63;--fg-subtle:#8E8B87;--primary:#2E3A59;--accent:#7BA686;--income:#2F855A;--income-soft:#E6F2EB;--expense:#B4423A;--expense-soft:#F7E8E6;}
+  html,body{background:var(--bg);color:var(--fg);font-family:'Plus Jakarta Sans',ui-sans-serif,system-ui,sans-serif;}
+  .font-display{font-family:'Fraunces',ui-serif,serif;font-optical-sizing:auto;}
+  .num{font-variant-numeric:tabular-nums;}
+  .wf-header{background:var(--surface);border-bottom:1px solid var(--border);}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:20px;}
+  .seg{background:var(--surface-muted);padding:4px;border-radius:9999px;display:flex;gap:4px;}
+  .seg button{flex:1;padding:8px 12px;border-radius:9999px;font-size:13px;font-weight:600;color:var(--fg-muted);}
+  .seg button.on{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(27,29,35,.06);}
+  .chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:9999px;padding:6px 12px;font-size:12px;font-weight:600;}
+  .dot{width:10px;height:10px;border-radius:9999px;flex-shrink:0;}
+</style>
+</head>
+<body class="min-h-screen pb-12">
+
+<header class="wf-header sticky top-0 z-40">
+  <div class="max-w-[440px] mx-auto px-5 py-3 flex items-center justify-between">
+    <a href="02-dashboard.html" class="flex items-center gap-2 text-[13px] font-medium">
+      <i data-lucide="chevron-left" class="w-4 h-4"></i> Báo cáo
+    </a>
+    <button class="w-9 h-9 rounded-full flex items-center justify-center" style="background:var(--surface-muted)"><i data-lucide="download" class="w-4 h-4"></i></button>
+  </div>
+  <p class="max-w-[440px] mx-auto px-5 pb-2 text-[11px] uppercase tracking-wider" style="color:var(--fg-subtle)">Wireframe · 12</p>
+</header>
+
+<main class="max-w-[440px] mx-auto px-5 pt-5 space-y-5">
+  <!-- Tabs -->
+  <div class="seg">
+    <button class="on">Dòng tiền</button>
+    <button>Theo danh mục</button>
+    <button>Giá trị ròng</button>
+  </div>
+
+  <!-- Date range -->
+  <div class="flex items-center justify-between">
+    <span class="chip"><i data-lucide="calendar-range" class="w-4 h-4" style="color:var(--fg-muted)"></i> 01/01 → 23/05/2026</span>
+    <div class="flex gap-1">
+      <button class="px-3 h-7 rounded-full text-[12px] font-medium" style="background:var(--surface-muted);color:var(--fg-muted)">3T</button>
+      <button class="px-3 h-7 rounded-full text-[12px] font-medium" style="background:var(--primary);color:#FAF8F5">ĐN</button>
+      <button class="px-3 h-7 rounded-full text-[12px] font-medium" style="background:var(--surface-muted);color:var(--fg-muted)">1N</button>
+    </div>
+  </div>
+
+  <!-- KPI row -->
+  <section class="grid grid-cols-3 gap-2">
+    <div class="card p-3">
+      <p class="text-[10px] uppercase tracking-wider" style="color:var(--fg-subtle)">Vào</p>
+      <p class="font-semibold text-[14px] num mt-1" style="color:var(--income)">+92.5M ₫</p>
+    </div>
+    <div class="card p-3">
+      <p class="text-[10px] uppercase tracking-wider" style="color:var(--fg-subtle)">Ra</p>
+      <p class="font-semibold text-[14px] num mt-1" style="color:var(--expense)">−61.2M ₫</p>
+    </div>
+    <div class="card p-3">
+      <p class="text-[10px] uppercase tracking-wider" style="color:var(--fg-subtle)">Thuần</p>
+      <p class="font-semibold text-[14px] num mt-1" style="color:var(--income)">+31.3M ₫</p>
+    </div>
+  </section>
+
+  <!-- Cash flow chart -->
+  <section class="card p-5">
+    <div class="flex items-center justify-between mb-1">
+      <h2 class="font-display text-[18px] font-semibold">Dòng tiền</h2>
+      <span class="text-[11px]" style="color:var(--fg-subtle)">Không bao gồm chuyển khoản</span>
+    </div>
+    <p class="text-[11px] mb-3" style="color:var(--fg-muted)"><span class="inline-block w-2 h-2 rounded-full align-middle" style="background:var(--income)"></span> Thu nhập · <span class="inline-block w-2 h-2 rounded-full align-middle ml-2" style="background:var(--expense)"></span> Chi tiêu</p>
+
+    <!-- SVG line chart -->
+    <svg viewBox="0 0 360 180" class="w-full h-[180px]">
+      <!-- gridlines -->
+      <g stroke="#E6E1D8" stroke-dasharray="3 3">
+        <line x1="20" y1="20" x2="360" y2="20"/>
+        <line x1="20" y1="60" x2="360" y2="60"/>
+        <line x1="20" y1="100" x2="360" y2="100"/>
+        <line x1="20" y1="140" x2="360" y2="140"/>
+      </g>
+      <!-- income line -->
+      <polyline fill="none" stroke="#2F855A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+        points="30,75 90,40 150,55 210,30 270,45 330,25" />
+      <!-- expense line -->
+      <polyline fill="none" stroke="#B4423A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+        points="30,105 90,95 150,120 210,85 270,110 330,90" />
+      <!-- dots -->
+      <g fill="#2F855A"><circle cx="30" cy="75" r="3"/><circle cx="90" cy="40" r="3"/><circle cx="150" cy="55" r="3"/><circle cx="210" cy="30" r="3"/><circle cx="270" cy="45" r="3"/><circle cx="330" cy="25" r="3"/></g>
+      <g fill="#B4423A"><circle cx="30" cy="105" r="3"/><circle cx="90" cy="95" r="3"/><circle cx="150" cy="120" r="3"/><circle cx="210" cy="85" r="3"/><circle cx="270" cy="110" r="3"/><circle cx="330" cy="90" r="3"/></g>
+      <!-- x labels -->
+      <g fill="#8E8B87" font-size="9" font-family="Plus Jakarta Sans" text-anchor="middle">
+        <text x="30" y="170">T1</text><text x="90" y="170">T2</text><text x="150" y="170">T3</text>
+        <text x="210" y="170">T4</text><text x="270" y="170">T5</text><text x="330" y="170">T6*</text>
+      </g>
+    </svg>
+  </section>
+
+  <!-- By category preview -->
+  <section class="card p-5">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="font-display text-[18px] font-semibold">Theo danh mục</h2>
+      <span class="text-[11px]" style="color:var(--fg-subtle)">Tháng 5 2026</span>
+    </div>
+    <div class="flex items-center gap-4">
+      <!-- Donut -->
+      <svg viewBox="0 0 80 80" class="w-[120px] h-[120px] flex-shrink-0">
+        <circle cx="40" cy="40" r="32" fill="none" stroke="#F2EFEA" stroke-width="14"/>
+        <circle cx="40" cy="40" r="32" fill="none" stroke="#4338CA" stroke-width="14" stroke-dasharray="80 200" transform="rotate(-90 40 40)"/>
+        <circle cx="40" cy="40" r="32" fill="none" stroke="#B4423A" stroke-width="14" stroke-dasharray="50 200" stroke-dashoffset="-80" transform="rotate(-90 40 40)"/>
+        <circle cx="40" cy="40" r="32" fill="none" stroke="#C2185B" stroke-width="14" stroke-dasharray="30 200" stroke-dashoffset="-130" transform="rotate(-90 40 40)"/>
+        <circle cx="40" cy="40" r="32" fill="none" stroke="#B57B14" stroke-width="14" stroke-dasharray="20 200" stroke-dashoffset="-160" transform="rotate(-90 40 40)"/>
+        <text x="40" y="38" text-anchor="middle" font-family="Fraunces" font-size="10" font-weight="600" fill="#1B1D23">12.25M</text>
+        <text x="40" y="50" text-anchor="middle" font-family="Plus Jakarta Sans" font-size="6" fill="#8E8B87">tổng ₫</text>
+      </svg>
+
+      <ul class="flex-1 space-y-2 text-[13px]">
+        <li class="flex items-center justify-between"><span class="flex items-center gap-2"><span class="dot" style="background:#4338CA"></span> Nhà ở</span><span class="num font-semibold">45%</span></li>
+        <li class="flex items-center justify-between"><span class="flex items-center gap-2"><span class="dot" style="background:#B4423A"></span> Ăn uống</span><span class="num font-semibold">28%</span></li>
+        <li class="flex items-center justify-between"><span class="flex items-center gap-2"><span class="dot" style="background:#C2185B"></span> Mua sắm</span><span class="num font-semibold">10%</span></li>
+        <li class="flex items-center justify-between"><span class="flex items-center gap-2"><span class="dot" style="background:#B57B14"></span> Cà phê</span><span class="num font-semibold">7%</span></li>
+        <li class="flex items-center justify-between" style="color:var(--fg-muted)"><span class="flex items-center gap-2"><span class="dot" style="background:#E6E1D8"></span> Khác (4)</span><span class="num">10%</span></li>
+      </ul>
+    </div>
+    <p class="text-center text-[12px] mt-4" style="color:var(--primary)">Xem chi tiết →</p>
+  </section>
+
+  <!-- Net worth preview -->
+  <section class="card p-5">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="font-display text-[18px] font-semibold">Giá trị ròng</h2>
+      <span class="font-semibold num" style="color:var(--income)">+12.4% ĐN</span>
+    </div>
+    <svg viewBox="0 0 360 120" class="w-full h-[120px]">
+      <defs>
+        <linearGradient id="nw" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stop-color="#7BA686" stop-opacity="0.35"/>
+          <stop offset="100%" stop-color="#7BA686" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d="M0,80 L30,75 L60,72 L90,60 L120,65 L150,50 L180,55 L210,40 L240,42 L270,30 L300,28 L330,20 L360,22 L360,120 L0,120 Z" fill="url(#nw)"/>
+      <polyline fill="none" stroke="#7BA686" stroke-width="2.5" stroke-linecap="round"
+        points="0,80 30,75 60,72 90,60 120,65 150,50 180,55 210,40 240,42 270,30 300,28 330,20 360,22"/>
+    </svg>
+    <div class="flex items-baseline gap-2 mt-2">
+      <p class="font-display text-[24px] font-semibold num">26.450.000 ₫</p>
+      <p class="text-[12px] num" style="color:var(--income)">+ 2.920.000 ₫ tháng này</p>
+    </div>
+  </section>
+</main>
+
+<script>lucide.createIcons();</script>
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>07 · Danh mục — Tài chính Cá nhân</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#FAF8F5;--surface:#FFF;--surface-muted:#F2EFEA;--border:#E6E1D8;--fg:#1B1D23;--fg-muted:#5E5D63;--fg-subtle:#8E8B87;--primary:#2E3A59;--accent:#7BA686;--income:#2F855A;--expense:#B4423A;--expense-soft:#F7E8E6;}
+  html,body{background:var(--bg);color:var(--fg);font-family:'Plus Jakarta Sans',ui-sans-serif,system-ui,sans-serif;}
+  .font-display{font-family:'Fraunces',ui-serif,serif;font-optical-sizing:auto;}
+  .num{font-variant-numeric:tabular-nums;}
+  .wf-header{background:var(--surface);border-bottom:1px solid var(--border);}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:20px;}
+  .cat-row{display:flex;align-items:center;gap:12px;padding:14px 16px;}
+  .cat-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;}
+  .child{padding-left:32px;}
+  .seg{background:var(--surface-muted);padding:4px;border-radius:9999px;display:inline-flex;gap:4px;}
+  .seg button{padding:8px 16px;border-radius:9999px;font-size:13px;font-weight:600;color:var(--fg-muted);}
+  .seg button.on{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(27,29,35,.06);}
+  .bar{height:6px;background:var(--surface-muted);border-radius:9999px;overflow:hidden;}
+  .preview{background:var(--surface);border:1px dashed var(--border);border-radius:16px;}
+</style>
+</head>
+<body class="min-h-screen pb-12">
+
+<header class="wf-header sticky top-0 z-40">
+  <div class="max-w-[440px] mx-auto px-5 py-3 flex items-center justify-between">
+    <a href="02-dashboard.html" class="flex items-center gap-2 text-[13px] font-medium">
+      <i data-lucide="chevron-left" class="w-4 h-4"></i> Danh mục
+    </a>
+    <button class="w-9 h-9 rounded-full flex items-center justify-center" style="background:var(--surface-muted)"><i data-lucide="plus" class="w-4 h-4"></i></button>
+  </div>
+  <p class="max-w-[440px] mx-auto px-5 pb-2 text-[11px] uppercase tracking-wider" style="color:var(--fg-subtle)">Wireframe · 07</p>
+</header>
+
+<main class="max-w-[440px] mx-auto px-5 pt-5 space-y-5">
+  <!-- Tabs -->
+  <div class="seg">
+    <button class="on">Chi tiêu</button>
+    <button>Thu nhập</button>
+  </div>
+
+  <p class="text-[12px]" style="color:var(--fg-muted)">10 danh mục · 4 danh mục con · Tổng chi tiêu Tháng 5 <span class="font-semibold num" style="color:var(--expense)">12.250.000 ₫</span></p>
+
+  <!-- Categories -->
+  <section class="card divide-y" style="border-color:var(--border)">
+    <!-- Ăn uống (with children) -->
+    <div>
+      <div class="cat-row">
+        <div class="cat-icon" style="background:var(--expense-soft);color:var(--expense)"><i data-lucide="utensils" class="w-5 h-5"></i></div>
+        <div class="flex-1 min-w-0">
+          <p class="font-semibold text-[14px]">Ăn uống <span class="text-[11px] font-normal" style="color:var(--fg-subtle)">· 3 danh mục con</span></p>
+          <div class="bar mt-1.5"><div style="background:var(--expense);width:100%;height:100%"></div></div>
+        </div>
+        <div class="text-right">
+          <p class="font-semibold text-[14px] num">3.450.000 ₫</p>
+          <p class="text-[11px] num" style="color:var(--expense)">+15% so với T4</p>
+        </div>
+      </div>
+      <div class="cat-row child">
+        <i data-lucide="corner-down-right" class="w-3 h-3" style="color:var(--fg-subtle)"></i>
+        <p class="flex-1 text-[13px]">Quán ăn nhanh</p>
+        <p class="text-[13px] num">820.000 ₫</p>
+      </div>
+      <div class="cat-row child">
+        <i data-lucide="corner-down-right" class="w-3 h-3" style="color:var(--fg-subtle)"></i>
+        <p class="flex-1 text-[13px]">Nhà hàng</p>
+        <p class="text-[13px] num">1.450.000 ₫</p>
+      </div>
+      <div class="cat-row child">
+        <i data-lucide="corner-down-right" class="w-3 h-3" style="color:var(--fg-subtle)"></i>
+        <p class="flex-1 text-[13px]">Đi chợ</p>
+        <p class="text-[13px] num">1.180.000 ₫</p>
+      </div>
+    </div>
+
+    <div class="cat-row">
+      <div class="cat-icon" style="background:#FEF3C7;color:#92400E"><i data-lucide="coffee" class="w-5 h-5"></i></div>
+      <div class="flex-1 min-w-0"><p class="font-semibold text-[14px]">Cà phê & Trà</p><div class="bar mt-1.5"><div style="background:#B57B14;width:24%;height:100%"></div></div></div>
+      <div class="text-right"><p class="font-semibold text-[14px] num">820.000 ₫</p></div>
+    </div>
+
+    <div class="cat-row">
+      <div class="cat-icon" style="background:#E8ECF6;color:var(--primary)"><i data-lucide="bus" class="w-5 h-5"></i></div>
+      <div class="flex-1 min-w-0"><p class="font-semibold text-[14px]">Giao thông</p><div class="bar mt-1.5"><div style="background:var(--primary);width:19%;height:100%"></div></div></div>
+      <div class="text-right"><p class="font-semibold text-[14px] num">650.000 ₫</p></div>
+    </div>
+
+    <div class="cat-row">
+      <div class="cat-icon" style="background:#E0E7FF;color:#4338CA"><i data-lucide="home" class="w-5 h-5"></i></div>
+      <div class="flex-1 min-w-0"><p class="font-semibold text-[14px]">Nhà ở</p><div class="bar mt-1.5"><div style="background:#4338CA;width:45%;height:100%"></div></div></div>
+      <div class="text-right"><p class="font-semibold text-[14px] num">5.500.000 ₫</p></div>
+    </div>
+
+    <div class="cat-row">
+      <div class="cat-icon" style="background:#FDE7F0;color:#C2185B"><i data-lucide="shopping-bag" class="w-5 h-5"></i></div>
+      <div class="flex-1 min-w-0"><p class="font-semibold text-[14px]">Mua sắm</p><div class="bar mt-1.5"><div style="background:#C2185B;width:36%;height:100%"></div></div></div>
+      <div class="text-right"><p class="font-semibold text-[14px] num">1.250.000 ₫</p></div>
+    </div>
+
+    <div class="cat-row">
+      <div class="cat-icon" style="background:#EDE9FE;color:#6D28D9"><i data-lucide="film" class="w-5 h-5"></i></div>
+      <div class="flex-1 min-w-0"><p class="font-semibold text-[14px]">Giải trí</p><div class="bar mt-1.5"><div style="background:#6D28D9;width:14%;height:100%"></div></div></div>
+      <div class="text-right"><p class="font-semibold text-[14px] num">480.000 ₫</p></div>
+    </div>
+
+    <div class="cat-row">
+      <div class="cat-icon" style="background:#D1FAE5;color:#047857"><i data-lucide="heart-pulse" class="w-5 h-5"></i></div>
+      <div class="flex-1 min-w-0"><p class="font-semibold text-[14px]">Y tế</p><div class="bar mt-1.5"><div style="background:#047857;width:3%;height:100%"></div></div></div>
+      <div class="text-right"><p class="font-semibold text-[14px] num">100.000 ₫</p></div>
+    </div>
+
+    <div class="cat-row">
+      <div class="cat-icon" style="background:#FFE4E6;color:#BE185D"><i data-lucide="zap" class="w-5 h-5"></i></div>
+      <div class="flex-1 min-w-0"><p class="font-semibold text-[14px]">Dịch vụ & Cước phí</p><div class="bar mt-1.5"><div style="background:#BE185D;width:8%;height:100%"></div></div></div>
+      <div class="text-right"><p class="font-semibold text-[14px] num">930.000 ₫</p></div>
+    </div>
+  </section>
+
+  <!-- Add/Edit modal preview -->
+  <section>
+    <p class="text-[11px] uppercase tracking-wider font-semibold px-1 mb-2" style="color:var(--fg-muted)">Thêm / chỉnh sửa danh mục — xem trước</p>
+    <div class="preview p-5 space-y-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:var(--expense-soft);color:var(--expense)"><i data-lucide="utensils" class="w-5 h-5"></i></div>
+        <input class="flex-1 bg-transparent outline-none text-[15px] font-semibold border-b" style="border-color:var(--border)" value="Đi chợ" />
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <span class="text-[11px] uppercase tracking-wider" style="color:var(--fg-subtle)">Thuộc:</span>
+        <span class="text-[12px] px-2 py-1 rounded-full" style="background:var(--expense-soft);color:var(--expense)">Ăn uống</span>
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button class="flex-1 h-10 rounded-xl text-[13px] font-semibold" style="background:var(--surface-muted);color:var(--fg-muted)">Hủy</button>
+        <button class="flex-1 h-10 rounded-xl text-[13px] font-semibold" style="background:var(--primary);color:#FAF8F5">Lưu</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>lucide.createIcons();</script>
+</body>
+</html>

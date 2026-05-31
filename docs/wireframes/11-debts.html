@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>11 · Nợ — Tài chính Cá nhân</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#FAF8F5;--surface:#FFF;--surface-muted:#F2EFEA;--border:#E6E1D8;--fg:#1B1D23;--fg-muted:#5E5D63;--fg-subtle:#8E8B87;--primary:#2E3A59;--accent:#7BA686;--income:#2F855A;--income-soft:#E6F2EB;--expense:#B4423A;--expense-soft:#F7E8E6;--warning:#B57B14;}
+  html,body{background:var(--bg);color:var(--fg);font-family:'Plus Jakarta Sans',ui-sans-serif,system-ui,sans-serif;}
+  .font-display{font-family:'Fraunces',ui-serif,serif;font-optical-sizing:auto;}
+  .num{font-variant-numeric:tabular-nums;}
+  .wf-header{background:var(--surface);border-bottom:1px solid var(--border);}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:20px;}
+  .seg{background:var(--surface-muted);padding:4px;border-radius:9999px;display:inline-flex;gap:4px;}
+  .seg button{padding:8px 14px;border-radius:9999px;font-size:13px;font-weight:600;color:var(--fg-muted);}
+  .seg button.on{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(27,29,35,.06);}
+  .pill{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+  .pill-open{background:var(--expense-soft);color:var(--expense);}
+  .pill-partial{background:#FEF3C7;color:#92400E;}
+  .pill-settled{background:var(--income-soft);color:var(--income);}
+  .bar{height:6px;background:var(--surface-muted);border-radius:9999px;overflow:hidden;}
+  .preview{background:var(--surface);border:1px dashed var(--border);border-radius:16px;}
+  .field{display:flex;align-items:center;gap:10px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;}
+</style>
+</head>
+<body class="min-h-screen pb-12">
+
+<header class="wf-header sticky top-0 z-40">
+  <div class="max-w-[440px] mx-auto px-5 py-3 flex items-center justify-between">
+    <a href="02-dashboard.html" class="flex items-center gap-2 text-[13px] font-medium">
+      <i data-lucide="chevron-left" class="w-4 h-4"></i> Nợ & Vay
+    </a>
+    <button class="w-9 h-9 rounded-full flex items-center justify-center" style="background:var(--surface-muted)"><i data-lucide="plus" class="w-4 h-4"></i></button>
+  </div>
+  <p class="max-w-[440px] mx-auto px-5 pb-2 text-[11px] uppercase tracking-wider" style="color:var(--fg-subtle)">Wireframe · 11</p>
+</header>
+
+<main class="max-w-[440px] mx-auto px-5 pt-5 space-y-5">
+  <!-- Summary -->
+  <section class="card p-5 grid grid-cols-2 gap-3">
+    <div class="border-r" style="border-color:var(--border)">
+      <p class="text-[11px] uppercase tracking-wider" style="color:var(--fg-subtle)">Bạn đang nợ</p>
+      <p class="font-display text-[24px] leading-[30px] font-semibold num mt-1" style="color:var(--expense)">3.500.000 ₫</p>
+      <p class="text-[12px]" style="color:var(--fg-muted)">2 đang hoạt động</p>
+    </div>
+    <div class="pl-3">
+      <p class="text-[11px] uppercase tracking-wider" style="color:var(--fg-subtle)">Người nợ bạn</p>
+      <p class="font-display text-[24px] leading-[30px] font-semibold num mt-1" style="color:var(--income)">800.000 ₫</p>
+      <p class="text-[12px]" style="color:var(--fg-muted)">1 đang hoạt động</p>
+    </div>
+  </section>
+
+  <div class="seg">
+    <button class="on">Đang hoạt động · 3</button>
+    <button>Đã thanh toán</button>
+    <button>Tất cả</button>
+  </div>
+
+  <!-- Debts list -->
+  <section class="space-y-4">
+
+    <!-- Owe — Partial -->
+    <article class="card p-5">
+      <div class="flex items-start justify-between gap-3 mb-2">
+        <div class="min-w-0">
+          <div class="flex items-center gap-2"><i data-lucide="user" class="w-4 h-4" style="color:var(--fg-muted)"></i><p class="font-display text-[18px] font-semibold truncate">Vay từ anh Tuấn</p></div>
+          <p class="text-[12px] mt-0.5" style="color:var(--fg-muted)">Cá nhân · vay 22/03/2026</p>
+        </div>
+        <span class="pill pill-partial">Một phần</span>
+      </div>
+      <div class="bar"><div style="background:var(--warning);width:60%;height:100%"></div></div>
+      <div class="flex items-end justify-between mt-3">
+        <div>
+          <p class="text-[11px] uppercase tracking-wider" style="color:var(--fg-subtle)">Còn lại</p>
+          <p class="font-semibold text-[20px] num" style="color:var(--expense)">− 2.000.000 ₫</p>
+          <p class="text-[12px] num" style="color:var(--fg-subtle)">của 5.000.000 ₫</p>
+        </div>
+        <div class="text-right">
+          <p class="text-[11px] uppercase tracking-wider" style="color:var(--fg-subtle)">Hạn</p>
+          <p class="font-semibold text-[14px] num">30/06/2026</p>
+          <p class="text-[12px]" style="color:var(--warning)">38 ngày</p>
+        </div>
+      </div>
+      <div class="flex gap-2 mt-4">
+        <button class="flex-1 h-10 rounded-xl text-[13px] font-semibold" style="background:var(--primary);color:#FAF8F5">Ghi nhận thanh toán</button>
+        <button class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:var(--surface-muted)"><i data-lucide="history" class="w-4 h-4"></i></button>
+      </div>
+    </article>
+
+    <!-- Owe — Open -->
+    <article class="card p-5">
+      <div class="flex items-start justify-between gap-3 mb-2">
+        <div class="min-w-0">
+          <div class="flex items-center gap-2"><i data-lucide="user" class="w-4 h-4" style="color:var(--fg-muted)"></i><p class="font-display text-[18px] font-semibold truncate">Vay từ chị Mai</p></div>
+          <p class="text-[12px] mt-0.5" style="color:var(--fg-muted)">Cá nhân · vay 12/05/2026</p>
+        </div>
+        <span class="pill pill-open">Đang mở</span>
+      </div>
+      <div class="bar"><div style="background:var(--expense);width:0%;height:100%"></div></div>
+      <div class="flex items-end justify-between mt-3">
+        <div>
+          <p class="text-[11px] uppercase tracking-wider" style="color:var(--fg-subtle)">Còn lại</p>
+          <p class="font-semibold text-[20px] num" style="color:var(--expense)">− 1.500.000 ₫</p>
+          <p class="text-[12px] num" style="color:var(--fg-subtle)">của 1.500.000 ₫</p>
+        </div>
+        <div class="text-right">
+          <p class="text-[11px] uppercase tracking-wider" style="color:var(--fg-subtle)">Hạn</p>
+          <p class="font-semibold text-[14px] num">12/07/2026</p>
+          <p class="text-[12px]" style="color:var(--fg-muted)">50 ngày</p>
+        </div>
+      </div>
+    </article>
+
+    <!-- Owed to you -->
+    <article class="card p-5">
+      <div class="flex items-start justify-between gap-3 mb-2">
+        <div class="min-w-0">
+          <div class="flex items-center gap-2"><i data-lucide="arrow-down-left" class="w-4 h-4" style="color:var(--income)"></i><p class="font-display text-[18px] font-semibold truncate">Cho em Hùng vay</p></div>
+          <p class="text-[12px] mt-0.5" style="color:var(--fg-muted)">Cá nhân · cho vay 05/05/2026</p>
+        </div>
+        <span class="pill pill-open" style="background:var(--income-soft);color:var(--income)">Đang mở</span>
+      </div>
+      <div class="bar"><div style="background:var(--income);width:0%;height:100%"></div></div>
+      <div class="flex items-end justify-between mt-3">
+        <div>
+          <p class="text-[11px] uppercase tracking-wider" style="color:var(--fg-subtle)">Cần thu</p>
+          <p class="font-semibold text-[20px] num" style="color:var(--income)">+ 800.000 ₫</p>
+          <p class="text-[12px] num" style="color:var(--fg-subtle)">của 800.000 ₫</p>
+        </div>
+        <div class="text-right">
+          <p class="text-[11px] uppercase tracking-wider" style="color:var(--fg-subtle)">Hạn</p>
+          <p class="font-semibold text-[14px] num">—</p>
+          <p class="text-[12px]" style="color:var(--fg-muted)">Không có hạn</p>
+        </div>
+      </div>
+    </article>
+
+  </section>
+
+  <!-- Settlement form preview -->
+  <section>
+    <p class="text-[11px] uppercase tracking-wider font-semibold px-1 mb-2" style="color:var(--fg-muted)">Ghi nhận thanh toán — xem trước</p>
+    <div class="preview p-5 space-y-3">
+      <p class="text-[13px]" style="color:var(--fg-muted)">Vay từ anh Tuấn · còn lại <span class="num font-semibold" style="color:var(--expense)">2.000.000 ₫</span></p>
+      <div class="field">
+        <i data-lucide="banknote" class="w-4 h-4" style="color:var(--fg-subtle)"></i>
+        <input class="flex-1 bg-transparent outline-none font-display text-[20px] font-semibold num" value="500.000" />
+        <span class="font-display text-[16px]" style="color:var(--fg-muted)">₫</span>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div class="field"><i data-lucide="smartphone" class="w-4 h-4" style="color:var(--fg-subtle)"></i><span class="text-[13px] font-semibold">MoMo</span></div>
+        <div class="field"><i data-lucide="calendar" class="w-4 h-4" style="color:var(--fg-subtle)"></i><span class="text-[13px] font-semibold num">23/05</span></div>
+      </div>
+      <button class="w-full h-11 rounded-xl text-[14px] font-semibold" style="background:var(--primary);color:#FAF8F5">Lưu thanh toán · còn lại 1.500.000 ₫</button>
+    </div>
+  </section>
+</main>
+
+<script>lucide.createIcons();</script>
+</body>
+</html>

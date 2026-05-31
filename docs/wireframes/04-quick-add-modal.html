@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>04 · Thêm nhanh — Tài chính Cá nhân</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#FAF8F5;--surface:#FFF;--surface-muted:#F2EFEA;--border:#E6E1D8;--fg:#1B1D23;--fg-muted:#5E5D63;--fg-subtle:#8E8B87;--primary:#2E3A59;--accent:#7BA686;--income:#2F855A;--income-soft:#E6F2EB;--expense:#B4423A;--expense-soft:#F7E8E6;}
+  html,body{background:var(--bg);color:var(--fg);font-family:'Plus Jakarta Sans',ui-sans-serif,system-ui,sans-serif;}
+  .font-display{font-family:'Fraunces',ui-serif,serif;font-optical-sizing:auto;}
+  .num{font-variant-numeric:tabular-nums;}
+  .wf-header{background:var(--surface);border-bottom:1px solid var(--border);}
+  .scrim{background:rgba(27,29,35,.32);}
+  .sheet{background:var(--surface);border-top-left-radius:20px;border-top-right-radius:20px;box-shadow:0 16px 40px rgba(27,29,35,.12);max-height:90vh;}
+  .seg{background:var(--surface-muted);padding:4px;border-radius:9999px;display:inline-flex;gap:4px;}
+  .seg button{padding:8px 16px;border-radius:9999px;font-size:13px;font-weight:600;color:var(--fg-muted);}
+  .seg button.on{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(27,29,35,.06);}
+  .amount-input{font-family:'Fraunces',serif;font-size:44px;font-weight:600;line-height:1;background:transparent;border:none;width:100%;text-align:left;outline:none;}
+  .amount-input::placeholder{color:var(--fg-subtle);}
+  .field{display:flex;align-items:center;gap:12px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:14px;}
+  .field-label{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--fg-subtle);font-weight:500;}
+  .chip-cat{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 8px;border-radius:14px;border:1px solid var(--border);background:var(--surface);min-width:64px;}
+  .chip-cat.on{background:var(--surface-muted);border-color:var(--primary);}
+  .btn-primary{background:var(--primary);color:#FAF8F5;height:52px;border-radius:14px;font-weight:600;width:100%;}
+</style>
+</head>
+<body class="min-h-screen">
+
+<header class="wf-header sticky top-0 z-40">
+  <div class="max-w-[440px] mx-auto px-5 py-3 flex items-center justify-between">
+    <a href="02-dashboard.html" class="flex items-center gap-2 text-[12px]" style="color:var(--fg-muted)"><i data-lucide="chevron-left" class="w-4 h-4"></i> Wireframe · 04 Thêm nhanh</a>
+    <span class="text-[11px] uppercase tracking-wider" style="color:var(--fg-subtle)">Tờ trượt lên</span>
+  </div>
+</header>
+
+<!-- Faded dashboard behind sheet -->
+<main class="max-w-[440px] mx-auto px-5 pt-4 opacity-50 pointer-events-none">
+  <div class="space-y-3">
+    <div class="h-16 rounded-2xl" style="background:var(--surface);border:1px solid var(--border)"></div>
+    <div class="h-40 rounded-2xl" style="background:var(--surface);border:1px solid var(--border)"></div>
+    <div class="h-40 rounded-2xl" style="background:var(--surface);border:1px solid var(--border)"></div>
+  </div>
+</main>
+
+<!-- Scrim + sheet -->
+<div class="fixed inset-0 z-50 scrim flex items-end justify-center">
+  <div class="sheet w-full max-w-[440px] p-6 space-y-5">
+    <!-- Drag handle -->
+    <div class="flex justify-center"><div class="h-1 w-9 rounded-full" style="background:var(--border)"></div></div>
+
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+      <h2 class="font-display text-[22px] font-semibold">Giao dịch mới</h2>
+      <button class="w-8 h-8 rounded-full flex items-center justify-center" style="background:var(--surface-muted)"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+
+    <!-- Kind switcher -->
+    <div class="seg">
+      <button>Thu nhập</button>
+      <button class="on">Chi tiêu</button>
+      <button>Chuyển khoản</button>
+    </div>
+
+    <!-- Amount -->
+    <div>
+      <p class="field-label mb-2">Số tiền</p>
+      <div class="flex items-baseline gap-3">
+        <input class="amount-input num" inputmode="decimal" autofocus value="120.000" />
+        <span class="font-display text-[28px] font-semibold" style="color:var(--fg-muted)">₫</span>
+      </div>
+      <p class="text-[12px] mt-2" style="color:var(--fg-subtle)">
+        <i data-lucide="zap" class="inline w-3 h-3 -mt-0.5"></i> Phím tắt: <span class="font-medium" style="color:var(--fg-muted)">50k</span> · <span class="font-medium" style="color:var(--fg-muted)">1tr</span> · <span class="font-medium" style="color:var(--fg-muted)">1,5tr</span>
+      </p>
+    </div>
+
+    <!-- Category quick picks -->
+    <div>
+      <div class="flex items-center justify-between mb-2">
+        <p class="field-label">Danh mục</p>
+        <button class="text-[12px] font-medium" style="color:var(--primary)">Tất cả →</button>
+      </div>
+      <div class="flex gap-2 overflow-x-auto -mx-1 px-1 pb-1">
+        <div class="chip-cat on"><div class="w-8 h-8 rounded-full flex items-center justify-center" style="background:var(--expense-soft);color:var(--expense)"><i data-lucide="utensils" class="w-4 h-4"></i></div><span class="text-[11px] font-medium">Ăn uống</span></div>
+        <div class="chip-cat"><div class="w-8 h-8 rounded-full flex items-center justify-center" style="background:var(--expense-soft);color:var(--expense)"><i data-lucide="coffee" class="w-4 h-4"></i></div><span class="text-[11px]">Cà phê</span></div>
+        <div class="chip-cat"><div class="w-8 h-8 rounded-full flex items-center justify-center" style="background:var(--expense-soft);color:var(--expense)"><i data-lucide="bus" class="w-4 h-4"></i></div><span class="text-[11px]">Giao thông</span></div>
+        <div class="chip-cat"><div class="w-8 h-8 rounded-full flex items-center justify-center" style="background:var(--expense-soft);color:var(--expense)"><i data-lucide="shopping-bag" class="w-4 h-4"></i></div><span class="text-[11px]">Mua sắm</span></div>
+        <div class="chip-cat"><div class="w-8 h-8 rounded-full flex items-center justify-center" style="background:var(--expense-soft);color:var(--expense)"><i data-lucide="home" class="w-4 h-4"></i></div><span class="text-[11px]">Nhà ở</span></div>
+      </div>
+    </div>
+
+    <!-- Account + Date row -->
+    <div class="grid grid-cols-2 gap-3">
+      <div class="field">
+        <div class="w-9 h-9 rounded-full flex items-center justify-center" style="background:var(--surface-muted)"><i data-lucide="smartphone" class="w-4 h-4" style="color:var(--fg-muted)"></i></div>
+        <div class="flex-1 min-w-0">
+          <p class="field-label">Tài khoản</p>
+          <p class="text-[14px] font-semibold truncate">MoMo</p>
+        </div>
+        <i data-lucide="chevron-down" class="w-4 h-4" style="color:var(--fg-subtle)"></i>
+      </div>
+      <div class="field">
+        <div class="w-9 h-9 rounded-full flex items-center justify-center" style="background:var(--surface-muted)"><i data-lucide="calendar" class="w-4 h-4" style="color:var(--fg-muted)"></i></div>
+        <div class="flex-1 min-w-0">
+          <p class="field-label">Ngày</p>
+          <p class="text-[14px] font-semibold num">Hôm nay · 23/05</p>
+        </div>
+        <i data-lucide="chevron-down" class="w-4 h-4" style="color:var(--fg-subtle)"></i>
+      </div>
+    </div>
+
+    <!-- Note -->
+    <div>
+      <p class="field-label mb-2">Ghi chú (tùy chọn)</p>
+      <div class="field">
+        <i data-lucide="pencil-line" class="w-4 h-4" style="color:var(--fg-subtle)"></i>
+        <input class="flex-1 bg-transparent outline-none text-[14px]" placeholder="Bún chả trưa cùng nhóm" />
+      </div>
+      <!-- recent merchants -->
+      <div class="flex gap-2 mt-2 flex-wrap">
+        <button class="text-[12px] px-3 py-1.5 rounded-full" style="background:var(--surface-muted);color:var(--fg-muted)">Bún chả Hương Liên</button>
+        <button class="text-[12px] px-3 py-1.5 rounded-full" style="background:var(--surface-muted);color:var(--fg-muted)">Phở 24</button>
+        <button class="text-[12px] px-3 py-1.5 rounded-full" style="background:var(--surface-muted);color:var(--fg-muted)">Highlands</button>
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <button class="btn-primary">Lưu giao dịch</button>
+    <p class="text-center text-[11px]" style="color:var(--fg-subtle)">Nhấn <kbd class="font-mono">⏎</kbd> để lưu · <kbd class="font-mono">Esc</kbd> để đóng</p>
+  </div>
+</div>
+
+<script>lucide.createIcons();</script>
+</body>
+</html>

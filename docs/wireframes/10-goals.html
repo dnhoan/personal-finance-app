@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>10 · Mục tiêu — Tài chính Cá nhân</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#FAF8F5;--surface:#FFF;--surface-muted:#F2EFEA;--border:#E6E1D8;--fg:#1B1D23;--fg-muted:#5E5D63;--fg-subtle:#8E8B87;--primary:#2E3A59;--accent:#7BA686;--income:#2F855A;--income-soft:#E6F2EB;--expense:#B4423A;}
+  html,body{background:var(--bg);color:var(--fg);font-family:'Plus Jakarta Sans',ui-sans-serif,system-ui,sans-serif;}
+  .font-display{font-family:'Fraunces',ui-serif,serif;font-optical-sizing:auto;}
+  .num{font-variant-numeric:tabular-nums;}
+  .wf-header{background:var(--surface);border-bottom:1px solid var(--border);}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:20px;}
+  .ring{position:relative;width:64px;height:64px;}
+  .ring svg{transform:rotate(-90deg);}
+  .ring text{font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:600;fill:var(--fg);}
+  .pill{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:9999px;font-size:11px;font-weight:500;background:var(--surface-muted);color:var(--fg-muted);}
+  .btn-add{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:48px;border:1px dashed var(--border);border-radius:14px;color:var(--fg-muted);font-weight:600;font-size:14px;}
+</style>
+</head>
+<body class="min-h-screen pb-12">
+
+<header class="wf-header sticky top-0 z-40">
+  <div class="max-w-[440px] mx-auto px-5 py-3 flex items-center justify-between">
+    <a href="02-dashboard.html" class="flex items-center gap-2 text-[13px] font-medium">
+      <i data-lucide="chevron-left" class="w-4 h-4"></i> Mục tiêu tiết kiệm
+    </a>
+    <button class="w-9 h-9 rounded-full flex items-center justify-center" style="background:var(--surface-muted)"><i data-lucide="plus" class="w-4 h-4"></i></button>
+  </div>
+  <p class="max-w-[440px] mx-auto px-5 pb-2 text-[11px] uppercase tracking-wider" style="color:var(--fg-subtle)">Wireframe · 10</p>
+</header>
+
+<main class="max-w-[440px] mx-auto px-5 pt-5 space-y-5">
+  <!-- Summary -->
+  <section class="card p-5">
+    <p class="text-[11px] uppercase tracking-wider font-medium" style="color:var(--fg-subtle)">Tổng tiết kiệm</p>
+    <p class="font-display text-[36px] leading-[42px] font-semibold num mt-1">14.800.000 ₫</p>
+    <p class="text-[12px] mt-1" style="color:var(--fg-muted)">trong <span class="num font-semibold">60.000.000 ₫</span> · 3 mục tiêu đang hoạt động</p>
+  </section>
+
+  <!-- Goal cards -->
+  <section class="space-y-4">
+
+    <!-- Goal: Macbook -->
+    <article class="card p-5">
+      <div class="flex items-start gap-4">
+        <div class="ring">
+          <svg viewBox="0 0 64 64" width="64" height="64">
+            <circle cx="32" cy="32" r="28" fill="none" stroke="#F2EFEA" stroke-width="6"/>
+            <circle cx="32" cy="32" r="28" fill="none" stroke="#7BA686" stroke-width="6" stroke-linecap="round" stroke-dasharray="175.93" stroke-dashoffset="79.17"/>
+            <text x="32" y="36" text-anchor="middle" transform="rotate(90 32 32)">55%</text>
+          </svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <i data-lucide="laptop" class="w-4 h-4" style="color:var(--fg-muted)"></i>
+            <p class="font-display text-[18px] font-semibold">Macbook Air M4</p>
+          </div>
+          <p class="text-[12px] mt-0.5" style="color:var(--fg-muted)">Liên kết · Vietcombank</p>
+          <div class="flex items-baseline gap-2 mt-2 num">
+            <p class="font-semibold text-[16px]">11.000.000 ₫</p>
+            <p class="text-[12px]" style="color:var(--fg-subtle)">/ 20.000.000 ₫</p>
+          </div>
+          <div class="flex flex-wrap gap-2 mt-2">
+            <span class="pill"><i data-lucide="calendar-clock" class="w-3 h-3"></i> Còn 142 ngày · 15/10/2026</span>
+            <span class="pill" style="background:var(--income-soft);color:var(--income)"><i data-lucide="trending-up" class="w-3 h-3"></i> Đúng tiến độ</span>
+          </div>
+        </div>
+      </div>
+      <div class="flex gap-2 mt-4">
+        <button class="flex-1 h-10 rounded-xl text-[13px] font-semibold" style="background:var(--primary);color:#FAF8F5">Góp vào</button>
+        <button class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:var(--surface-muted)"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+      </div>
+    </article>
+
+    <!-- Goal: Emergency fund -->
+    <article class="card p-5">
+      <div class="flex items-start gap-4">
+        <div class="ring">
+          <svg viewBox="0 0 64 64" width="64" height="64">
+            <circle cx="32" cy="32" r="28" fill="none" stroke="#F2EFEA" stroke-width="6"/>
+            <circle cx="32" cy="32" r="28" fill="none" stroke="#2E3A59" stroke-width="6" stroke-linecap="round" stroke-dasharray="175.93" stroke-dashoffset="116.11"/>
+            <text x="32" y="36" text-anchor="middle" transform="rotate(90 32 32)">34%</text>
+          </svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <i data-lucide="shield-check" class="w-4 h-4" style="color:var(--fg-muted)"></i>
+            <p class="font-display text-[18px] font-semibold">Quỹ dự phòng</p>
+          </div>
+          <p class="text-[12px] mt-0.5" style="color:var(--fg-muted)">Liên kết · Vietcombank · tự động 1.000.000 ₫/tháng</p>
+          <div class="flex items-baseline gap-2 mt-2 num">
+            <p class="font-semibold text-[16px]">3.400.000 ₫</p>
+            <p class="text-[12px]" style="color:var(--fg-subtle)">/ 10.000.000 ₫</p>
+          </div>
+          <div class="flex flex-wrap gap-2 mt-2">
+            <span class="pill"><i data-lucide="infinity" class="w-3 h-3"></i> Không có hạn</span>
+            <span class="pill" style="background:var(--surface-muted);color:var(--fg-muted)"><i data-lucide="repeat" class="w-3 h-3"></i> Góp tự động</span>
+          </div>
+        </div>
+      </div>
+      <div class="flex gap-2 mt-4">
+        <button class="flex-1 h-10 rounded-xl text-[13px] font-semibold" style="background:var(--primary);color:#FAF8F5">Góp vào</button>
+        <button class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:var(--surface-muted)"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+      </div>
+    </article>
+
+    <!-- Goal: Đà Lạt trip -->
+    <article class="card p-5">
+      <div class="flex items-start gap-4">
+        <div class="ring">
+          <svg viewBox="0 0 64 64" width="64" height="64">
+            <circle cx="32" cy="32" r="28" fill="none" stroke="#F2EFEA" stroke-width="6"/>
+            <circle cx="32" cy="32" r="28" fill="none" stroke="#B57B14" stroke-width="6" stroke-linecap="round" stroke-dasharray="175.93" stroke-dashoffset="36.95"/>
+            <text x="32" y="36" text-anchor="middle" transform="rotate(90 32 32)">79%</text>
+          </svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <i data-lucide="plane" class="w-4 h-4" style="color:var(--fg-muted)"></i>
+            <p class="font-display text-[18px] font-semibold">Đà Lạt trip</p>
+          </div>
+          <p class="text-[12px] mt-0.5" style="color:var(--fg-muted)">Liên kết · MoMo</p>
+          <div class="flex items-baseline gap-2 mt-2 num">
+            <p class="font-semibold text-[16px]">2.370.000 ₫</p>
+            <p class="text-[12px]" style="color:var(--fg-subtle)">/ 3.000.000 ₫</p>
+          </div>
+          <div class="flex flex-wrap gap-2 mt-2">
+            <span class="pill" style="background:#FEF3C7;color:#92400E"><i data-lucide="calendar-clock" class="w-3 h-3"></i> Còn 12 ngày · 04/06/2026</span>
+          </div>
+        </div>
+      </div>
+      <div class="flex gap-2 mt-4">
+        <button class="flex-1 h-10 rounded-xl text-[13px] font-semibold" style="background:var(--primary);color:#FAF8F5">Góp vào</button>
+        <button class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:var(--surface-muted)"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+      </div>
+    </article>
+
+  </section>
+
+  <button class="btn-add"><i data-lucide="plus" class="w-4 h-4"></i> Mục tiêu mới</button>
+</main>
+
+<script>lucide.createIcons();</script>
+</body>
+</html>
