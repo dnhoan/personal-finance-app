@@ -1,3 +1,4 @@
-// Drizzle schema source of truth. Filled in Phase 3.
-// Empty exports keep drizzle-kit happy for the Phase 1 smoke generate/migrate run.
-export {};
+// Drizzle schema source of truth. Domain tables (accounts, transactions, …)
+// land in Phase 3. Better Auth's tables are defined in auth-schema.ts and
+// re-exported here so drizzle-kit (configured to read this file) picks them up.
+export * from "./auth-schema";

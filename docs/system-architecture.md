@@ -47,10 +47,12 @@ Last updated: 2026-05-23 (research approved).
 
 ## Auth Boundary
 
-- Better Auth handles Google OAuth flow.
-- On sign-in callback, check `session.user.email === env.ALLOWED_EMAIL`.
-- Mismatch → revoke session + redirect to `/unauthorized`.
-- All app routes + Server Actions require valid session (middleware enforced).
+Implemented in Phase 2 (Better Auth `1.6.16`, Google-only). Three enforcement layers:
+
+- **Sign-in allowlist** (`lib/auth.ts`): `databaseHooks.user.create.before` (first sign-in) + `databaseHooks.session.create.before` (every returning sign-in) call the pure `assertAllowlisted()` gate (`lib/auth-allowlist.ts`) — requires `emailVerified === true` and case/whitespace-normalised `email === ALLOWED_EMAIL`. Failure throws `APIError(FORBIDDEN)`; no user row / no session is created. Client routes rejects to `/unauthorized` via `errorCallbackURL`.
+- **Middleware** (`middleware.ts`, edge): cheap session-cookie _presence_ check via `getSessionCookie`; missing → `302 /sign-in?from=<path>`. No DB. Matcher excludes `/api/auth`, public auth pages, and PWA assets.
+- **`requireSession()`** (`lib/auth-session.ts`, server-only, React-`cache`d): authoritative per-call check — validates the session server-side AND re-runs the allowlist (catches cookie replay + `ALLOWED_EMAIL` rotation). **Every Server Action / Route Handler that touches data MUST call it first** — middleware does not cover Server Functions.
+- Better Auth's own tables (`user`, `session`, `account`, `verification`) live in `lib/db/auth-schema.ts`. Session cookie: `httpOnly`, `sameSite=lax`, `secure` in prod, 30-day rolling (`updateAge` 1 day).
 - `/api/cron/*` — protected by shared secret `CRON_SECRET` header.
 - `/api/telegram` — protected by `X-Telegram-Bot-Api-Secret-Token` header (grammY verifies).
 
