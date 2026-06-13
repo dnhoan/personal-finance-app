@@ -2,8 +2,15 @@ import { Receipt } from "lucide-react";
 import type { TxListItem } from "../queries";
 import { TransactionRow } from "./transaction-row";
 
-// Server-rendered transaction list with a calm empty state.
-export function TransactionList({ transactions }: { transactions: TxListItem[] }) {
+// Server-rendered transaction list with a calm empty state. `accounts` is
+// forwarded to each row's edit sheet.
+export function TransactionList({
+  transactions,
+  accounts,
+}: {
+  transactions: TxListItem[];
+  accounts: { id: string; name: string }[];
+}) {
   if (transactions.length === 0) {
     return (
       <div className="flex flex-col items-center gap-2 py-16 text-center">
@@ -17,7 +24,7 @@ export function TransactionList({ transactions }: { transactions: TxListItem[] }
   return (
     <ul className="divide-y divide-border">
       {transactions.map((tx) => (
-        <TransactionRow key={tx.id} tx={tx} />
+        <TransactionRow key={tx.id} tx={tx} accounts={accounts} />
       ))}
     </ul>
   );

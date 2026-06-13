@@ -26,8 +26,15 @@ const MINUS = "−"; // U+2212, not a hyphen — per design guidelines.
 
 // 64px display row: tinted icon circle, title + meta stack, colored amount right.
 // Amounts are stored signed for transfers; display uses the magnitude + a sign
-// derived from kind (transfers are sign-less / neutral).
-export function TransactionRow({ tx }: { tx: TxListItem }) {
+// derived from kind (transfers are sign-less / neutral). `accounts` feeds the
+// row's edit sheet (income/expense rows only).
+export function TransactionRow({
+  tx,
+  accounts,
+}: {
+  tx: TxListItem;
+  accounts: { id: string; name: string }[];
+}) {
   const isTransfer = tx.kind === "transfer";
   const Icon = isTransfer ? ArrowLeftRight : tx.categoryName ? Tag : ACCOUNT_ICON[tx.accountType];
   const abs = Math.abs(tx.amount);
@@ -59,7 +66,7 @@ export function TransactionRow({ tx }: { tx: TxListItem }) {
       </div>
 
       <span className={cn("shrink-0 font-semibold tabular-nums", amountClass)}>{amountText}</span>
-      <TransactionRowActions id={tx.id} isTransfer={isTransfer} />
+      <TransactionRowActions tx={tx} accounts={accounts} />
     </li>
   );
 }
