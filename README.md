@@ -114,7 +114,7 @@ e2e/ · tests/            # Playwright & Vitest suites
 
 - [x] **Phase 1** — Project scaffold (Next.js, Drizzle/Neon, shadcn/ui, testing, tooling)
 - [ ] **Phase 2** — Auth & app shell (Google OAuth, allowlist gate, dashboard layout)
-- [ ] **Phase 3** — Database schema & core entities
+- [x] **Phase 3** — Database schema & core entities
 - [ ] **Phase 4** — Transactions, accounts, categories
 - [ ] **Phase 5** — Budgets, recurring, goals, debts
 - [ ] **Phase 6** — Reports, export, Telegram alerts

@@ -8,6 +8,13 @@
       "when": 1781160675267,
       "tag": "0000_serious_luckman",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1781341239437,
+      "tag": "0001_colossal_ultimatum",
+      "breakpoints": true
     }
   ]
 }

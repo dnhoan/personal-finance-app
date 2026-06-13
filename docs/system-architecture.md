@@ -58,17 +58,24 @@ Implemented in Phase 2 (Better Auth `1.6.16`, Google-only). Three enforcement la
 
 ## Data Model (Summary)
 
+Identity: domain tables anchor `user_id` (text) to Better Auth's `user` table — a
+single identity source, no separate domain `users` table. Domain schema lives in
+`lib/db/schema/*.ts` (one file per entity, barrel-exported via `schema.ts`).
+
 Core entities:
 
-- `users` — single row at MVP; schema supports multi-user later.
-- `accounts` — `type` enum: `cash | bank | credit_card | e_wallet | debt`. Balance derived from transactions.
-- `categories` — hierarchical, `parent_id` self-FK, seed-list 10 VN-aware buckets.
-- `transactions` — `kind` enum: `income | expense | transfer`. `transfer_pair_id` for transfer-linking.
-- `recurring_rules` — `rrule` string (RFC 5545), `next_due`, `notified_at`, links to category + account + amount template.
-- `budgets` — `category_id`, `period_month`, `amount`, rollover toggle.
-- `goals` — `name`, `target_amount`, `target_date`, `current_amount`, `account_id`.
+- `accounts` — `type` enum: `cash | bank | credit_card | e_wallet | debt`; `status` enum for the debt lifecycle. Balance derived from transactions.
+- `categories` — hierarchical, `parent_id` self-FK (restrict), unique `(user_id, slug)`, seed-list 10 VN-aware buckets.
+- `transactions` — `kind` enum: `income | expense | transfer`. `transfer_pair_id` self-FK (cascade) links transfer pairs; `client_op_id` partial-unique for retry idempotency; `recurring_rule_id` (set null) links materialised instances; `occurred_month_ict` is a STORED generated column (`date_trunc('month', occurred_at AT TIME ZONE 'Asia/Ho_Chi_Minh')`) so every month-bucketed query reads a uniform value.
+- `recurring_rules` — `rrule` string (RFC 5545), `next_due`, `notified_at` (alert idempotency), `last_materialised_at` (materialisation cursor), `lead_days`, `active`.
+- `budgets` — unique `(user_id, category_id, period_month)`, `amount`, rollover toggle.
+- `goals` — `name`, `target_amount`, `target_date`, `account_id`. Progress is **computed on read** (`SUM(transactions.amount) WHERE goal_id=$g`) — no `current_amount` denorm cache.
+- `cron_state` — single-row heartbeat (boolean PK + `CHECK(id)`); `last_renewal_check_at` written by the renewal cron, surfaced on the dashboard.
 
-Schema details + migrations: produced by `/ck:plan` → cook phase.
+Money fields are `numeric(18,0)` (VND has no fractional cents) and round-trip as
+strings to avoid JS float precision loss. All `user_id` FKs cascade on owner delete;
+FKs to accounts/categories use `RESTRICT`. Migrations applied via `drizzle-kit migrate`
+(no `db:push`); seed via `npm run db:seed` (idempotent).
 
 ## Module Structure
 
