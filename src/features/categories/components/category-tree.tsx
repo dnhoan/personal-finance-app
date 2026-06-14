@@ -3,6 +3,7 @@ import * as React from "react";
 import { Plus, MoreVertical, Pencil, Archive, CornerDownRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { PageHeader } from "@/components/app-shell/back-link";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -50,14 +51,15 @@ export function CategoryTree({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-fg" style={{ fontFamily: "var(--font-serif)" }}>
-          Danh mục
-        </h1>
-        <Button size="sm" onClick={openCreate}>
-          <Plus size={18} aria-hidden="true" /> Thêm
-        </Button>
-      </div>
+      <PageHeader
+        href="/settings"
+        label="Danh mục"
+        action={
+          <Button size="sm" onClick={openCreate}>
+            <Plus size={18} aria-hidden="true" /> Thêm
+          </Button>
+        }
+      />
 
       <div
         role="radiogroup"

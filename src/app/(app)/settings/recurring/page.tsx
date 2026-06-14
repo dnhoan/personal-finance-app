@@ -41,11 +41,12 @@ export default async function RecurringPage({
   const netNegative = net < 0;
 
   return (
-    <div className="flex flex-col gap-5">
-      <h1 className="text-2xl font-semibold text-fg" style={{ fontFamily: "var(--font-serif)" }}>
-        Định kỳ
-      </h1>
-
+    <RecurringList
+      rules={rules}
+      accounts={accounts}
+      categories={categories}
+      initialEditId={initialEditId}
+    >
       <section className="rounded-2xl border border-border bg-surface p-5">
         <p className="text-[11px] font-medium uppercase tracking-wider text-fg-subtle">
           30 ngày tới
@@ -64,13 +65,6 @@ export default async function RecurringPage({
           {summary.activeCount} quy tắc hoạt động · {summary.dueSoonCount} sắp đến hạn
         </p>
       </section>
-
-      <RecurringList
-        rules={rules}
-        accounts={accounts}
-        categories={categories}
-        initialEditId={initialEditId}
-      />
-    </div>
+    </RecurringList>
   );
 }

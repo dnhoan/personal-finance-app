@@ -2,6 +2,8 @@
 import * as React from "react";
 import { Plus, CalendarClock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/app-shell/back-link";
 import type { CategoryPickerOption } from "@/features/categories/components/category-picker";
 import { RecurringRow } from "./recurring-row";
 import { RecurringFormSheet, type AccountOption } from "./recurring-form-sheet";
@@ -17,11 +19,13 @@ export function RecurringList({
   accounts,
   categories,
   initialEditId,
+  children,
 }: {
   rules: RecurringRuleItem[];
   accounts: AccountOption[];
   categories: CategoryPickerOption[];
   initialEditId?: string;
+  children?: React.ReactNode;
 }) {
   const [filter, setFilter] = React.useState<Filter>("active");
   const [open, setOpen] = React.useState(false);
@@ -56,6 +60,26 @@ export function RecurringList({
 
   return (
     <div className="flex flex-col gap-4">
+      <PageHeader
+        href="/settings"
+        label="Định kỳ"
+        action={
+          <Button
+            size="icon"
+            className="rounded-full"
+            aria-label="Tạo quy tắc định kỳ mới"
+            onClick={() => {
+              setEditing(null);
+              setOpen(true);
+            }}
+          >
+            <Plus size={20} aria-hidden="true" />
+          </Button>
+        }
+      />
+
+      {children}
+
       <div className="flex gap-1 self-start rounded-full bg-surface-muted p-1">
         {TABS.map((t) => (
           <button

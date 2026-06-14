@@ -2,6 +2,8 @@
 import * as React from "react";
 import type { Route } from "next";
 import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/app-shell/back-link";
 import { groupAccounts } from "../account-grouping";
 import type { AccountWithBalance } from "../queries";
 import { AccountsSummaryCard } from "./accounts-summary-card";
@@ -34,6 +36,21 @@ export function AccountList({ accounts }: { accounts: AccountWithBalance[] }) {
 
   return (
     <div className="flex flex-col gap-5">
+      <PageHeader
+        href="/settings"
+        label="Tài khoản"
+        action={
+          <Button
+            size="icon"
+            className="rounded-full"
+            aria-label="Thêm tài khoản"
+            onClick={openCreate}
+          >
+            <Plus size={20} aria-hidden="true" />
+          </Button>
+        }
+      />
+
       <AccountsSummaryCard
         total={grouped.total}
         assetCount={grouped.assets.rows.length}
