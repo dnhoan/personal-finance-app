@@ -1,6 +1,7 @@
 import { requireSession } from "@/lib/auth-session";
 import { listTransactions } from "@/features/transactions/queries";
 import { listActiveAccounts } from "@/features/accounts/queries";
+import { listCategoriesFlat } from "@/features/categories/queries";
 import {
   resolveDateRange,
   RANGE_PRESETS,
@@ -34,9 +35,10 @@ export default async function TransactionsPage({
     : undefined;
   const accountId = sp.accountId && UUID_RE.test(sp.accountId) ? sp.accountId : undefined;
 
-  const [transactions, accounts] = await Promise.all([
+  const [transactions, accounts, categories] = await Promise.all([
     listTransactions(user.id, { from, to, kind, accountId }),
     listActiveAccounts(user.id),
+    listCategoriesFlat(user.id),
   ]);
 
   return (
@@ -45,8 +47,8 @@ export default async function TransactionsPage({
         Giao dịch
       </h1>
       <TransactionFilters accounts={accounts} />
-      <TransactionList transactions={transactions} />
-      <QuickAddLauncher accounts={accounts} />
+      <TransactionList transactions={transactions} accounts={accounts} />
+      <QuickAddLauncher accounts={accounts} categories={categories} />
     </div>
   );
 }

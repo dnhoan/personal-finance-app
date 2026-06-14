@@ -4,6 +4,7 @@ import { cronState } from "./schema/cron-state";
 
 // 10 VN-aware root spending categories. `icon` = Lucide icon name, `color` = hex
 // swatch from the design palette. Seeded once per owner; idempotent on (user, slug).
+// All seeded buckets are expense categories.
 export const SEED_CATEGORIES: ReadonlyArray<{
   slug: string;
   name: string;
@@ -25,7 +26,7 @@ export const SEED_CATEGORIES: ReadonlyArray<{
 // Idempotent seed: inserts the category tree for `ownerId` and the single
 // cron_state heartbeat row. Safe to re-run — conflicts are ignored.
 export async function seed(db: Db, ownerId: string): Promise<{ categories: number }> {
-  const rows = SEED_CATEGORIES.map((c) => ({ ...c, userId: ownerId }));
+  const rows = SEED_CATEGORIES.map((c) => ({ ...c, kind: "expense" as const, userId: ownerId }));
   const inserted = await db
     .insert(categories)
     .values(rows)

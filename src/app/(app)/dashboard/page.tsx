@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { requireSession } from "@/lib/auth-session";
 import { listTransactions } from "@/features/transactions/queries";
 import { listActiveAccounts } from "@/features/accounts/queries";
+import { listCategoriesFlat } from "@/features/categories/queries";
 import { TransactionList } from "@/features/transactions/components/transaction-list";
 import { QuickAddLauncher } from "@/features/transactions/components/quick-add-launcher";
 
@@ -10,9 +11,10 @@ export const metadata = { title: "Trang chủ · Personal Finance" };
 
 export default async function DashboardPage() {
   const { user } = await requireSession();
-  const [recent, accounts] = await Promise.all([
+  const [recent, accounts, categories] = await Promise.all([
     listTransactions(user.id, { limit: 10 }),
     listActiveAccounts(user.id),
+    listCategoriesFlat(user.id),
   ]);
 
   return (
@@ -28,10 +30,10 @@ export default async function DashboardPage() {
             Xem tất cả
           </Link>
         </div>
-        <TransactionList transactions={recent} />
+        <TransactionList transactions={recent} accounts={accounts} />
       </section>
 
-      <QuickAddLauncher accounts={accounts} />
+      <QuickAddLauncher accounts={accounts} categories={categories} />
     </div>
   );
 }

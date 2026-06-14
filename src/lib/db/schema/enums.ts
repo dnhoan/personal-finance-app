@@ -15,3 +15,7 @@ export const accountStatus = pgEnum("account_status", ["open", "partial", "settl
 
 // Transaction direction. `transfer` rows come in linked pairs and carry no category.
 export const transactionKind = pgEnum("transaction_kind", ["income", "expense", "transfer"]);
+
+// Categories are typed income or expense (no transfer — transfers carry no
+// category). Budgets only apply to expense categories.
+export const categoryKind = pgEnum("category_kind", ["income", "expense"]);

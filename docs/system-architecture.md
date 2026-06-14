@@ -65,7 +65,7 @@ single identity source, no separate domain `users` table. Domain schema lives in
 Core entities:
 
 - `accounts` — `type` enum: `cash | bank | credit_card | e_wallet | debt`; `status` enum for the debt lifecycle. Balance derived from transactions.
-- `categories` — hierarchical, `parent_id` self-FK (restrict), unique `(user_id, slug)`, seed-list 10 VN-aware buckets.
+- `categories` — hierarchical, `parent_id` self-FK (restrict, depth-2 cap enforced in app), unique `(user_id, slug)`, `kind` (income/expense), `archived_at` soft-archive, seed-list 10 VN-aware expense buckets.
 - `transactions` — `kind` enum: `income | expense | transfer`. `transfer_pair_id` self-FK (cascade) links transfer pairs; `client_op_id` partial-unique for retry idempotency; `recurring_rule_id` (set null) links materialised instances; `occurred_month_ict` is a STORED generated column (`date_trunc('month', occurred_at AT TIME ZONE 'Asia/Ho_Chi_Minh')`) so every month-bucketed query reads a uniform value.
 - `recurring_rules` — `rrule` string (RFC 5545), `next_due`, `notified_at` (alert idempotency), `last_materialised_at` (materialisation cursor), `lead_days`, `active`.
 - `budgets` — unique `(user_id, category_id, period_month)`, `amount`, rollover toggle.

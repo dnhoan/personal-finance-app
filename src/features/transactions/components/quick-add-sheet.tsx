@@ -15,6 +15,10 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { VndAmountInput } from "@/components/forms/vnd-amount-input";
+import {
+  CategoryPicker,
+  type CategoryPickerOption,
+} from "@/features/categories/components/category-picker";
 import { KindToggle, type TxKind } from "./kind-toggle";
 import { createTransaction, createTransfer } from "../actions";
 
@@ -25,6 +29,7 @@ type FormValues = {
   amount: number | null;
   accountId: string;
   toAccountId: string;
+  categoryId: string | null;
   note: string;
 };
 
@@ -33,12 +38,14 @@ type FormValues = {
 // so a retry/double-tap is idempotent server-side. Category is a slot (Phase 5).
 export function QuickAddSheet({
   accounts,
+  categories,
   open,
   onOpenChange,
   defaultAccountId,
   defaultKind,
 }: {
   accounts: AccountOption[];
+  categories: CategoryPickerOption[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** Pre-select this account (the "from" account in transfer mode). */
@@ -48,15 +55,17 @@ export function QuickAddSheet({
 }) {
   const clientOpId = React.useRef("");
   const [submitError, setSubmitError] = React.useState<string | null>(null);
-  const { control, register, handleSubmit, watch, reset, formState } = useForm<FormValues>({
-    defaultValues: {
-      kind: defaultKind ?? "expense",
-      amount: null,
-      accountId: defaultAccountId ?? "",
-      toAccountId: "",
-      note: "",
-    },
-  });
+  const { control, register, handleSubmit, watch, reset, setValue, formState } =
+    useForm<FormValues>({
+      defaultValues: {
+        kind: defaultKind ?? "expense",
+        amount: null,
+        accountId: defaultAccountId ?? "",
+        toAccountId: "",
+        categoryId: null,
+        note: "",
+      },
+    });
   const kind = watch("kind");
   const isTransfer = kind === "transfer";
 
@@ -71,6 +80,7 @@ export function QuickAddSheet({
         amount: null,
         accountId: defaultAccountId ?? "",
         toAccountId: "",
+        categoryId: null,
         note: "",
       });
     }
@@ -98,13 +108,20 @@ export function QuickAddSheet({
           kind,
           amount: values.amount,
           accountId: values.accountId,
-          categoryId: null,
+          categoryId: values.categoryId,
           occurredAt: new Date(),
           note: values.note,
           clientOpId: clientOpId.current,
         });
       }
-      reset({ kind, amount: null, accountId: values.accountId, toAccountId: "", note: "" });
+      reset({
+        kind,
+        amount: null,
+        accountId: values.accountId,
+        toAccountId: "",
+        categoryId: null,
+        note: "",
+      });
       onOpenChange(false);
     } catch (e) {
       setSubmitError(e instanceof Error ? e.message : "Đã xảy ra lỗi");
@@ -147,7 +164,16 @@ export function QuickAddSheet({
             <Controller
               control={control}
               name="kind"
-              render={({ field }) => <KindToggle value={field.value} onChange={field.onChange} />}
+              render={({ field }) => (
+                <KindToggle
+                  value={field.value}
+                  onChange={(k) => {
+                    field.onChange(k);
+                    // Category options are kind-specific; clear on switch.
+                    setValue("categoryId", null);
+                  }}
+                />
+              )}
             />
 
             <div className="flex flex-col gap-1.5">
@@ -178,7 +204,18 @@ export function QuickAddSheet({
             ) : (
               <div className="flex flex-col gap-1.5">
                 <Label>Danh mục</Label>
-                <p className="text-sm text-fg-subtle">Chọn danh mục sẽ có ở giai đoạn sau.</p>
+                <Controller
+                  control={control}
+                  name="categoryId"
+                  render={({ field }) => (
+                    <CategoryPicker
+                      categories={categories}
+                      kind={kind as "income" | "expense"}
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
               </div>
             )}
 

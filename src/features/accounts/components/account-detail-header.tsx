@@ -9,6 +9,7 @@ import {
   QuickAddSheet,
   type AccountOption,
 } from "@/features/transactions/components/quick-add-sheet";
+import type { CategoryPickerOption } from "@/features/categories/components/category-picker";
 import type { TxKind } from "@/features/transactions/components/kind-toggle";
 import { ACCOUNT_META } from "../account-meta";
 import type { AccountWithBalance } from "../queries";
@@ -22,10 +23,13 @@ import { AccountFormSheet, type EditTarget } from "./account-form-sheet";
 export function AccountDetailHeader({
   account,
   accounts,
+  categories,
 }: {
   account: AccountWithBalance;
   /** Active accounts for the transfer picker. */
   accounts: AccountOption[];
+  /** Categories for the quick-add category picker. */
+  categories: CategoryPickerOption[];
 }) {
   const router = useRouter();
   const [quickAddOpen, setQuickAddOpen] = React.useState(false);
@@ -100,6 +104,7 @@ export function AccountDetailHeader({
 
       <QuickAddSheet
         accounts={accounts}
+        categories={categories}
         open={quickAddOpen}
         onOpenChange={setQuickAddOpen}
         defaultAccountId={account.id}
