@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Route } from "next";
-import { Wallet, Tags, ChevronRight, type LucideIcon } from "lucide-react";
+import { Wallet, Tags, Repeat, ChevronRight, type LucideIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 export const metadata = { title: "Thêm · Personal Finance" };
@@ -8,6 +8,7 @@ export const metadata = { title: "Thêm · Personal Finance" };
 const ROWS: { href: Route; label: string; icon: LucideIcon }[] = [
   { href: "/accounts", label: "Tài khoản", icon: Wallet },
   { href: "/settings/categories" as Route, label: "Danh mục", icon: Tags },
+  { href: "/recurring" as Route, label: "Định kỳ", icon: Repeat },
 ];
 
 // Settings index: a list of navigation rows. Future rows (export, telegram) slot

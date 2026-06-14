@@ -20,6 +20,7 @@ export type TxListItem = {
   categoryColor: string | null;
   categoryIcon: string | null;
   transferPairId: string | null;
+  recurringRuleId: string | null;
 };
 
 const DEFAULT_LIMIT = 100;
@@ -53,6 +54,7 @@ export async function listTransactions(
       categoryColor: categories.color,
       categoryIcon: categories.icon,
       transferPairId: transactions.transferPairId,
+      recurringRuleId: transactions.recurringRuleId,
     })
     .from(transactions)
     .innerJoin(accounts, eq(accounts.id, transactions.accountId))
