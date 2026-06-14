@@ -9,4 +9,6 @@ export function revalidateTxViews(): void {
   // Detail page shows the account's balance, month stats, and tx history, so a
   // tx mutation on any account must refresh it.
   revalidatePath("/accounts/[id]", "page");
+  // Categories manager shows each category's monthly spend/income total.
+  revalidatePath("/settings/categories");
 }

@@ -54,6 +54,15 @@ describe("buildCategoryTree", () => {
     expect(tree[0]!.spent).toBe(100_000 + 820_000 + 1_180_000);
     expect(tree[0]!.children.find((c) => c.id === "food-fast")!.spent).toBe(820_000);
   });
+
+  // The builder is kind-agnostic: it reflects whatever amounts the caller puts in
+  // the map. Income trees must carry income totals — the bug was the per-category
+  // query hardcoding kind='expense', leaving income categories at 0.
+  it("attaches the amount map regardless of kind (income totals show up)", () => {
+    const income: CategoryRow = { ...cat("salary", "Lương"), kind: "income" };
+    const tree = buildCategoryTree([income], new Map([["salary", 20_000_000]]));
+    expect(tree[0]!.spent).toBe(20_000_000);
+  });
 });
 
 describe("slugify", () => {

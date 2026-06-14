@@ -5,6 +5,10 @@
 **Component**: Categories, budgets, category picker
 **Status**: Complete (pending commit)
 
+> **Follow-up (2026-06-14):** the category month-total query shipped here summed
+> only `kind='expense'`, so income-tab totals always read 0. Fixed — see
+> [fix-income-category-totals](./2026-06-14-fix-income-category-totals.md).
+
 ## What Happened
 
 Shipped category tree CRUD (`/settings/categories`), a reusable category picker
