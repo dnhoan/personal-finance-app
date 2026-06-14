@@ -1,4 +1,6 @@
+import { db } from "@/lib/db/client";
 import { requireSession } from "@/lib/auth-session";
+import { materialiseDueInstances } from "@/features/recurring/lib/materialise";
 import { listTransactions } from "@/features/transactions/queries";
 import { listActiveAccounts } from "@/features/accounts/queries";
 import { listCategoriesFlat } from "@/features/categories/queries";
@@ -25,6 +27,15 @@ export default async function TransactionsPage({
 }) {
   const { user } = await requireSession();
   const sp = await searchParams;
+
+  // Surface any newly-due recurring instances in the ledger. Best-effort: a
+  // failure logs but must not block the list. Idempotent + advisory-locked, so a
+  // concurrent call (recurring page / cron) is a safe no-op.
+  try {
+    await materialiseDueInstances(db, user.id);
+  } catch (err) {
+    console.error("materialiseDueInstances (transactions page) failed", err);
+  }
 
   const preset: RangePreset = RANGE_PRESETS.includes(sp.range as RangePreset)
     ? (sp.range as RangePreset)
