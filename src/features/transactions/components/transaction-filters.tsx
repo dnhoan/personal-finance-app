@@ -27,14 +27,41 @@ const KIND_LABELS: Record<string, string> = {
   transfer: "Chuyển",
 };
 
+type CategoryFilterOption = { id: string; name: string; parentId: string | null };
+
+// Orders categories as roots followed by their indented children, so the select
+// reads as a shallow tree.
+function orderCategories(categories: CategoryFilterOption[]): { id: string; label: string }[] {
+  const roots = categories.filter((c) => c.parentId === null);
+  const childrenByParent = new Map<string, CategoryFilterOption[]>();
+  for (const c of categories) {
+    if (c.parentId === null) continue;
+    const list = childrenByParent.get(c.parentId) ?? [];
+    list.push(c);
+    childrenByParent.set(c.parentId, list);
+  }
+  return roots.flatMap((root) => [
+    { id: root.id, label: root.name },
+    ...(childrenByParent.get(root.id) ?? []).map((c) => ({ id: c.id, label: `   ${c.name}` })),
+  ]);
+}
+
 // Filter bar wired to URL search params so the server page re-queries on change.
-export function TransactionFilters({ accounts }: { accounts: { id: string; name: string }[] }) {
+export function TransactionFilters({
+  accounts,
+  categories,
+}: {
+  accounts: { id: string; name: string }[];
+  categories: CategoryFilterOption[];
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const sp = useSearchParams();
   const range = (sp.get("range") as RangePreset) || "month";
   const kind = sp.get("kind") || "all";
   const accountId = sp.get("accountId") || "all";
+  const categoryId = sp.get("categoryId") || "all";
+  const categoryOptions = orderCategories(categories);
 
   function setParams(updates: Record<string, string | null>) {
     const params = new URLSearchParams(sp.toString());
@@ -114,6 +141,25 @@ export function TransactionFilters({ accounts }: { accounts: { id: string; name:
           </SelectContent>
         </Select>
       </div>
+
+      {categoryOptions.length > 0 && (
+        <Select
+          value={categoryId}
+          onValueChange={(v) => setParams({ categoryId: v === "all" ? null : v })}
+        >
+          <SelectTrigger aria-label="Lọc theo danh mục">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Mọi danh mục</SelectItem>
+            {categoryOptions.map((c) => (
+              <SelectItem key={c.id} value={c.id}>
+                {c.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
     </div>
   );
 }
