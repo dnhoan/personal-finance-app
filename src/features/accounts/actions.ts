@@ -14,6 +14,8 @@ import {
 function revalidateAccountViews() {
   revalidatePath("/accounts");
   revalidatePath("/dashboard");
+  // Detail page shows the hero name + balance, so rename/archive must refresh it.
+  revalidatePath("/accounts/[id]", "page");
 }
 
 export async function createAccount(input: CreateAccountInput): Promise<{ id: string }> {

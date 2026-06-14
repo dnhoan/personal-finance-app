@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import type { accountStatus, accountType } from "@/lib/db/schema";
@@ -57,4 +58,63 @@ export async function listActiveAccounts(
     ORDER BY created_at ASC
   `);
   return rows.rows;
+}
+
+// Single-account variant of listAccountsWithBalance, ownership-scoped. Returns
+// null when the id doesn't exist or belongs to another user (so the caller can
+// 404 without leaking which case it was). `cache`d so the detail page's
+// generateMetadata + render share one query per request.
+export const getAccountWithBalance = cache(async function getAccountWithBalance(
+  userId: string,
+  id: string,
+): Promise<AccountWithBalance | null> {
+  const rows = await db.execute<{
+    id: string;
+    name: string;
+    type: AccountWithBalance["type"];
+    status: AccountWithBalance["status"];
+    currency: string;
+    balance: string;
+  }>(sql`
+    SELECT
+      a.id, a.name, a.type, a.status, a.currency,
+      (a.initial_balance + COALESCE(SUM(
+        CASE t.kind WHEN 'income' THEN t.amount WHEN 'expense' THEN -t.amount ELSE t.amount END
+      ), 0))::text AS balance
+    FROM accounts a
+    LEFT JOIN transactions t ON t.account_id = a.id AND t.user_id = a.user_id
+    WHERE a.user_id = ${userId} AND a.id = ${id}
+    GROUP BY a.id
+  `);
+
+  const r = rows.rows[0];
+  if (!r) return null;
+  return {
+    id: r.id,
+    name: r.name,
+    type: r.type,
+    status: r.status,
+    currency: r.currency,
+    balance: Number(r.balance),
+  };
+});
+
+export type AccountMonthStats = { moneyIn: number; moneyOut: number };
+
+// Money in/out for one account in the current ICT month. Filters on the generated
+// `occurred_month_ict` bucket (the project's canonical month key) so no bespoke
+// TZ math. Transfers are sign-less and excluded, matching the dashboard hero.
+export async function getAccountMonthStats(userId: string, id: string): Promise<AccountMonthStats> {
+  const rows = await db.execute<{ money_in: string; money_out: string }>(sql`
+    SELECT
+      COALESCE(SUM(amount) FILTER (WHERE kind = 'income'), 0)::text  AS money_in,
+      COALESCE(SUM(amount) FILTER (WHERE kind = 'expense'), 0)::text AS money_out
+    FROM transactions
+    WHERE user_id = ${userId}
+      AND account_id = ${id}
+      AND occurred_month_ict = date_trunc('month', now() AT TIME ZONE 'Asia/Ho_Chi_Minh')::date
+  `);
+
+  const r = rows.rows[0];
+  return { moneyIn: Number(r?.money_in ?? 0), moneyOut: Number(r?.money_out ?? 0) };
 }

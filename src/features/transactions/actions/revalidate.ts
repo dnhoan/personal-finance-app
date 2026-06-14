@@ -6,4 +6,7 @@ export function revalidateTxViews(): void {
   revalidatePath("/dashboard");
   revalidatePath("/transactions");
   revalidatePath("/accounts");
+  // Detail page shows the account's balance, month stats, and tx history, so a
+  // tx mutation on any account must refresh it.
+  revalidatePath("/accounts/[id]", "page");
 }

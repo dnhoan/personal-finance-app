@@ -35,15 +35,27 @@ export function QuickAddSheet({
   accounts,
   open,
   onOpenChange,
+  defaultAccountId,
+  defaultKind,
 }: {
   accounts: AccountOption[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Pre-select this account (the "from" account in transfer mode). */
+  defaultAccountId?: string;
+  /** Pre-select the transaction kind on open. */
+  defaultKind?: TxKind;
 }) {
   const clientOpId = React.useRef("");
   const [submitError, setSubmitError] = React.useState<string | null>(null);
   const { control, register, handleSubmit, watch, reset, formState } = useForm<FormValues>({
-    defaultValues: { kind: "expense", amount: null, accountId: "", toAccountId: "", note: "" },
+    defaultValues: {
+      kind: defaultKind ?? "expense",
+      amount: null,
+      accountId: defaultAccountId ?? "",
+      toAccountId: "",
+      note: "",
+    },
   });
   const kind = watch("kind");
   const isTransfer = kind === "transfer";
@@ -52,8 +64,17 @@ export function QuickAddSheet({
     if (open) {
       clientOpId.current = crypto.randomUUID();
       setSubmitError(null);
+      // Re-seed each open so the pills' chosen account/kind take effect even when
+      // the sheet was previously opened with different defaults.
+      reset({
+        kind: defaultKind ?? "expense",
+        amount: null,
+        accountId: defaultAccountId ?? "",
+        toAccountId: "",
+        note: "",
+      });
     }
-  }, [open]);
+  }, [open, defaultAccountId, defaultKind, reset]);
 
   async function onSubmit(values: FormValues) {
     setSubmitError(null);

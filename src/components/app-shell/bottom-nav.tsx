@@ -5,13 +5,12 @@ import { usePathname } from "next/navigation";
 import { Home, ArrowLeftRight, Target, Menu, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Routes beyond /dashboard 404 until their phases land — acceptable for now.
-// Cast to Route because typedRoutes can't yet resolve the not-built paths.
+// All four tabs now resolve under typedRoutes (their pages exist), so no casts.
 const TABS: { href: Route; label: string; icon: LucideIcon }[] = [
-  { href: "/dashboard" as Route, label: "Trang chủ", icon: Home },
-  { href: "/transactions" as Route, label: "Giao dịch", icon: ArrowLeftRight },
-  { href: "/budgets" as Route, label: "Ngân sách", icon: Target },
-  { href: "/settings" as Route, label: "Thêm", icon: Menu },
+  { href: "/dashboard", label: "Trang chủ", icon: Home },
+  { href: "/transactions", label: "Giao dịch", icon: ArrowLeftRight },
+  { href: "/budgets", label: "Ngân sách", icon: Target },
+  { href: "/settings", label: "Thêm", icon: Menu },
 ];
 
 export function BottomNav() {
