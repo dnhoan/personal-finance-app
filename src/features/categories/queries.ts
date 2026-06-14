@@ -30,30 +30,37 @@ export async function listCategoriesFlat(
     .orderBy(categories.name);
 }
 
-// Expense spent per category for one month, keyed by category_id. Buckets on the
-// `occurred_month_ict` generated column (ICT month) — never re-derive from occurred_at.
-async function spentByCategory(userId: string, monthKey: string): Promise<Map<string, number>> {
-  const rows = await db.execute<{ category_id: string; spent: string }>(sql`
-    SELECT category_id, SUM(amount)::text AS spent
+// Per-category transaction sum for one month, keyed by category_id, scoped to a
+// kind (expense spend or income received). Buckets on the `occurred_month_ict`
+// generated column (ICT month) — never re-derive from occurred_at.
+async function amountByCategory(
+  userId: string,
+  kind: CategoryKind,
+  monthKey: string,
+): Promise<Map<string, number>> {
+  const rows = await db.execute<{ category_id: string; total: string }>(sql`
+    SELECT category_id, SUM(amount)::text AS total
     FROM transactions
     WHERE user_id = ${userId}
-      AND kind = 'expense'
+      AND kind = ${kind}
       AND category_id IS NOT NULL
       AND occurred_month_ict = ${monthStartDate(monthKey)}
     GROUP BY category_id
   `);
-  return new Map(rows.rows.map((r) => [r.category_id, Number(r.spent)]));
+  return new Map(rows.rows.map((r) => [r.category_id, Number(r.total)]));
 }
 
 // Two-level tree for a kind. When `monthKey` is given, attaches each category's
-// own expense spend; a parent's `spent` rolls up its children's spend.
+// own monthly total for that kind; a parent's `spent` rolls up its children's.
 export async function listCategoryTree(
   userId: string,
   kind: CategoryKind,
   monthKey?: string,
 ): Promise<CategoryNode[]> {
   const rows = await listCategoriesFlat(userId, kind);
-  const spentMap = monthKey ? await spentByCategory(userId, monthKey) : new Map<string, number>();
+  const spentMap = monthKey
+    ? await amountByCategory(userId, kind, monthKey)
+    : new Map<string, number>();
   return buildCategoryTree(rows, spentMap);
 }
 
