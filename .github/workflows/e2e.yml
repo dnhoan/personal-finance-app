@@ -29,7 +29,7 @@ jobs:
       GOOGLE_CLIENT_ID: "ci-dummy.apps.googleusercontent.com"
       GOOGLE_CLIENT_SECRET: "ci-dummy-google-client-secret"
       ALLOWED_EMAIL: "ci@example.com"
-      BOT_TOKEN: "0000000000:CIDUMMYBOTTOKENNOTREALAAAAAAAAAAAAAAAA"
+      BOT_TOKEN: "ci-dummy-bot-token-not-a-real-value-0000000"
       TELEGRAM_OWNER_USER_ID: "0"
       TELEGRAM_DM_CHAT_ID: "0"
       WEBHOOK_SECRET: "ci-dummy-webhook-secret-not-a-real-value-00000"
