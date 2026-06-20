@@ -1,0 +1,73 @@
+name: Migrate production DB
+
+# Applies pending Drizzle migrations to the PRODUCTION Neon database.
+# Manual on purpose: `workflow_dispatch` is the "deliberate, not automatic"
+# property. PROD_DATABASE_URL is scoped to the `production` environment so only
+# this job can read it. (No required-reviewer self-approval — reviewer==requester
+# adds a click without review value, and fights the merge->migrate timing.)
+#
+# ALWAYS follow expand-contract for column changes (see docs/deployment-guide.md):
+# deploy column-tolerant code first, migrate, then deploy code that requires it —
+# Vercel auto-deploys on push and will go live before this runs.
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "migrate-prod" to confirm you intend to mutate production.'
+        required: true
+        type: string
+
+concurrency:
+  # Never run two prod migrations at once.
+  group: migrate-prod
+  cancel-in-progress: false
+
+jobs:
+  migrate-prod:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production # scopes PROD_DATABASE_URL / NEON_API_KEY to this job
+
+    steps:
+      - name: Guard — confirmation text
+        if: ${{ inputs.confirm != 'migrate-prod' }}
+        run: |
+          echo "::error::Confirmation text did not match 'migrate-prod'. Aborting."
+          exit 1
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Show target host (masked) for operator confirmation
+        env:
+          PROD_DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+        run: |
+          # Print only the host, so the operator can confirm "this is prod" in the
+          # job summary. The full URL is a secret and stays masked.
+          HOST="$(printf '%s' "$PROD_DATABASE_URL" | sed -E 's#^[^@]*@([^/:?]+).*#\1#')"
+          echo "Migration target host: ${HOST}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Snapshot a named pre-migrate Neon branch (durable rollback target)
+        # A named branch survives independent of free-tier PITR retention.
+        # NOTE: pin to a commit SHA before merging to main.
+        uses: neondatabase/create-branch-action@v5
+        with:
+          project_id: ${{ secrets.NEON_PROJECT_ID }}
+          parent: ${{ vars.NEON_PROD_BRANCH || 'main' }}
+          branch_name: prod-pre-migrate-${{ github.sha }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+
+      - name: Apply migrations to production
+        env:
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+        run: |
+          npm run db:migrate
+          echo "Migrations applied. Rollback target branch: prod-pre-migrate-${{ github.sha }}" >> "$GITHUB_STEP_SUMMARY"

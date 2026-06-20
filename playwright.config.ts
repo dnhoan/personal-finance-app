@@ -18,7 +18,10 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run dev",
+    // In CI, test the real production build (next start), not the dev server —
+    // CI builds first, so reuse that artifact. Locally, keep `next dev` for fast
+    // iteration. (e2e.yml runs `next build` before invoking Playwright in CI.)
+    command: process.env.CI ? "npm run start" : "npm run dev",
     url: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

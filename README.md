@@ -118,6 +118,7 @@ e2e/ · tests/            # Playwright & Vitest suites
 - [x] **Phase 4** — Transactions, accounts, quick-add (VND parser, atomic transfers)
 - [ ] **Phase 5** — Budgets, recurring, goals, debts
 - [ ] **Phase 6** — Reports, export, Telegram alerts
+- [x] **CI/CD & Deploy** — GitHub Actions gates (lint·typecheck·migrate-check·unit·build·gitleaks), Vercel Git-integration deploy, gated Neon prod migrations, runbook ([`docs/deployment-guide.md`](docs/deployment-guide.md)). _Live account setup pending — see runbook §2._
 
 See [`docs/project-overview-pdr.md`](docs/project-overview-pdr.md) for full requirements and [`docs/system-architecture.md`](docs/system-architecture.md) for architecture.
 
