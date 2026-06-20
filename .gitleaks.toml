@@ -1,0 +1,18 @@
+# gitleaks config for the secret-scan CI gate.
+# Extends the default ruleset; scopes OUT generated/vendored paths that produce
+# false positives (Next build manifests carry prerender encryption keys; .claude
+# is vendored Claude Code tooling with example configs/fixtures; node_modules is
+# third-party). The intent is to catch real credentials in OUR source/config.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Exclude generated build output, vendored tooling, and deps"
+paths = [
+  '''\.next/''',
+  '''node_modules/''',
+  '''\.claude/''',
+  '''playwright-report/''',
+  '''package-lock\.json''',
+]
