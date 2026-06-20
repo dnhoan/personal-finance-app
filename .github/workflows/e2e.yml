@@ -1,0 +1,66 @@
+name: E2E
+
+# e2e is NOT a PR-blocking gate. The current specs are unauthenticated redirect
+# checks only — authenticated flows can't be driven in CI without a test-auth
+# backdoor (see e2e/quick-add.spec.ts). So e2e runs on demand and nightly,
+# against the real production build (next start), not the dev server.
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 02:00 UTC daily (~09:00 ICT). Catches regressions in the redirect/shell flow.
+    - cron: "0 2 * * *"
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # Same throwaway dummy env as ci.yml: validateEnv() must pass for the build
+    # AND for `next start`. The session-free redirect specs need no real DB.
+    env:
+      CI: "true"
+      DATABASE_URL: "postgresql://ci:ci@localhost:5432/ci?sslmode=require"
+      BETTER_AUTH_SECRET: "ci-dummy-better-auth-secret-not-a-real-value-000"
+      GOOGLE_CLIENT_ID: "ci-dummy.apps.googleusercontent.com"
+      GOOGLE_CLIENT_SECRET: "ci-dummy-google-client-secret"
+      ALLOWED_EMAIL: "ci@example.com"
+      BOT_TOKEN: "0000000000:CIDUMMYBOTTOKENNOTREALAAAAAAAAAAAAAAAA"
+      TELEGRAM_OWNER_USER_ID: "0"
+      TELEGRAM_DM_CHAT_ID: "0"
+      WEBHOOK_SECRET: "ci-dummy-webhook-secret-not-a-real-value-00000"
+      CRON_SECRET: "ci-dummy-cron-secret-not-a-real-value-000000000"
+      NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Build
+        run: npm run build
+
+      - name: Run e2e (against next start)
+        # playwright.config.ts boots `npm run start` when CI is set.
+        run: npm run test:e2e
+
+      - name: Upload report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

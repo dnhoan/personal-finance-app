@@ -1,0 +1,63 @@
+name: Migration check
+
+# Verifies that DB migrations actually apply, against a throwaway Postgres
+# SERVICE CONTAINER seeded from scratch — NOT a branch of production. The empty
+# container proves migrations run cleanly on a fresh DB and carries zero prod
+# financial rows into CI (the strongest version of the public-repo hardening:
+# there is simply no prod data and no Neon key in this job at all).
+#
+# Cheap parity (`db:check`, schema vs journal) already runs in ci.yml for every
+# PR; this job adds the real `drizzle-kit migrate` run, only when migrations change.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "drizzle/**"
+      - "src/lib/db/schema.ts"
+      - "src/lib/db/schema/**"
+      - "src/lib/db/auth-schema.ts"
+
+concurrency:
+  group: migration-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  migrate-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports:
+          - 5432:5432
+        # Wait until Postgres is ready before the steps run.
+        options: >-
+          --health-cmd "pg_isready -U ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply migrations to the empty Postgres
+        env:
+          # drizzle.config.ts reads DATABASE_URL from process.env (its dotenv
+          # load of .env.local is a no-op in CI — no such file). sslmode=disable
+          # for the local service container.
+          DATABASE_URL: "postgresql://ci:ci@localhost:5432/ci?sslmode=disable"
+        run: npm run db:migrate
