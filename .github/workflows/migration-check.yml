@@ -56,8 +56,10 @@ jobs:
 
       - name: Apply migrations to the empty Postgres
         env:
-          # drizzle.config.ts reads DATABASE_URL from process.env (its dotenv
-          # load of .env.local is a no-op in CI — no such file). sslmode=disable
-          # for the local service container.
+          # The app + `db:migrate` use the @neondatabase/serverless (WebSocket)
+          # driver, which can't talk to a vanilla Postgres container. `db:migrate:ci`
+          # applies the same drizzle/ migrations over the standard Postgres wire
+          # protocol (node-postgres) against this throwaway service container —
+          # no Neon key, no prod data. sslmode=disable for the local container.
           DATABASE_URL: "postgresql://ci:ci@localhost:5432/ci?sslmode=disable"
-        run: npm run db:migrate
+        run: npm run db:migrate:ci
