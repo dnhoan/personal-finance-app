@@ -9,6 +9,7 @@ import { transactions } from "@/lib/db/schema";
 export type InsertTxData = {
   accountId: string;
   categoryId: string | null;
+  goalId: string | null;
   kind: "income" | "expense";
   amount: number;
   occurredAt: Date;
@@ -26,6 +27,7 @@ export async function insertTxIdempotent(userId: string, data: InsertTxData): Pr
       userId,
       accountId: data.accountId,
       categoryId: data.categoryId,
+      goalId: data.goalId,
       kind: data.kind,
       amount: String(data.amount),
       occurredAt: data.occurredAt,

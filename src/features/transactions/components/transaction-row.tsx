@@ -4,6 +4,7 @@ import {
   CreditCard,
   Smartphone,
   HandCoins,
+  ArrowDownLeft,
   ArrowLeftRight,
   Tag,
   type LucideIcon,
@@ -20,6 +21,7 @@ const ACCOUNT_ICON: Record<TxListItem["accountType"], LucideIcon> = {
   credit_card: CreditCard,
   e_wallet: Smartphone,
   debt: HandCoins,
+  receivable: ArrowDownLeft,
 };
 
 const MINUS = "−"; // U+2212, not a hyphen — per design guidelines.

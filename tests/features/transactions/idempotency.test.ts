@@ -30,6 +30,7 @@ describe("insertTxIdempotent", () => {
   const baseData = (clientOpId: string) => ({
     accountId,
     categoryId: null,
+    goalId: null,
     kind: "expense" as const,
     amount: 50_000,
     occurredAt: new Date("2026-06-12T05:00:00Z"),

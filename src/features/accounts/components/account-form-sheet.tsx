@@ -98,13 +98,26 @@ export function AccountFormSheet({
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="acc-balance">Số dư ban đầu</Label>
+                <Label htmlFor="acc-balance">
+                  {type === "debt"
+                    ? "Tổng nợ ban đầu"
+                    : type === "receivable"
+                      ? "Tổng cho vay ban đầu"
+                      : "Số dư ban đầu"}
+                </Label>
                 <VndAmountInput
                   id="acc-balance"
                   defaultRaw="0"
                   aria-label="Số dư ban đầu"
                   onValueChange={setInitialBalance}
                 />
+                {(type === "debt" || type === "receivable") && (
+                  <p className="text-[12px] text-fg-muted">
+                    {type === "debt"
+                      ? "Nhập tổng số tiền bạn nợ. Ghi một khoản chi vào tài khoản này để trả dần. Mẹo: đặt tên như “Vay từ Mẹ”."
+                      : "Nhập tổng số tiền người khác nợ bạn. Ghi một khoản thu vào tài khoản này khi được trả. Mẹo: đặt tên như “Cho Hùng vay”."}
+                  </p>
+                )}
               </div>
             </>
           )}

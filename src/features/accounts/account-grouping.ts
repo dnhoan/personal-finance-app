@@ -7,11 +7,11 @@ export type AccountGroup = {
 };
 
 export type GroupedAccounts = {
-  /** Sum of all non-archived balances (assets + liabilities). */
+  /** Net worth: assets (incl. receivables to collect) minus outstanding debts. */
   total: number;
-  /** Non-debt accounts: cash / bank / credit_card / e_wallet. */
+  /** Spendable + receivable accounts: cash / bank / credit_card / e_wallet / receivable. */
   assets: AccountGroup;
-  /** Debt-type accounts only. */
+  /** Debt accounts only; subtotal is the (negative) net-worth contribution. */
   liabilities: AccountGroup;
   /** Archived accounts, excluded from total/subtotals; rendered separately. */
   archived: AccountWithBalance[];
@@ -19,8 +19,12 @@ export type GroupedAccounts = {
 
 // Pure presentational grouping over already-authorized rows. Assets vs
 // Liabilities is split strictly by `type === "debt"`, NOT by balance sign — a
-// credit card can carry a negative balance yet still belongs under Assets.
-// Archived accounts are pulled aside and excluded from every total.
+// credit card can carry a negative balance yet still belongs under Assets, and a
+// receivable (money owed to you) is an asset.
+//
+// Debt `balance` is the positive amount still owed (see listAccountsWithBalance),
+// so it contributes NEGATIVELY to net worth: the liabilities subtotal and `total`
+// subtract it. Archived accounts are pulled aside and excluded from every total.
 export function groupAccounts(accounts: AccountWithBalance[]): GroupedAccounts {
   const assets: AccountWithBalance[] = [];
   const liabilities: AccountWithBalance[] = [];
@@ -38,7 +42,8 @@ export function groupAccounts(accounts: AccountWithBalance[]): GroupedAccounts {
 
   const sum = (rows: AccountWithBalance[]) => rows.reduce((acc, r) => acc + r.balance, 0);
   const assetsSubtotal = sum(assets);
-  const liabilitiesSubtotal = sum(liabilities);
+  // Debt balances are amounts owed; they reduce net worth.
+  const liabilitiesSubtotal = -sum(liabilities);
 
   return {
     total: assetsSubtotal + liabilitiesSubtotal,

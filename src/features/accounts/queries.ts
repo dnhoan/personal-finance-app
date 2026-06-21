@@ -14,9 +14,15 @@ export type AccountWithBalance = {
   balance: number;
 };
 
-// Balance = opening balance + signed sum of transactions on the account.
-// income → +amount, expense → −amount, transfer legs are stored already-signed
-// (out leg negative, in leg positive), so they sum directly.
+// Balance for spending accounts = opening balance + signed sum of transactions
+// (income +amount, expense −amount, transfer legs stored already-signed).
+//
+// debt/receivable accounts model an OUTSTANDING amount, not a spendable balance:
+// `balance` = initial − settled, where settling tx are expense (pay down a debt)
+// or income (collect a receivable). It counts down toward 0 as the obligation
+// clears, so a debt's positive `balance` is "still owed" and a receivable's is
+// "still to collect" — matching the /debts surface and feeding net worth with the
+// correct sign in groupAccounts.
 export async function listAccountsWithBalance(userId: string): Promise<AccountWithBalance[]> {
   const rows = await db.execute<{
     id: string;
@@ -28,9 +34,16 @@ export async function listAccountsWithBalance(userId: string): Promise<AccountWi
   }>(sql`
     SELECT
       a.id, a.name, a.type, a.status, a.currency,
-      (a.initial_balance + COALESCE(SUM(
-        CASE t.kind WHEN 'income' THEN t.amount WHEN 'expense' THEN -t.amount ELSE t.amount END
-      ), 0))::text AS balance
+      CASE
+        WHEN a.type = 'debt' THEN
+          (a.initial_balance - COALESCE(SUM(t.amount) FILTER (WHERE t.kind = 'expense'), 0))::text
+        WHEN a.type = 'receivable' THEN
+          (a.initial_balance - COALESCE(SUM(t.amount) FILTER (WHERE t.kind = 'income'), 0))::text
+        ELSE
+          (a.initial_balance + COALESCE(SUM(
+            CASE t.kind WHEN 'income' THEN t.amount WHEN 'expense' THEN -t.amount ELSE t.amount END
+          ), 0))::text
+      END AS balance
     FROM accounts a
     LEFT JOIN transactions t ON t.account_id = a.id AND t.user_id = a.user_id
     WHERE a.user_id = ${userId}
@@ -78,9 +91,16 @@ export const getAccountWithBalance = cache(async function getAccountWithBalance(
   }>(sql`
     SELECT
       a.id, a.name, a.type, a.status, a.currency,
-      (a.initial_balance + COALESCE(SUM(
-        CASE t.kind WHEN 'income' THEN t.amount WHEN 'expense' THEN -t.amount ELSE t.amount END
-      ), 0))::text AS balance
+      CASE
+        WHEN a.type = 'debt' THEN
+          (a.initial_balance - COALESCE(SUM(t.amount) FILTER (WHERE t.kind = 'expense'), 0))::text
+        WHEN a.type = 'receivable' THEN
+          (a.initial_balance - COALESCE(SUM(t.amount) FILTER (WHERE t.kind = 'income'), 0))::text
+        ELSE
+          (a.initial_balance + COALESCE(SUM(
+            CASE t.kind WHEN 'income' THEN t.amount WHEN 'expense' THEN -t.amount ELSE t.amount END
+          ), 0))::text
+      END AS balance
     FROM accounts a
     LEFT JOIN transactions t ON t.account_id = a.id AND t.user_id = a.user_id
     WHERE a.user_id = ${userId} AND a.id = ${id}

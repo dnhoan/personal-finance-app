@@ -60,6 +60,8 @@ export const transactions = pgTable(
     index("transactions_user_occurred_at_idx").on(t.userId, t.occurredAt.desc()),
     index("transactions_user_category_idx").on(t.userId, t.categoryId),
     index("transactions_user_month_idx").on(t.userId, t.occurredMonthIct),
+    // Backs the goal-progress aggregate SUM(amount) WHERE goal_id = $g AND user_id = $u.
+    index("transactions_goal_user_idx").on(t.goalId, t.userId),
     // Idempotency: at most one row per client-supplied op id.
     uniqueIndex("transactions_client_op_id_uniq")
       .on(t.clientOpId)

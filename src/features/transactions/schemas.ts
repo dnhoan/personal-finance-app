@@ -19,6 +19,9 @@ export const createTxSchema = z.object({
   amount,
   accountId: uuid,
   categoryId: uuid.nullish(),
+  // Optional manual goal tag — the user picks it in the quick-add sheet; it is
+  // never auto-set. Progress is computed as SUM(amount) over tagged tx.
+  goalId: uuid.nullish(),
   occurredAt: z.coerce.date(),
   note: z.string().trim().max(500).optional().or(z.literal("")),
   merchant: z.string().trim().max(200).optional().or(z.literal("")),
