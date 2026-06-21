@@ -13,6 +13,9 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      // `server-only` is a build-time guard with no runtime export; stub it so
+      // server query modules can be imported directly in integration tests.
+      "server-only": path.resolve(__dirname, "./tests/stubs/server-only.ts"),
     },
   },
 });

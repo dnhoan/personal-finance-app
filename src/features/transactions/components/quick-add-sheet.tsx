@@ -19,6 +19,7 @@ import {
   CategoryPicker,
   type CategoryPickerOption,
 } from "@/features/categories/components/category-picker";
+import { GoalPicker, type GoalPickerOption } from "@/features/goals/components/goal-picker";
 import { KindToggle, type TxKind } from "./kind-toggle";
 import { createTransaction, createTransfer } from "../actions";
 
@@ -30,6 +31,7 @@ type FormValues = {
   accountId: string;
   toAccountId: string;
   categoryId: string | null;
+  goalId: string | null;
   note: string;
 };
 
@@ -39,6 +41,7 @@ type FormValues = {
 export function QuickAddSheet({
   accounts,
   categories,
+  goals = [],
   open,
   onOpenChange,
   defaultAccountId,
@@ -46,6 +49,7 @@ export function QuickAddSheet({
 }: {
   accounts: AccountOption[];
   categories: CategoryPickerOption[];
+  goals?: GoalPickerOption[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** Pre-select this account (the "from" account in transfer mode). */
@@ -63,6 +67,7 @@ export function QuickAddSheet({
         accountId: defaultAccountId ?? "",
         toAccountId: "",
         categoryId: null,
+        goalId: null,
         note: "",
       },
     });
@@ -81,6 +86,7 @@ export function QuickAddSheet({
         accountId: defaultAccountId ?? "",
         toAccountId: "",
         categoryId: null,
+        goalId: null,
         note: "",
       });
     }
@@ -109,6 +115,7 @@ export function QuickAddSheet({
           amount: values.amount,
           accountId: values.accountId,
           categoryId: values.categoryId,
+          goalId: values.goalId,
           occurredAt: new Date(),
           note: values.note,
           clientOpId: clientOpId.current,
@@ -120,6 +127,7 @@ export function QuickAddSheet({
         accountId: values.accountId,
         toAccountId: "",
         categoryId: null,
+        goalId: null,
         note: "",
       });
       onOpenChange(false);
@@ -214,6 +222,19 @@ export function QuickAddSheet({
                       value={field.value}
                       onChange={field.onChange}
                     />
+                  )}
+                />
+              </div>
+            )}
+
+            {!isTransfer && goals.length > 0 && (
+              <div className="flex flex-col gap-1.5">
+                <Label>Gắn mục tiêu (tùy chọn)</Label>
+                <Controller
+                  control={control}
+                  name="goalId"
+                  render={({ field }) => (
+                    <GoalPicker goals={goals} value={field.value} onChange={field.onChange} />
                   )}
                 />
               </div>

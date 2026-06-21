@@ -1,7 +1,14 @@
 import { z } from "zod";
 import { MAX_VND } from "@/features/transactions/schemas";
 
-export const ACCOUNT_TYPES = ["cash", "bank", "credit_card", "e_wallet", "debt"] as const;
+export const ACCOUNT_TYPES = [
+  "cash",
+  "bank",
+  "credit_card",
+  "e_wallet",
+  "debt",
+  "receivable",
+] as const;
 
 export const createAccountSchema = z.object({
   name: z.string().trim().min(1, "Tên tài khoản bắt buộc").max(80),

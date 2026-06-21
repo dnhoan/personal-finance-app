@@ -22,6 +22,13 @@
       "when": 1781431827784,
       "tag": "0002_previous_wrecking_crew",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1781952417897,
+      "tag": "0003_smiling_jetstream",
+      "breakpoints": true
     }
   ]
 }

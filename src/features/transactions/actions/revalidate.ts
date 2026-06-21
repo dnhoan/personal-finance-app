@@ -11,4 +11,8 @@ export function revalidateTxViews(): void {
   revalidatePath("/accounts/[id]", "page");
   // Categories manager shows each category's monthly spend/income total.
   revalidatePath("/settings/categories");
+  // Goal progress and debt remaining/status are computed from the ledger, so any
+  // tx mutation (tag a goal, pay down a debt) must refresh those surfaces too.
+  revalidatePath("/goals");
+  revalidatePath("/debts");
 }

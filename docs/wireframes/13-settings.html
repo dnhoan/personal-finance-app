@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>13 · Thêm (Cài đặt) — Tài chính Cá nhân</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#FAF8F5;--surface:#FFF;--surface-muted:#F2EFEA;--border:#E6E1D8;--fg:#1B1D23;--fg-muted:#5E5D63;--fg-subtle:#8E8B87;--primary:#2E3A59;--accent:#7BA686;--income:#2F855A;--expense:#B4423A;--danger:#B4423A;}
+  html,body{background:var(--bg);color:var(--fg);font-family:'Plus Jakarta Sans',ui-sans-serif,system-ui,sans-serif;}
+  .font-display{font-family:'Fraunces',ui-serif,serif;font-optical-sizing:auto;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:20px;}
+  .nav-row{display:flex;align-items:center;gap:14px;padding:16px;border-bottom:1px solid var(--border);min-height:64px;}
+  .nav-row:last-child{border-bottom:none;}
+  .nav-icon{width:40px;height:40px;border-radius:9999px;display:flex;align-items:center;justify-content:center;background:var(--surface-muted);color:var(--fg-muted);flex:0 0 auto;}
+  .section-label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;font-weight:600;color:var(--fg-muted);padding-left:4px;margin-bottom:8px;}
+  /* mobile bottom nav (reference only) */
+  .tabbar{background:rgba(255,255,255,.95);border-top:1px solid var(--border);backdrop-filter:blur(8px);}
+</style>
+</head>
+<body class="min-h-screen pb-28">
+
+<!--
+  NOTE: redesign removes the global TopBar (wallet brand + avatar).
+  Account identity + Sign Out now live here on the Settings screen.
+  Pages start directly with their <h1>; no sticky header above.
+-->
+
+<main class="max-w-[440px] mx-auto px-5 pt-6 space-y-6">
+
+  <!-- Page title (replaces TopBar; first thing on the page) -->
+  <div class="flex items-center justify-between">
+    <h1 class="font-display text-[26px] leading-tight font-semibold">Thêm</h1>
+    <span class="text-[11px] uppercase tracking-wider" style="color:var(--fg-subtle)">Wireframe · 13</span>
+  </div>
+
+  <!-- Account header card -->
+  <section class="card p-4 flex items-center gap-4">
+    <div class="w-12 h-12 rounded-full flex items-center justify-center text-[18px] font-semibold"
+         style="background:var(--primary);color:var(--bg)">H</div>
+    <div class="min-w-0 flex-1">
+      <p class="text-[11px] uppercase tracking-wider font-medium" style="color:var(--fg-subtle)">Tài khoản</p>
+      <p class="font-semibold text-[15px] truncate" translate="no">hoanam2k2.tb@gmail.com</p>
+    </div>
+    <i data-lucide="badge-check" class="w-5 h-5" style="color:var(--accent)"></i>
+  </section>
+
+  <!-- Group: Finances -->
+  <section>
+    <p class="section-label">Tài chính</p>
+    <div class="card">
+      <a href="05-accounts.html" class="nav-row">
+        <span class="nav-icon"><i data-lucide="wallet" class="w-5 h-5"></i></span>
+        <span class="flex-1 min-w-0 font-medium text-[15px]">Tài khoản</span>
+        <i data-lucide="chevron-right" class="w-5 h-5" style="color:var(--fg-subtle)"></i>
+      </a>
+      <a href="10-goals.html" class="nav-row">
+        <span class="nav-icon"><i data-lucide="flag" class="w-5 h-5"></i></span>
+        <span class="flex-1 min-w-0 font-medium text-[15px]">Mục tiêu</span>
+        <i data-lucide="chevron-right" class="w-5 h-5" style="color:var(--fg-subtle)"></i>
+      </a>
+      <a href="11-debts.html" class="nav-row">
+        <span class="nav-icon"><i data-lucide="hand-coins" class="w-5 h-5"></i></span>
+        <span class="flex-1 min-w-0 font-medium text-[15px]">Nợ &amp; Vay</span>
+        <i data-lucide="chevron-right" class="w-5 h-5" style="color:var(--fg-subtle)"></i>
+      </a>
+    </div>
+  </section>
+
+  <!-- Group: Setup -->
+  <section>
+    <p class="section-label">Thiết lập</p>
+    <div class="card">
+      <a href="07-categories.html" class="nav-row">
+        <span class="nav-icon"><i data-lucide="tags" class="w-5 h-5"></i></span>
+        <span class="flex-1 min-w-0 font-medium text-[15px]">Danh mục</span>
+        <i data-lucide="chevron-right" class="w-5 h-5" style="color:var(--fg-subtle)"></i>
+      </a>
+      <a href="09-recurring.html" class="nav-row">
+        <span class="nav-icon"><i data-lucide="repeat" class="w-5 h-5"></i></span>
+        <span class="flex-1 min-w-0 font-medium text-[15px]">Định kỳ</span>
+        <i data-lucide="chevron-right" class="w-5 h-5" style="color:var(--fg-subtle)"></i>
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer: Sign out (was in the TopBar avatar dropdown) -->
+  <section>
+    <button class="card w-full nav-row" style="color:var(--danger)">
+      <span class="nav-icon" style="background:#F7E8E6;color:var(--danger)"><i data-lucide="log-out" class="w-5 h-5"></i></span>
+      <span class="flex-1 min-w-0 font-medium text-[15px] text-left">Đăng xuất</span>
+    </button>
+    <p class="text-[12px] text-center mt-3" style="color:var(--fg-subtle)">Tài chính Cá nhân · v1.0</p>
+  </section>
+</main>
+
+<!-- Mobile bottom nav (reference — "Thêm" tab active) -->
+<nav class="tabbar fixed inset-x-0 bottom-0 z-40">
+  <div class="max-w-[440px] mx-auto flex">
+    <a href="02-dashboard.html" class="flex-1 flex flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium" style="color:var(--fg-subtle)">
+      <i data-lucide="home" class="w-[22px] h-[22px]"></i> Trang chủ
+    </a>
+    <a href="03-transactions-list.html" class="flex-1 flex flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium" style="color:var(--fg-subtle)">
+      <i data-lucide="arrow-left-right" class="w-[22px] h-[22px]"></i> Giao dịch
+    </a>
+    <a href="08-budgets.html" class="flex-1 flex flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium" style="color:var(--fg-subtle)">
+      <i data-lucide="target" class="w-[22px] h-[22px]"></i> Ngân sách
+    </a>
+    <a href="13-settings.html" class="flex-1 flex flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium" style="color:var(--primary)">
+      <i data-lucide="menu" class="w-[22px] h-[22px]"></i> Thêm
+    </a>
+  </div>
+</nav>
+
+<script>lucide.createIcons();</script>
+</body>
+</html>

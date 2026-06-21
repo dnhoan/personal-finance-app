@@ -17,12 +17,23 @@ describe("groupAccounts", () => {
   it("splits assets vs liabilities by type === 'debt'", () => {
     const result = groupAccounts([
       account({ type: "bank", balance: 1000 }),
-      account({ type: "debt", balance: -500 }),
+      account({ type: "debt", balance: 500 }),
       account({ type: "e_wallet", balance: 200 }),
     ]);
     expect(result.assets.rows).toHaveLength(2);
     expect(result.liabilities.rows).toHaveLength(1);
     expect(result.liabilities.rows[0]!.type).toBe("debt");
+  });
+
+  it("counts a receivable (owed to you) as an asset", () => {
+    const result = groupAccounts([
+      account({ type: "bank", balance: 1000 }),
+      account({ type: "receivable", balance: 800 }),
+    ]);
+    expect(result.assets.rows).toHaveLength(2);
+    expect(result.liabilities.rows).toHaveLength(0);
+    expect(result.assets.subtotal).toBe(1800);
+    expect(result.total).toBe(1800);
   });
 
   it("keeps a negative credit card under Assets (split by type, not sign)", () => {
@@ -32,11 +43,12 @@ describe("groupAccounts", () => {
     expect(result.assets.subtotal).toBe(-1600);
   });
 
-  it("computes total and per-group subtotals", () => {
+  it("computes total and per-group subtotals (debt owed reduces net worth)", () => {
     const result = groupAccounts([
       account({ type: "bank", balance: 1000 }),
       account({ type: "cash", balance: 500 }),
-      account({ type: "debt", balance: -2000 }),
+      // Debt balance is the positive amount still owed; it subtracts from total.
+      account({ type: "debt", balance: 2000 }),
     ]);
     expect(result.assets.subtotal).toBe(1500);
     expect(result.liabilities.subtotal).toBe(-2000);

@@ -4,6 +4,7 @@ import { materialiseDueInstances } from "@/features/recurring/lib/materialise";
 import { listTransactions } from "@/features/transactions/queries";
 import { listActiveAccounts } from "@/features/accounts/queries";
 import { listCategoriesFlat } from "@/features/categories/queries";
+import { listActiveGoals } from "@/features/goals/queries";
 import {
   resolveDateRange,
   RANGE_PRESETS,
@@ -47,10 +48,11 @@ export default async function TransactionsPage({
   const accountId = sp.accountId && UUID_RE.test(sp.accountId) ? sp.accountId : undefined;
   const categoryId = sp.categoryId && UUID_RE.test(sp.categoryId) ? sp.categoryId : undefined;
 
-  const [transactions, accounts, categories] = await Promise.all([
+  const [transactions, accounts, categories, goals] = await Promise.all([
     listTransactions(user.id, { from, to, kind, accountId, categoryId }),
     listActiveAccounts(user.id),
     listCategoriesFlat(user.id),
+    listActiveGoals(user.id),
   ]);
 
   return (
@@ -60,7 +62,7 @@ export default async function TransactionsPage({
       </h1>
       <TransactionFilters accounts={accounts} categories={categories} />
       <TransactionList transactions={transactions} accounts={accounts} />
-      <QuickAddLauncher accounts={accounts} categories={categories} />
+      <QuickAddLauncher accounts={accounts} categories={categories} goals={goals} />
     </div>
   );
 }
