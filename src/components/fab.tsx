@@ -17,6 +17,7 @@ export function Fab({
       aria-label={label}
       className={[
         "fixed right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full",
+        "touch-manipulation [-webkit-tap-highlight-color:transparent]",
         "bg-primary text-primary-foreground transition-transform active:scale-95",
         "shadow-[0_4px_12px_rgba(27,29,35,0.06),0_1px_3px_rgba(27,29,35,0.04)]",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",

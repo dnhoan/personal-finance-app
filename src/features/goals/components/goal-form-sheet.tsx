@@ -91,8 +91,9 @@ export function GoalFormSheet({
               id="goal-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="VD: Du lịch Nhật Bản"
+              placeholder="VD: Du lịch Nhật Bản…"
               autoComplete="off"
+              spellCheck={false}
             />
           </div>
 

@@ -1,5 +1,69 @@
 # Project Changelog
 
+## Phase 8: UI/UX Improvements (2026-06-27)
+
+### Features Shipped
+
+**Global Theming & Chrome** — System-aware dark mode + accessibility baseline
+
+- Next viewport export with per-scheme `themeColor` (light/dark)
+- `color-scheme: light dark` on `:root` + `@media (prefers-color-scheme: dark)` auto-activates `.dark` tokens
+- No toggle UI — system preference only
+- Heading `text-wrap: balance` for better readability
+- Skip-to-content link + `<main id>` for keyboard nav
+
+**Focus/Hover/Touch States** — Full interactive feedback coverage
+
+- Focus-visible rings on all focusable elements
+- Hover feedback on buttons, selects, FAB, bottom-nav, filter pills
+- Touch targets: `touch-manipulation` + `-webkit-tap-highlight` suppressed
+- Select item highlight via `data-[highlighted]` attribute
+
+**Optimistic Delete & Archive** — Improved UX for destructive actions
+
+- Transaction delete: 5s undo toast (via `sonner`), reverted if page unmounts during grace period
+- Account archive: immediate toast + `unarchiveAccount` server action for undo
+- Single `<Toaster>` in (app) layout; `window.confirm` removed
+
+**Forms Polish** — Validation & input hygiene
+
+- Focus-on-validation-error for better error discovery
+- `spellCheck={false}` on numeric/identifier inputs
+- Ellipsis placeholders for improved placeholder hints
+- Dirty-state discard guard on quick-add & account-form sheets
+
+**List Performance** — Rendering optimization for long transaction lists
+
+- `content-visibility: auto` + `contain-intrinsic-size` on transaction rows
+- `overscroll-contain` on sheet body and filter scroller
+
+**Navigation Redesign** — TopBar removal + Settings restructure
+
+- Removed global TopBar component (`top-bar.tsx`, `sign-out-menu-item.tsx` deleted)
+- Settings page redesigned: grouped account/appearance/help sections with account header + Sign Out footer
+- New `SignOutButton` + `SettingsRow` components for consistent Settings layout
+- Account email + Sign Out migrated from TopBar → Settings footer
+
+### UI Updates
+
+- Applied accessibility baseline to all pages
+- Transaction delete flows use optimistic undo instead of confirmation dialogs
+- Settings navigation consolidated into single grouped layout
+- Dark mode automatically enabled on `prefers-color-scheme: dark`
+
+### Tests
+
+- All existing tests pass; no new test files added (refactor + polish scope)
+- TypeCheck, lint, build: ✅ clean
+
+### Notes
+
+- Design tokens (colors, spacing, radius, type) unchanged — only chrome/interaction layer updated
+- No schema or server-side changes; purely frontend polish
+- Sonner toast library now a hard dependency for undo feedback
+
+---
+
 ## Phase 7: Goals & Debts (2026-06-20)
 
 ### Features Shipped

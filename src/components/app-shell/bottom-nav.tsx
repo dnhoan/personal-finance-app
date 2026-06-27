@@ -30,8 +30,10 @@ export function BottomNav() {
                 href={href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex min-h-[56px] flex-col items-center justify-center gap-1 text-[11px] font-medium",
-                  active ? "text-primary" : "text-fg-subtle",
+                  "flex min-h-[56px] flex-col items-center justify-center gap-1 rounded-md text-[11px] font-medium",
+                  "touch-manipulation [-webkit-tap-highlight-color:transparent]",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
+                  active ? "text-primary" : "text-fg-subtle hover:text-fg",
                 )}
               >
                 <Icon size={22} strokeWidth={active ? 2 : 1.75} aria-hidden="true" />

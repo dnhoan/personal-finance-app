@@ -3,6 +3,7 @@ import * as React from "react";
 import Link from "next/link";
 import type { Route } from "next";
 import { useForm, Controller } from "react-hook-form";
+import { toast } from "sonner";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -94,7 +95,13 @@ export function QuickAddSheet({
 
   async function onSubmit(values: FormValues) {
     setSubmitError(null);
-    if (values.amount === null || values.amount <= 0) return setSubmitError("Nhập số tiền hợp lệ");
+    if (values.amount === null || values.amount <= 0) {
+      // Amount is the most common failure — pull focus back to it. The input is a
+      // controlled custom field, so target its DOM node by id rather than RHF's
+      // setFocus (which only tracks ref-registered inputs).
+      document.getElementById("qa-amount")?.focus();
+      return setSubmitError("Nhập số tiền hợp lệ");
+    }
     if (!values.accountId) return setSubmitError("Chọn tài khoản");
     try {
       if (isTransfer) {
@@ -136,6 +143,17 @@ export function QuickAddSheet({
     }
   }
 
+  // Guard against silently discarding a half-filled form. Only fires when the
+  // form is actually dirty, so the common open→close-empty path stays friction-
+  // free. The discard toast lets the user confirm rather than blocking outright.
+  function requestClose(next: boolean) {
+    if (next) return onOpenChange(true);
+    if (!formState.isDirty) return onOpenChange(false);
+    toast("Bỏ thay đổi chưa lưu?", {
+      action: { label: "Bỏ", onClick: () => onOpenChange(false) },
+    });
+  }
+
   const accountSelect = (name: "accountId" | "toAccountId", placeholder: string) => (
     <Controller
       control={control}
@@ -158,7 +176,7 @@ export function QuickAddSheet({
   );
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={requestClose}>
       <SheetContent title="Thêm giao dịch">
         {accounts.length === 0 ? (
           <div className="flex flex-col gap-3 py-4 text-center">
@@ -242,7 +260,13 @@ export function QuickAddSheet({
 
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="qa-note">Ghi chú</Label>
-              <Input id="qa-note" {...register("note")} placeholder="Tùy chọn" autoComplete="off" />
+              <Input
+                id="qa-note"
+                {...register("note")}
+                placeholder="Tùy chọn…"
+                autoComplete="off"
+                spellCheck={false}
+              />
             </div>
 
             {submitError && (

@@ -8,6 +8,7 @@ import {
   createAccountSchema,
   renameAccountSchema,
   archiveAccountSchema,
+  unarchiveAccountSchema,
   type CreateAccountInput,
 } from "./schemas";
 
@@ -57,6 +58,22 @@ export async function archiveAccount(input: { id: string }): Promise<void> {
   await db
     .update(accounts)
     .set({ status: "archived", updatedAt: new Date() })
+    .where(and(eq(accounts.id, data.id), eq(accounts.userId, user.id)));
+
+  revalidateAccountViews();
+}
+
+// Reverses archiveAccount — restores the account to the active pickers. Backs the
+// undo-toast offered right after archiving. Restores to "open" (the schema
+// default); a prior debt sub-status (partial/settled) isn't preserved across an
+// archive round-trip — acceptable for the undo window's scope.
+export async function unarchiveAccount(input: { id: string }): Promise<void> {
+  const { user } = await requireSession();
+  const data = unarchiveAccountSchema.parse(input);
+
+  await db
+    .update(accounts)
+    .set({ status: "open", updatedAt: new Date() })
     .where(and(eq(accounts.id, data.id), eq(accounts.userId, user.id)));
 
   revalidateAccountViews();

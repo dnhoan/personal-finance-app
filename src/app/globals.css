@@ -44,39 +44,127 @@
   --font-serif: var(--font-fraunces), Georgia, serif;
 }
 
+/* Opt the whole document into light+dark so native controls (date inputs,
+   scrollbars, form widgets) and the UA paint correctly under OS dark mode. */
+:root {
+  color-scheme: light dark;
+}
+
+/* Dark palette, authored once as raw `--dark-*` values, then mapped onto the
+   live tokens by both activation paths below. This keeps a single source of
+   truth for the colors — only the short mapping list repeats. */
+:root {
+  --dark-background: #15161a;
+  --dark-foreground: #edece8;
+  --dark-surface: #1e2027;
+  --dark-surface-muted: #262932;
+  --dark-border: #2f3340;
+  --dark-input: #2f3340;
+  --dark-ring: #8fbe9c;
+
+  --dark-fg: #edece8;
+  --dark-fg-muted: #a6a39d;
+  --dark-fg-subtle: #74726e;
+
+  --dark-primary: #a8b6d9;
+  --dark-primary-foreground: #15161a;
+  --dark-secondary: #262932;
+  --dark-secondary-foreground: #edece8;
+  --dark-accent: #8fbe9c;
+  --dark-accent-foreground: #15161a;
+  --dark-muted: #262932;
+  --dark-muted-foreground: #a6a39d;
+  --dark-card: #1e2027;
+  --dark-card-foreground: #edece8;
+  --dark-destructive: #e89a92;
+  --dark-destructive-foreground: #15161a;
+
+  --dark-income: #7bc79b;
+  --dark-income-soft: #1f3127;
+  --dark-expense: #e89a92;
+  --dark-expense-soft: #3a2422;
+  --dark-transfer: #a6a39d;
+  --dark-warning: #e0b560;
+  --dark-danger: #e89a92;
+}
+
+/* The single mapping from raw dark values to the live tokens. Reused by the
+   `.dark` class (future manual toggle) and by the system dark scheme via the
+   @media block — so the activation logic lives in two tiny selectors, not two
+   copies of the palette. */
 .dark {
-  --color-background: #15161a;
-  --color-foreground: #edece8;
-  --color-surface: #1e2027;
-  --color-surface-muted: #262932;
-  --color-border: #2f3340;
-  --color-input: #2f3340;
-  --color-ring: #8fbe9c;
+  --color-background: var(--dark-background);
+  --color-foreground: var(--dark-foreground);
+  --color-surface: var(--dark-surface);
+  --color-surface-muted: var(--dark-surface-muted);
+  --color-border: var(--dark-border);
+  --color-input: var(--dark-input);
+  --color-ring: var(--dark-ring);
 
-  --color-fg: #edece8;
-  --color-fg-muted: #a6a39d;
-  --color-fg-subtle: #74726e;
+  --color-fg: var(--dark-fg);
+  --color-fg-muted: var(--dark-fg-muted);
+  --color-fg-subtle: var(--dark-fg-subtle);
 
-  --color-primary: #a8b6d9;
-  --color-primary-foreground: #15161a;
-  --color-secondary: #262932;
-  --color-secondary-foreground: #edece8;
-  --color-accent: #8fbe9c;
-  --color-accent-foreground: #15161a;
-  --color-muted: #262932;
-  --color-muted-foreground: #a6a39d;
-  --color-card: #1e2027;
-  --color-card-foreground: #edece8;
-  --color-destructive: #e89a92;
-  --color-destructive-foreground: #15161a;
+  --color-primary: var(--dark-primary);
+  --color-primary-foreground: var(--dark-primary-foreground);
+  --color-secondary: var(--dark-secondary);
+  --color-secondary-foreground: var(--dark-secondary-foreground);
+  --color-accent: var(--dark-accent);
+  --color-accent-foreground: var(--dark-accent-foreground);
+  --color-muted: var(--dark-muted);
+  --color-muted-foreground: var(--dark-muted-foreground);
+  --color-card: var(--dark-card);
+  --color-card-foreground: var(--dark-card-foreground);
+  --color-destructive: var(--dark-destructive);
+  --color-destructive-foreground: var(--dark-destructive-foreground);
 
-  --color-income: #7bc79b;
-  --color-income-soft: #1f3127;
-  --color-expense: #e89a92;
-  --color-expense-soft: #3a2422;
-  --color-transfer: #a6a39d;
-  --color-warning: #e0b560;
-  --color-danger: #e89a92;
+  --color-income: var(--dark-income);
+  --color-income-soft: var(--dark-income-soft);
+  --color-expense: var(--dark-expense);
+  --color-expense-soft: var(--dark-expense-soft);
+  --color-transfer: var(--dark-transfer);
+  --color-warning: var(--dark-warning);
+  --color-danger: var(--dark-danger);
+}
+
+/* System dark scheme — same mapping as `.dark`, applied without a class. A
+   `.light` class escape hatch lets a future manual toggle force light even when
+   the OS is dark. */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --color-background: var(--dark-background);
+    --color-foreground: var(--dark-foreground);
+    --color-surface: var(--dark-surface);
+    --color-surface-muted: var(--dark-surface-muted);
+    --color-border: var(--dark-border);
+    --color-input: var(--dark-input);
+    --color-ring: var(--dark-ring);
+
+    --color-fg: var(--dark-fg);
+    --color-fg-muted: var(--dark-fg-muted);
+    --color-fg-subtle: var(--dark-fg-subtle);
+
+    --color-primary: var(--dark-primary);
+    --color-primary-foreground: var(--dark-primary-foreground);
+    --color-secondary: var(--dark-secondary);
+    --color-secondary-foreground: var(--dark-secondary-foreground);
+    --color-accent: var(--dark-accent);
+    --color-accent-foreground: var(--dark-accent-foreground);
+    --color-muted: var(--dark-muted);
+    --color-muted-foreground: var(--dark-muted-foreground);
+    --color-card: var(--dark-card);
+    --color-card-foreground: var(--dark-card-foreground);
+    --color-destructive: var(--dark-destructive);
+    --color-destructive-foreground: var(--dark-destructive-foreground);
+
+    --color-income: var(--dark-income);
+    --color-income-soft: var(--dark-income-soft);
+    --color-expense: var(--dark-expense);
+    --color-expense-soft: var(--dark-expense-soft);
+    --color-transfer: var(--dark-transfer);
+    --color-warning: var(--dark-warning);
+    --color-danger: var(--dark-danger);
+  }
 }
 
 body {
@@ -85,4 +173,11 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Balance multi-line headings so short titles don't leave an orphan word. */
+h1,
+h2,
+h3 {
+  text-wrap: balance;
 }
