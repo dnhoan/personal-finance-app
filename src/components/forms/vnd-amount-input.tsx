@@ -37,6 +37,7 @@ export function VndAmountInput({ id, defaultRaw = "", onValueChange, ...aria }: 
         id={id}
         inputMode="decimal"
         autoComplete="off"
+        spellCheck={false}
         placeholder="50k · 1tr · 1,5tr"
         value={raw}
         onChange={handleChange}

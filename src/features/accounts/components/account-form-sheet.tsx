@@ -1,5 +1,6 @@
 "use client";
 import * as React from "react";
+import { toast } from "sonner";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -30,6 +31,7 @@ export function AccountFormSheet({
   editing: EditTarget;
 }) {
   const isEdit = editing !== null;
+  const nameRef = React.useRef<HTMLInputElement>(null);
   const [name, setName] = React.useState("");
   const [type, setType] = React.useState<AccountType>("cash");
   const [initialBalance, setInitialBalance] = React.useState<number | null>(0);
@@ -48,7 +50,12 @@ export function AccountFormSheet({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!name.trim()) return setError("Nhập tên tài khoản");
+    if (!name.trim()) {
+      // Move focus to the offending field so the error is reachable for keyboard
+      // and screen-reader users, not just shown.
+      nameRef.current?.focus();
+      return setError("Nhập tên tài khoản");
+    }
     setSubmitting(true);
     try {
       if (isEdit) {
@@ -64,18 +71,32 @@ export function AccountFormSheet({
     }
   }
 
+  // Dirty if the name diverged from its initial value, or (create mode) a non-zero
+  // opening balance was entered. Gates the discard guard so empty opens close free.
+  const dirty = name.trim() !== (editing?.name ?? "") || (!isEdit && (initialBalance ?? 0) !== 0);
+
+  function requestClose(next: boolean) {
+    if (next) return onOpenChange(true);
+    if (!dirty) return onOpenChange(false);
+    toast("Bỏ thay đổi chưa lưu?", {
+      action: { label: "Bỏ", onClick: () => onOpenChange(false) },
+    });
+  }
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={requestClose}>
       <SheetContent title={isEdit ? "Sửa tài khoản" : "Thêm tài khoản"}>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="acc-name">Tên tài khoản</Label>
             <Input
+              ref={nameRef}
               id="acc-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="VD: Tiền mặt"
+              placeholder="VD: Tiền mặt…"
               autoComplete="off"
+              spellCheck={false}
             />
           </div>
 

@@ -145,8 +145,9 @@ export function TransactionEditSheet({
               id="edit-note"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Tùy chọn"
+              placeholder="Tùy chọn…"
               autoComplete="off"
+              spellCheck={false}
             />
           </div>
 

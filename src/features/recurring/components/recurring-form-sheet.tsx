@@ -195,8 +195,9 @@ export function RecurringFormSheet({
               id="rule-note"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Vd: Netflix Premium"
+              placeholder="Vd: Netflix Premium…"
               autoComplete="off"
+              spellCheck={false}
             />
           </div>
 

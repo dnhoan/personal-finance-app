@@ -1,5 +1,6 @@
 "use client";
 import * as React from "react";
+import { toast } from "sonner";
 import { MoreVertical, Pencil, Archive } from "lucide-react";
 import {
   DropdownMenu,
@@ -7,7 +8,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { archiveAccount } from "../actions";
+import { archiveAccount, unarchiveAccount } from "../actions";
+
+// Undo window for the archive toast.
+const UNDO_WINDOW_MS = 5000;
 
 // Edit/archive overflow menu, shared by the accounts list row and the detail
 // header. `onEdit` opens the rename sheet; `onArchived` (optional) fires after a
@@ -24,6 +28,23 @@ export function AccountActionsMenu({
   onArchived?: () => void;
 }) {
   const [pending, startTransition] = React.useTransition();
+
+  // Archive runs immediately (it's already reversible). The toast offers Undo,
+  // which calls unarchiveAccount within the window — no native confirm dialog.
+  function handleArchive() {
+    startTransition(async () => {
+      await archiveAccount({ id: accountId });
+      onArchived?.();
+    });
+    toast("Đã lưu trữ tài khoản", {
+      duration: UNDO_WINDOW_MS,
+      action: {
+        label: "Hoàn tác",
+        onClick: () => startTransition(() => void unarchiveAccount({ id: accountId })),
+      },
+    });
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -41,11 +62,7 @@ export function AccountActionsMenu({
             disabled={pending}
             onSelect={(e) => {
               e.preventDefault();
-              if (window.confirm("Lưu trữ tài khoản này? Giao dịch cũ vẫn được giữ lại."))
-                startTransition(async () => {
-                  await archiveAccount({ id: accountId });
-                  onArchived?.();
-                });
+              handleArchive();
             }}
           >
             <Archive size={16} aria-hidden="true" /> Lưu trữ

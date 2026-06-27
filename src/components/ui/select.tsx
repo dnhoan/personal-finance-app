@@ -15,7 +15,8 @@ const SelectTrigger = React.forwardRef<
     ref={ref}
     className={cn(
       "flex h-12 w-full items-center justify-between rounded-md border border-input bg-surface px-3 py-2 text-base text-fg md:h-11",
-      "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background",
+      "touch-manipulation [-webkit-tap-highlight-color:transparent]",
+      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
       "disabled:cursor-not-allowed disabled:opacity-50 data-[placeholder]:text-fg-subtle",
       className,
     )}
@@ -63,7 +64,9 @@ const SelectItem = React.forwardRef<
     ref={ref}
     className={cn(
       "relative flex w-full cursor-pointer select-none items-center rounded-sm py-2.5 pl-8 pr-2 text-base outline-none",
-      "focus:bg-surface-muted data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      // Radix sets data-highlighted on keyboard arrow nav and pointer hover — use
+      // it (not :focus) so the active item highlights during keyboard navigation.
+      "data-[highlighted]:bg-surface-muted data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       className,
     )}
     {...props}
