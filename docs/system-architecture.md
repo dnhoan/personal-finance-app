@@ -2,7 +2,7 @@
 
 Personal finance management web PWA. Single-user, Vietnam locale, VND-only, Vietnamese UI (English deferred Phase 2+).
 
-Last updated: 2026-05-23 (research approved).
+Last updated: 2026-06-27 (Phase 8 reports & dashboard shipped).
 
 ## Tech Stack (Locked)
 
@@ -67,15 +67,65 @@ Core entities:
 - `accounts` — `type` enum: `cash | bank | credit_card | e_wallet | debt | receivable`. `debt` = liability (you owe); `receivable` = asset (owed to you). `status` enum for debt/receivable lifecycle (open/partial/settled/archived). Balance derived from transactions — spending accounts use signed sum; debt/receivable use `initial_balance − settled` (counting down to zero as obligation clears).
 - `categories` — hierarchical, `parent_id` self-FK (restrict, depth-2 cap enforced in app), unique `(user_id, slug)`, `kind` (income/expense), `archived_at` soft-archive, seed-list 10 VN-aware expense buckets.
 - `transactions` — `kind` enum: `income | expense | transfer`. `transfer_pair_id` self-FK (cascade) links transfer pairs; `client_op_id` partial-unique for retry idempotency; `recurring_rule_id` (set null) links materialised instances; `occurred_month_ict` is a STORED generated column (`date_trunc('month', occurred_at AT TIME ZONE 'Asia/Ho_Chi_Minh')`) so every month-bucketed query reads a uniform value.
-- `recurring_rules` — `rrule` string (RFC 5545, with DTSTART embedded), `next_due`, `notified_at` (alert idempotency), `last_materialised_at` (materialisation cursor), `lead_days`, `active`. **Lazy materialisation:** reading `/recurring` or `/transactions` (and the Phase 9 cron) calls `materialiseDueInstances`, which expands each due rule's occurrences within a 30-day lead window into real `transactions` rows. Idempotent via the `(recurring_rule_id, occurred_at)` partial-unique index; concurrency-safe via a per-rule `pg_advisory_xact_lock`. Occurrences anchor at 12:00 UTC (= 19:00 ICT) so the VN calendar day and `occurred_month_ict` bucket stay deterministic without TZID machinery (VN has no DST). Edit semantics: "this only" detaches the row (`recurring_rule_id` → null); "edit series" mutates the rule forward, never rewriting already-materialised rows.
+- `recurring_rules` — `rrule` string (RFC 5545, with DTSTART embedded), `next_due`, `notified_at` (alert idempotency), `last_materialised_at` (materialisation cursor), `lead_days`, `active`. **Lazy materialisation:** reading `/recurring` or `/transactions` (and the cron renewal check) calls `materialiseDueInstances`, which expands each due rule's occurrences within a 30-day lead window into real `transactions` rows. Idempotent via the `(recurring_rule_id, occurred_at)` partial-unique index; concurrency-safe via a per-rule `pg_advisory_xact_lock`. Occurrences anchor at 12:00 UTC (= 19:00 ICT) so the VN calendar day and `occurred_month_ict` bucket stay deterministic without TZID machinery (VN has no DST). Edit semantics: "this only" detaches the row (`recurring_rule_id` → null); "edit series" mutates the rule forward, never rewriting already-materialised rows.
 - `budgets` — unique `(user_id, category_id, period_month)`, `amount`, rollover toggle.
 - `goals` — `name`, `target_amount`, `target_date`, `account_id`. Virtual savings buckets. Progress is **computed on read** (`SUM(transactions.amount) WHERE goal_id=$g AND user_id=$u`) — no `current_amount` denorm cache. Transactions tag a goal manually (income/expense only; transfers omit). Index `transactions(goal_id, user_id)` backs the read.
-- `cron_state` — single-row heartbeat (boolean PK + `CHECK(id)`); `last_renewal_check_at` written by the renewal cron, surfaced on the dashboard.
+- `cron_state` — single-row heartbeat (boolean PK + `CHECK(id)`); `last_renewal_check_at` written by the renewal cron, surfaced on dashboard cron-status badge (red warning if >25h stale).
 
 Money fields are `numeric(18,0)` (VND has no fractional cents) and round-trip as
 strings to avoid JS float precision loss. All `user_id` FKs cascade on owner delete;
 FKs to accounts/categories use `RESTRICT`. Migrations applied via `drizzle-kit migrate`
 (no `db:push`); seed via `npm run db:seed` (idempotent).
+
+## Analytics & Reporting
+
+Reports module (`src/features/reports/`) provides financial insights via time-scoped queries and interactive charts. All queries are user-scoped and leverage the `occurred_month_ict` stored-generated column for consistent month bucketing.
+
+**Core Queries** (`queries.ts`)
+
+- `netCashFlowMtd()` — Current month inflow vs. outflow (transfers excluded), used in hero card
+- `netWorthSnapshot()` — Aggregate account balances grouped by type (accounts, debts, receivables), used in net-worth card
+- `topCategoriesThisMonth()` — Top 5 expense categories by sum this month, used in top-categories card
+- `upcomingRenewals()` — Next 30 days of due recurring transactions, used in upcoming-renewals card
+- `cashFlowSeries()` — Daily/weekly/monthly income vs. expense historical series (time-range scoped), feeds cash-flow-chart
+- `cronHeartbeat()` — Reads `cron_state.last_renewal_check_at`, used to calculate staleness for cron-status-badge
+
+**Spending Breakdown** (`spending-by-category-query.ts`)
+
+- `spendingByCategoryQuery()` — Category-level expense aggregation within a date range
+- Supports drill-down: user selects donut slice to focus on sub-category transactions
+- "Khác" (Other) category cap: limits chart to top 8 categories + rolls remaining into "Other"
+- URL-state drill: `?category=slug` persists drill-down selection for shareable reports
+
+**Time-Range Presets** (`lib/range-presets.ts`)
+
+- Predefined ranges: this month (mtd), last month, last 3 months, last 12 months, custom date picker
+- DoS protection: enforced 24-month maximum span to prevent expensive queries on large date ranges
+- User-selectable via range-picker component (dropdown + custom date inputs)
+
+**Chart Components** (`components/`)
+
+- `hero-net-cash-flow.tsx` — MTD cash flow hero with large "XYZ VNĐ" display, Fraunces 40 weight
+- `net-worth-card.tsx` — Net worth snapshot with account breakdown (spending/debt/receivable split)
+- `top-categories-card.tsx` — Top 5 expense categories bar chart
+- `upcoming-renewals-card.tsx` — Upcoming transactions list with renewal dates
+- `cash-flow-chart.tsx` — Recharts ComposedChart (income bars + expense line) over time
+- `spending-donut.tsx` — Recharts PieChart with drill-down + URL-state persistence
+- `range-picker.tsx` — Dropdown presets + custom date input
+- `report-tabs.tsx` — Navigation between /reports/cash-flow, /reports/spending, /reports/net-worth
+- `chart-theme.ts` — CSS-var token definitions (--color-income, --color-expense, etc.) + reduced-motion support
+
+**Accessibility** (`chart-data-table.tsx`)
+
+- WCAG fallback: `<table aria-label="">` with sr-only data for all charts
+- Screen readers receive tabular representation of chart data
+- Copy-friendly: users can select/export data via table
+
+**Theming**
+
+- Charts use CSS custom properties (var(--color-income), var(--color-expense)) for dynamic coloring
+- Dark mode: automatic via `:root .dark` selector (no per-chart re-render required)
+- Respects `prefers-reduced-motion`: animations disabled system-wide
 
 ## Module Structure
 
@@ -84,6 +134,7 @@ src/
   app/                  # Next.js App Router
     (auth)/             # Sign-in/out routes
     (app)/              # Authed dashboard + features
+      reports/          # /reports/cash-flow, /reports/spending, /reports/net-worth
     api/
       telegram/route.ts # grammY webhook
       cron/             # Cron endpoints
@@ -92,8 +143,15 @@ src/
     forms/              # RHF wrappers
     charts/             # Recharts wrappers
   features/
-    transactions/  accounts/  categories/
-    budgets/       recurring/ goals/ debts/ reports/
+    transactions/       # CRUD + queries
+    accounts/           # Account management + grouping
+    categories/         # Hierarchical categories
+    budgets/            # Monthly budget tracking
+    recurring/          # Bill/subscription materialization
+    goals/              # Savings buckets
+    debts/              # Liability/asset tracking
+    reports/            # Analytics queries + chart components
+    dashboard/          # Dashboard layout + cron health
   lib/
     auth.ts             # Better Auth + allowlist
     db/                 # Drizzle client + schema + migrations

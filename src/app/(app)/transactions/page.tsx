@@ -13,6 +13,7 @@ import {
 import { TransactionList } from "@/features/transactions/components/transaction-list";
 import { TransactionFilters } from "@/features/transactions/components/transaction-filters";
 import { QuickAddLauncher } from "@/features/transactions/components/quick-add-launcher";
+import { console } from "inspector/promises";
 
 export const metadata = { title: "Giao dịch · Personal Finance" };
 
@@ -34,6 +35,7 @@ export default async function TransactionsPage({
   // concurrent call (recurring page / cron) is a safe no-op.
   try {
     await materialiseDueInstances(db, user.id);
+    console.debug("materialiseDueInstances (transactions page) succeeded");
   } catch (err) {
     console.error("materialiseDueInstances (transactions page) failed", err);
   }

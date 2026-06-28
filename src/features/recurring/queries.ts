@@ -99,8 +99,14 @@ export async function listRecurringRules(
   const rules: RecurringRuleItem[] = rows.map((r) => {
     const amount = Number(r.amount);
     const kind = r.kind as "income" | "expense";
+    // "Due soon" must reflect the soonest *upcoming* occurrence, not the stored
+    // `nextDue` cursor: materialisation advances `nextDue` past the 30-day lead
+    // window after pre-creating instances, so it is always far in the future and
+    // could never satisfy a leadDays (~3) cutoff. Recompute from the rrule.
+    const nextDates = nextOccurrences(r.rrule, 3, now).map(anchorToVnDate);
     const dueSoonCutoff = ictDate(addDays(now, r.leadDays));
-    const dueSoon = r.active && r.nextDue <= dueSoonCutoff;
+    const upcoming = nextDates[0];
+    const dueSoon = r.active && upcoming != null && upcoming <= dueSoonCutoff;
 
     if (r.active) {
       activeCount++;
@@ -128,7 +134,7 @@ export async function listRecurringRules(
       active: r.active,
       nextDue: r.nextDue,
       description: describeRrule(r.rrule),
-      nextDates: nextOccurrences(r.rrule, 3, now).map(anchorToVnDate),
+      nextDates,
       dueSoon,
     };
   });
