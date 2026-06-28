@@ -28,7 +28,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </a>
       <main
         id="main-content"
-        className="mx-auto max-w-3xl px-4 pb-24 pt-[max(1rem,env(safe-area-inset-top))] md:pb-8"
+        className="mx-auto max-w-3xl overflow-x-hidden px-4 pb-24 pt-[max(1rem,env(safe-area-inset-top))] md:pb-8"
       >
         {children}
       </main>

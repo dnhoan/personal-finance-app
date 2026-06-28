@@ -27,6 +27,7 @@ export default async function RecurringPage({
   // failure logs but must not block the page.
   try {
     await materialiseDueInstances(db, user.id);
+    console.debug("materialiseDueInstances (recurring page) succeeded");
   } catch (err) {
     console.error("materialiseDueInstances (recurring page) failed", err);
   }

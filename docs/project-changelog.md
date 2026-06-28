@@ -1,5 +1,55 @@
 # Project Changelog
 
+## Phase 8: Reports & Dashboard (2026-06-27)
+
+### Features Shipped
+
+**Analytics & Reporting Suite** — Multi-view financial insights with time-range controls
+
+- Query module `src/features/reports/queries.ts`: `netCashFlowMtd`, `netWorthSnapshot`, `topCategoriesThisMonth`, `upcomingRenewals`, `cashFlowSeries`, `cronHeartbeat` — all user-scoped, month bucketing via stored-generated `occurred_month_ict` column
+- Spending breakdown: `spending-by-category-query.ts` — donut visualization with one-level drill + 8-slice "Khác" (Other) cap
+- Time-range presets: `lib/range-presets.ts` (mtd/last-month/last-3m/last-12m/custom) with 24-month DoS protection
+- Chart components: hero-net-cash-flow, net-worth-card, top-categories-card, upcoming-renewals-card, cash-flow-chart (Recharts ComposedChart), spending-donut (Recharts + URL-state drill), range-picker, report-tabs
+- WCAG chart fallback: `chart-data-table.tsx` (sr-only table for screen readers)
+- Theming: `chart-theme.ts` (CSS-var tokens + reduced-motion support) — dark mode auto-flips via `:root` variables
+
+**Dashboard Redesign** — Centralized financial overview with cron health monitoring
+
+- Hero section: net cash flow MTD (transfers excluded), Fraunces 40 weight
+- Card layout: net worth + top categories + upcoming renewals + cron health badge
+- Recent transactions list retained; QuickAddLauncher preserved
+- All queries run in parallel via `Promise.all`
+- Net worth reuses Phase 7 `listAccountsWithBalance` + `groupAccounts` (correct debt/receivable signs)
+
+**Cron Health Monitoring** — Renewal alert staleness detection
+
+- `src/features/dashboard/lib/cron-health.ts`: staleness check (red warning if >25h since last renewal check)
+- `cron-status-badge.tsx`: visual heartbeat indicator on dashboard
+
+**New Routes**
+
+- `/reports/cash-flow` — composited income vs. expense over time
+- `/reports/spending` — category drill-down donut + historical trends
+- `/reports/net-worth` — net worth snapshot with account breakdown
+
+### Dependencies
+
+- Added: `recharts@^3.9.0`
+
+### Validation
+
+- TypeCheck + lint: ✅ clean
+- Build: ✅ 18 routes
+- Tests: ✅ 14 unit + 5 live-Neon integration green
+
+### Notes
+
+- Charts auto-theme via CSS variables — no manual dark mode handling required
+- Range presets include DoS cap to prevent expensive queries on large date spans
+- Spending drill-down persists via URL state for shareable reports
+
+---
+
 ## Phase 8: UI/UX Improvements (2026-06-27)
 
 ### Features Shipped
