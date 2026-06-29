@@ -1,8 +1,8 @@
 # Codebase Summary
 
-Personal finance web PWA built with Next.js 15, TypeScript, Drizzle ORM, Neon Postgres, Better Auth, shadcn/ui, and Recharts.
+Personal finance web PWA built with Next.js 15, TypeScript, Drizzle ORM, Neon Postgres, Better Auth, shadcn/ui, Recharts, and Serwist (offline-capable).
 
-Last updated: 2026-06-29
+Last updated: 2026-06-30
 
 ## Project Overview
 
@@ -101,6 +101,15 @@ src/features/
   dashboard/
     ├── lib/cron-health.ts (staleness check)
     └── components/ (cron-status-badge, etc.)
+
+  export/
+    ├── queries.ts (full user data dump: accounts, transactions, budgets, etc.)
+    └── CSV/JSON streaming via /api/export/* endpoints
+
+  pwa/
+    ├── Serwist 9 service worker (offline-capable, versioned caching)
+    ├── Manifest (standalone, icon set, theme color)
+    └── Offline fallback page
 ```
 
 ## Pages & Routes
@@ -128,8 +137,19 @@ src/features/
 **API Routes**
 
 - `/api/auth/*` — Better Auth endpoints
+- `/api/export/csv` — Stream transactions as CSV (UTF-8 BOM, dd/MM/yyyy dates, formula-injection safe)
+- `/api/export/json` — Full user backup (all entities, user-scoped, no-store cache)
 - `/api/telegram` — grammY webhook (allowlist by chat_id)
 - `/api/cron/renewal-check` — Daily renewal materialization + Telegram alert
+
+**PWA & Offline**
+
+- Service Worker (`src/sw/index.ts`) — Serwist 9 runtime caching
+  - NetworkOnly: auth routes + API (always fresh)
+  - CacheFirst: static assets (immutable)
+  - NetworkFirst (3s timeout): HTML navigations → /offline
+- `public/manifest.json` — PWA install metadata
+- `public/offline` — Offline fallback page (no auth required)
 
 ## Tech Stack
 

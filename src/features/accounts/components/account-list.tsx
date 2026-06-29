@@ -1,9 +1,10 @@
 "use client";
 import * as React from "react";
 import type { Route } from "next";
-import { Plus } from "lucide-react";
+import { Plus, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/app-shell/back-link";
+import { EmptyState } from "@/features/reports/components/empty-state";
 import { groupAccounts } from "../account-grouping";
 import type { AccountWithBalance } from "../queries";
 import { AccountsSummaryCard } from "./accounts-summary-card";
@@ -24,6 +25,7 @@ export function AccountList({ accounts }: { accounts: AccountWithBalance[] }) {
   const [editing, setEditing] = React.useState<EditTarget>(null);
 
   const grouped = React.useMemo(() => groupAccounts(accounts), [accounts]);
+  const isEmpty = accounts.length === 0;
 
   function openCreate() {
     setEditing(null);
@@ -51,38 +53,48 @@ export function AccountList({ accounts }: { accounts: AccountWithBalance[] }) {
         }
       />
 
-      <AccountsSummaryCard
-        total={grouped.total}
-        assetCount={grouped.assets.rows.length}
-        debtCount={grouped.liabilities.rows.length}
-      />
+      {isEmpty ? (
+        <EmptyState
+          icon={<Wallet size={32} aria-hidden="true" />}
+          title="Chưa có tài khoản"
+          description="Thêm tài khoản đầu tiên để bắt đầu theo dõi số dư và giao dịch."
+        />
+      ) : (
+        <>
+          <AccountsSummaryCard
+            total={grouped.total}
+            assetCount={grouped.assets.rows.length}
+            debtCount={grouped.liabilities.rows.length}
+          />
 
-      <AccountGroup
-        title="Tài sản"
-        subtotal={grouped.assets.subtotal}
-        rows={grouped.assets.rows}
-        hrefFor={detailHref}
-        onEdit={openEdit}
-      />
-
-      <AccountGroup
-        title="Nợ phải trả"
-        subtotal={grouped.liabilities.subtotal}
-        rows={grouped.liabilities.rows}
-        hrefFor={detailHref}
-        onEdit={openEdit}
-      />
-
-      {grouped.archived.length > 0 && (
-        <div className="opacity-70">
           <AccountGroup
-            title="Đã lưu trữ"
-            subtotal={grouped.archived.reduce((acc, r) => acc + r.balance, 0)}
-            rows={grouped.archived}
+            title="Tài sản"
+            subtotal={grouped.assets.subtotal}
+            rows={grouped.assets.rows}
             hrefFor={detailHref}
             onEdit={openEdit}
           />
-        </div>
+
+          <AccountGroup
+            title="Nợ phải trả"
+            subtotal={grouped.liabilities.subtotal}
+            rows={grouped.liabilities.rows}
+            hrefFor={detailHref}
+            onEdit={openEdit}
+          />
+
+          {grouped.archived.length > 0 && (
+            <div className="opacity-70">
+              <AccountGroup
+                title="Đã lưu trữ"
+                subtotal={grouped.archived.reduce((acc, r) => acc + r.balance, 0)}
+                rows={grouped.archived}
+                hrefFor={detailHref}
+                onEdit={openEdit}
+              />
+            </div>
+          )}
+        </>
       )}
 
       <button

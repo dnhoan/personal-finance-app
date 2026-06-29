@@ -1,5 +1,71 @@
 # Project Changelog
 
+## Phase 10: PWA Export & Polish (2026-06-30)
+
+### Features Shipped
+
+**Progressive Web App (PWA) Layer** — Offline-capable installable app via Serwist 9
+
+- Service Worker (`src/sw/index.ts`): explicit runtime caching strategy
+  - NetworkOnly for authenticated routes `(app)/*` + `/api/*` (always fresh, cookie-bearing)
+  - CacheFirst for static assets (versioned, persistent across updates)
+  - NetworkFirst (3s timeout) for HTML navigations with `/offline` fallback
+  - Versioned cache name `finance-v${BUILD_ID}` (git short SHA injected via `next.config.ts` withSerwist wrap; SW disabled in dev)
+- Installation manifest: `public/manifest.json` (theme_color #FAF8F5, standalone mode, start_url /dashboard)
+  - Icon set: 192×192 (rounded), 512×512, 512×512 maskable for adaptive Android home screen
+- Offline fallback page (`public/offline`) — top-level, unauthenticated, calm messaging
+- Auth sync: `auth-client.ts` purges all `finance-*` caches on sign-out; LOGOUT message handler
+- Update available: toast notification on `controllerchange` event (user-triggered refresh)
+- Middleware updated to keep SW assets public: `sw.js`, `manifest.json`, icon files, `/offline` route
+
+**Data Export** — User-initiated backup & analysis downloads
+
+- `GET /api/export/csv?entity=transactions` — Streaming CSV export
+  - UTF-8 BOM for Excel VN display
+  - VN locale dates: ICT dd/MM/yyyy format
+  - Formula-injection neutralisation per cell (RFC-4180 quoting)
+  - Utility: `src/lib/csv-escape.ts` (strip leading `=`, `+`, `@`, `-`)
+- `GET /api/export/json` — Full per-user backup bundle
+  - All entities (accounts, categories, transactions, budgets, goals, debts, recurring rules)
+  - User-scoped: `user_id` filter + excludes auth tables (user, session, account, verification)
+  - Cache-Control: no-store (no intermediate caching)
+- Both endpoints require session (`requireSession()`) + return `Content-Disposition: attachment` headers
+- Settings page: export download links (CSV transactions, JSON backup)
+
+**Polish & Accessibility** — Production refinements
+
+- EmptyState component on accounts list (first-run CTA)
+- Per-route error boundaries via `error.tsx` (8 feature routes)
+  - Shared `RouteError` component for consistent error UX
+  - Graceful fallback on unexpected throws
+- Accessibility audit via axe-core in e2e suite
+  - Found + fixed real WCAG AA contrast failure on subtle text
+  - Darkened `--color-fg-subtle`: light #8e8b87→#6f6c68, dark #74726e→#8a8884
+  - Verified all touch targets ≥44×44 px
+
+### Tests
+
+- `tests/lib/csv-injection.test.ts` — 13 unit tests (formula escape coverage)
+- `e2e/pwa-install-manifest.spec.ts` — Manifest presence + icon resolution
+- `e2e/a11y-axe.spec.ts` — Automated WCAG AA scan across routes
+- `e2e/sign-in-add-export.spec.ts` — Export endpoint auth + CSV structure validation
+
+### Validation
+
+- TypeCheck + lint: ✅ clean
+- Build: ✅ 18 routes; SW 38 KB; cache-name versioning verified
+- Tests: ✅ 177 unit + 15 e2e pass
+- Code review: ✅ 0 Critical/High/Medium issues
+
+### Notes
+
+- PWA installed on Android auto-adds to home screen (Add to Home Screen); iOS uses Share → Add to Home Screen
+- Serwist v9 migration from next-pwa complete; no workbox dependency
+- CSV export: safe for import to Excel, Sheets, Numbers (formula injection handled)
+- Post-deploy: manual Lighthouse run, on-device install test (Android + iOS), live Vietnam latency ping from hosted URL
+
+---
+
 ## Phase 8: Reports & Dashboard (2026-06-27)
 
 ### Features Shipped

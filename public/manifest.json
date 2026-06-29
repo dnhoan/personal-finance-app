@@ -1,0 +1,33 @@
+{
+  "name": "Tài chính Cá nhân",
+  "short_name": "Tài chính",
+  "description": "Quản lý chi tiêu cá nhân",
+  "lang": "vi",
+  "dir": "ltr",
+  "display": "standalone",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "theme_color": "#FAF8F5",
+  "background_color": "#FAF8F5",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 
 Personal finance management web PWA. Single-user, Vietnam locale, VND-only, Vietnamese UI (English deferred Phase 2+).
 
-Last updated: 2026-06-29 (Phase 8 UI/UX improvements + net-worth trend shipped).
+Last updated: 2026-06-30 (Phase 10: PWA Layer, Data Export, Accessibility Polish — MVP complete).
 
 ## Tech Stack (Locked)
 
@@ -25,12 +25,16 @@ Last updated: 2026-06-29 (Phase 8 UI/UX improvements + net-worth trend shipped).
 ## High-Level Topology
 
 ```
-[ Browser PWA (Next.js client) ]
-            |
-            v
+[ Browser PWA (Next.js client + Service Worker) ]
+     |                            |
+     | NetworkFirst/CacheFirst    | Export triggers
+     v                            v
 [ Vercel Next.js (Edge/Node Functions, Server Actions) ]
-            |
-            v
+     |                                      |
+     | /api/export/csv                     | /api/export/json
+     | /api/export/json                    v
+     |                            [ User Download (CSV/JSON) ]
+     v
 [ Neon Postgres (Singapore region) ]
 
 [ cron-job.org ] ----daily POST + CRON_SECRET---->  [ /api/cron/renewal-check ]
@@ -43,6 +47,12 @@ Last updated: 2026-06-29 (Phase 8 UI/UX improvements + net-worth trend shipped).
 
 [ Telegram servers ] ----webhook POST + secret header----> [ /api/telegram ]
                                               (grammY router; allowlist by chat_id)
+
+Service Worker Caching Strategy:
+  - NetworkOnly: (app)/*, /api/* (always fresh, auth cookies)
+  - CacheFirst: /static, /_next (versioned, persistent)
+  - NetworkFirst (3s timeout): HTML navigations → /offline fallback
+  - Cache versioning: finance-v{BUILD_ID} (git short SHA)
 ```
 
 ## Auth Boundary
@@ -75,6 +85,42 @@ Money fields are `numeric(18,0)` (VND has no fractional cents) and round-trip as
 strings to avoid JS float precision loss. All `user_id` FKs cascade on owner delete;
 FKs to accounts/categories use `RESTRICT`. Migrations applied via `drizzle-kit migrate`
 (no `db:push`); seed via `npm run db:seed` (idempotent).
+
+## Progressive Web App (PWA) Layer
+
+Service Worker (`src/sw/index.ts`, Serwist 9) manages offline capability and performance:
+
+- **Caching Strategy:**
+  - `NetworkOnly`: authenticated routes `(app)/*` + `/api/*` — always fetch fresh data with auth cookies
+  - `CacheFirst`: static assets `/_next`, `/static` — immutable, cache indefinitely
+  - `NetworkFirst` (3s timeout): HTML navigations → fallback to `/offline` page
+- **Cache Versioning:** `finance-v${BUILD_ID}` where BUILD_ID = git short SHA (injected via `next.config.ts` withSerwist wrap)
+  - Automatic cleanup: old cache names purged on service worker activation
+  - No manual cache busting required
+- **Installation:** `public/manifest.json` (standalone mode, start_url /dashboard)
+  - Icons: 192×192 (rounded), 512×512 (square), 512×512 maskable (Android adaptive badge)
+  - Theme color: #FAF8F5 (light background)
+- **Auth Sync:** Sign-out purges all `finance-*` caches via `auth-client.ts` LOGOUT handler
+- **Update Detection:** User notified via toast on `controllerchange` (new SW available)
+- **Offline Fallback:** Public `/offline` page (no auth required)
+
+## Data Export
+
+User-initiated backup and analysis via REST endpoints:
+
+- **CSV Export** (`GET /api/export/csv?entity=transactions`)
+  - Streaming response for large datasets
+  - UTF-8 BOM for Excel VN character encoding
+  - VN date format: `dd/MM/yyyy` (ICT timezone)
+  - Formula-injection neutralisation: `csv-escape.ts` strips leading `=`, `+`, `@`, `-` per RFC-4180
+  - RFC-4180 compliant quoting for commas, newlines, quotes
+- **JSON Export** (`GET /api/export/json`)
+  - Full per-user backup: all entities (accounts, categories, transactions, budgets, goals, debts, recurring)
+  - User-scoped: filters by `user_id`, excludes auth tables (user, session, account, verification)
+  - Cache-Control: no-store (prevents intermediate caching)
+- **Authentication:** Both endpoints require session (`requireSession()`)
+- **Download Headers:** Content-Disposition: attachment for browser download
+- **Settings UI:** Download links on `/settings` page (CSV transactions, JSON backup)
 
 ## Analytics & Reporting
 
@@ -153,6 +199,7 @@ src/
     (app)/              # Authed dashboard + features
       reports/          # /reports/cash-flow, /reports/spending, /reports/net-worth
     api/
+      export/           # GET /api/export/csv, GET /api/export/json
       telegram/route.ts # grammY webhook
       cron/             # Cron endpoints
   components/
@@ -171,18 +218,33 @@ src/
     dashboard/          # Dashboard layout + cron health
   lib/
     auth.ts             # Better Auth + allowlist
+    auth-client.ts      # Client-side auth utils (cache purge on sign-out)
+    csv-escape.ts       # CSV formula-injection prevention
     db/                 # Drizzle client + schema + migrations
     vnd.ts              # parser + formatter
     telegram.ts         # sendMessage helper
   server/               # server-only utils
+  sw/
+    index.ts            # Serwist 9 service worker (offline, caching strategy)
+public/
+  manifest.json         # PWA manifest (standalone, icons, theme)
+  offline/              # Offline fallback page
 ```
 
-## Open Items (defer to live test during scaffold)
+## Open Items (Post-Deploy — After Live Hosted URL Available)
 
-- Vietnam → Neon SGP region latency (ping from machine post-deploy).
-- Neon scale-to-zero cold-start UX impact.
-- CSV export performance at >10K rows.
-- VAPID/web-push readiness if future phase adds browser-push.
+- **Lighthouse audit:** Full PWA audit (performance, accessibility, best practices) on hosted URL
+- **On-device install:** Verify installation on Android (auto-add to home screen) and iOS (Share → Add to Home Screen)
+- **Vietnam → Neon SGP latency:** Ping from Vietnam machine; measure real-world query round-trip time
+- **Cold-start UX:** Neon scale-to-zero startup impact on first request after idle period
+- **CSV export performance:** Validate streaming performance with 10K+ row exports
+
+### Future Phases (Post-MVP)
+
+- VAPID/web-push if browser-push notifications added (Phase 2+)
+- English UI localization (i18n library; MVP Vietnamese-only)
+- Receipt photo attachments + OCR
+- Bank statement CSV/Excel import
 
 ## References
 

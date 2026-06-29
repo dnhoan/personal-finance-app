@@ -25,13 +25,21 @@ export async function signInWithGoogle(from?: string): Promise<void> {
   });
 }
 
-// Best-effort Service Worker cache purge on sign-out. No-op until the PWA layer
-// registers a worker; guarded so it never throws in environments without it.
+// Best-effort Service Worker cache purge on sign-out. Scoped to the app's own
+// `finance-*` caches so we never touch unrelated origins' caches, and also asks
+// the active SW to purge its runtime caches (the SW owns caches the page may not
+// see directly). Guarded so it never throws where there's no SW/Cache API.
 async function clearServiceWorkerCaches(): Promise<void> {
-  if (typeof window === "undefined" || typeof caches === "undefined") return;
+  if (typeof window === "undefined") return;
+  try {
+    navigator.serviceWorker?.controller?.postMessage({ type: "LOGOUT" });
+  } catch {
+    // ignore — best-effort
+  }
+  if (typeof caches === "undefined") return;
   try {
     const keys = await caches.keys();
-    await Promise.all(keys.map((k) => caches.delete(k)));
+    await Promise.all(keys.filter((k) => k.startsWith("finance-")).map((k) => caches.delete(k)));
   } catch {
     // ignore — cache clearing is best-effort
   }
