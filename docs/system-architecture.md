@@ -50,11 +50,10 @@ Last updated: 2026-06-29 (Phase 8 UI/UX improvements + net-worth trend shipped).
 Implemented in Phase 2 (Better Auth `1.6.16`, Google-only). Three enforcement layers:
 
 - **Sign-in allowlist** (`lib/auth.ts`): `databaseHooks.user.create.before` (first sign-in) + `databaseHooks.session.create.before` (every returning sign-in) call the pure `assertAllowlisted()` gate (`lib/auth-allowlist.ts`) — requires `emailVerified === true` and case/whitespace-normalised `email === ALLOWED_EMAIL`. Failure throws `APIError(FORBIDDEN)`; no user row / no session is created. Client routes rejects to `/unauthorized` via `errorCallbackURL`.
-- **Middleware** (`middleware.ts`, edge): cheap session-cookie _presence_ check via `getSessionCookie`; missing → `302 /sign-in?from=<path>`. No DB. Matcher excludes `/api/auth`, public auth pages, and PWA assets.
+- **Middleware** (`middleware.ts`, edge): cheap session-cookie _presence_ check via `getSessionCookie`; missing → `302 /sign-in?from=<path>`. No DB. Matcher excludes `/api/auth`, `/api/cron` (cookieless, secret-guarded), public auth pages, and PWA assets.
 - **`requireSession()`** (`lib/auth-session.ts`, server-only, React-`cache`d): authoritative per-call check — validates the session server-side AND re-runs the allowlist (catches cookie replay + `ALLOWED_EMAIL` rotation). **Every Server Action / Route Handler that touches data MUST call it first** — middleware does not cover Server Functions.
 - Better Auth's own tables (`user`, `session`, `account`, `verification`) live in `lib/db/auth-schema.ts`. Session cookie: `httpOnly`, `sameSite=lax`, `secure` in prod, 30-day rolling (`updateAge` 1 day).
-- `/api/cron/*` — protected by shared secret `CRON_SECRET` header.
-- `/api/telegram` — protected by `X-Telegram-Bot-Api-Secret-Token` header (grammY verifies).
+- `/api/cron/*` — cookieless (excluded from the middleware matcher); protected by the `Authorization: Bearer <CRON_SECRET>` header (SHA-256-then-`timingSafeEqual`) plus an in-memory per-IP rate limit.
 
 ## Data Model (Summary)
 
@@ -189,5 +188,6 @@ src/
 
 - `plans/reports/researcher-domain-data-model.md`
 - `plans/reports/researcher-tech-stack.md`
-- `plans/reports/researcher-telegram-bot.md`
+- `plans/reports/researcher-email-alerts.md` (Phase 9 alert transport — Brevo SMTP)
+- `plans/reports/researcher-telegram-bot.md` (superseded for transport; cron idempotency + external-cron findings still apply)
 - `plans/reports/researcher-pwa-vn-ux.md`

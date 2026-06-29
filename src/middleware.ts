@@ -15,9 +15,12 @@ export function middleware(request: NextRequest): NextResponse {
 }
 
 export const config = {
-  // Protect everything except Next internals, the auth API, and the public
-  // auth pages. /api/auth must be excluded so the OAuth callback round-trips.
+  // Protect everything except Next internals, the auth API, the cron API, and the
+  // public auth pages. /api/auth must be excluded so the OAuth callback
+  // round-trips; /api/cron must be excluded because cron-job.org sends no session
+  // cookie — that route is guarded by the CRON_SECRET bearer check instead, so a
+  // cookie redirect here would make the endpoint permanently unreachable.
   matcher: [
-    "/((?!_next/static|_next/image|api/auth|sign-in|unauthorized|favicon.ico|manifest.webmanifest|icon|apple-icon|robots.txt|sitemap.xml).*)",
+    "/((?!_next/static|_next/image|api/auth|api/cron|sign-in|unauthorized|favicon.ico|manifest.webmanifest|icon|apple-icon|robots.txt|sitemap.xml).*)",
   ],
 };
