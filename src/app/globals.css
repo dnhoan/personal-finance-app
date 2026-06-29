@@ -12,7 +12,9 @@
 
   --color-fg: #1b1d23;
   --color-fg-muted: #5e5d63;
-  --color-fg-subtle: #8e8b87;
+  /* Subtle text still clears WCAG AA 4.5:1 on white surface (5.2:1) and the warm
+     #faf8f5 background (4.9:1); kept lighter than --fg-muted for hierarchy. */
+  --color-fg-subtle: #6f6c68;
 
   --color-primary: #2e3a59;
   --color-primary-foreground: #faf8f5;
@@ -64,7 +66,8 @@
 
   --dark-fg: #edece8;
   --dark-fg-muted: #a6a39d;
-  --dark-fg-subtle: #74726e;
+  /* Clears AA 4.5:1 on both dark surfaces (#1e2027 4.6:1 / #15161a 5.1:1). */
+  --dark-fg-subtle: #8a8884;
 
   --dark-primary: #a8b6d9;
   --dark-primary-foreground: #15161a;

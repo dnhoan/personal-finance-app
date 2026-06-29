@@ -1,5 +1,15 @@
 import type { Route } from "next";
-import { Wallet, Tags, Repeat, Flag, HandCoins, BadgeCheck, type LucideIcon } from "lucide-react";
+import {
+  Wallet,
+  Tags,
+  Repeat,
+  Flag,
+  HandCoins,
+  BadgeCheck,
+  FileSpreadsheet,
+  FileJson,
+  type LucideIcon,
+} from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { SettingsRow } from "@/features/settings/components/settings-row";
 import { SignOutButton } from "@/components/auth/sign-out-button";
@@ -68,6 +78,33 @@ export default async function SettingsPage() {
           </Card>
         </section>
       ))}
+
+      {/* Data export. Plain download links (not router rows) — the browser fetches
+          the attachment from the API route and saves it. The `download` attribute
+          lets the server-set Content-Disposition filename win. */}
+      <section className="flex flex-col gap-2">
+        <h2 className="pl-1 text-[11px] font-semibold uppercase tracking-wider text-fg-muted">
+          Dữ liệu
+        </h2>
+        <Card className="overflow-hidden p-0">
+          <a
+            href="/api/export/csv?entity=transactions"
+            download
+            className="flex min-h-[52px] items-center gap-3 px-4 py-3 text-fg transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+          >
+            <FileSpreadsheet size={20} className="shrink-0 text-fg-muted" aria-hidden="true" />
+            <span className="font-medium">Xuất giao dịch (CSV)</span>
+          </a>
+          <a
+            href="/api/export/json"
+            download
+            className="flex min-h-[52px] items-center gap-3 border-t border-border px-4 py-3 text-fg transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+          >
+            <FileJson size={20} className="shrink-0 text-fg-muted" aria-hidden="true" />
+            <span className="font-medium">Sao lưu toàn bộ (JSON)</span>
+          </a>
+        </Card>
+      </section>
 
       <section className="flex flex-col gap-3">
         <SignOutButton />

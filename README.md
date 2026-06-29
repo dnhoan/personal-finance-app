@@ -84,6 +84,22 @@ Daily renewal reminders are sent as email via Brevo's free SMTP relay (300 email
 
 Alerts are delivered to the rule owner's account email (`user.email`) — the address you signed in with — so there is no separate destination to configure.
 
+### Google OAuth
+
+Sign-in is Google OAuth gated by a single-email allowlist (`ALLOWED_EMAIL`). In the [Google Cloud Console](https://console.cloud.google.com/) → _APIs & Services → Credentials_ → OAuth 2.0 Client:
+
+- **Authorized redirect URI:** `${NEXT_PUBLIC_APP_URL}/api/auth/callback/google` (e.g. `https://<your-app>/api/auth/callback/google`; add `http://localhost:3000/api/auth/callback/google` for local dev).
+- Copy the client id/secret into `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`.
+
+### Install as an App (PWA)
+
+The app is an installable PWA.
+
+- **Android (Chrome):** the browser shows an install prompt automatically; tap _Install_ to add it to the home screen. It then launches standalone (no browser chrome).
+- **iOS (Safari):** iOS has no automatic prompt — use **Share → Add to Home Screen**.
+
+The service worker is built only in production (`next start` / deploy); it is disabled in `next dev` to avoid HMR collisions.
+
 ### Cron Setup (cron-job.org)
 
 Vercel Hobby has no built-in cron, so an external scheduler hits the renewal endpoint daily. In [cron-job.org](https://cron-job.org/):

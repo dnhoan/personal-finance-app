@@ -40,8 +40,8 @@ Owner only. Single-tenant. Gated by Google OAuth + email allowlist.
 
 - Locale: Vietnam — DD/MM/YYYY, 24h, Monday week-start.
 - Currency: VND only, `Intl.NumberFormat('vi-VN')` → `50.000 ₫`.
-- UI language: Vietnamese (Phase 1 MVP). English deferred to Phase 2+.
-- Online-only (no offline queue at MVP).
+- UI language: Vietnamese (MVP). English deferred to Phase 2+.
+- PWA installable: offline-capable via service worker (read-only auth routes cached, HTML navigations fallback to /offline)
 - Mobile-first responsive; desktop layout supported.
 - Auth: Google OAuth, email allowlist, single user.
 - Hosting: Vercel Hobby (free) + Neon free tier + cron-job.org free.
@@ -62,8 +62,28 @@ Owner only. Single-tenant. Gated by Google OAuth + email allowlist.
 - Generic account types at MVP (Bank, E-Wallet); specific apps (Vietcombank, Momo, ZaloPay) deferred.
 - Vercel cron disabled on free tier → external `cron-job.org` calls Vercel HTTPS endpoint.
 
+## MVP Completion Status
+
+All must-have features shipped as of 2026-06-30 (Phase 10):
+
+- ✅ Transactions (income, expense, transfer; quick-add; VND parser)
+- ✅ Accounts (cash, bank, credit card, e-wallet, debt, receivable types)
+- ✅ Categories (hierarchical, 10 seeded VN-aware)
+- ✅ Budgets (monthly per category, progress bars, rollover)
+- ✅ Recurring (RRULE, lazy materialization, edit one vs series)
+- ✅ Savings goals (virtual buckets, progress tracking)
+- ✅ Debts/loans (liability tracking, open→partial→settled lifecycle)
+- ✅ Reports (cash flow MoM, spending drill-down, net worth trend)
+- ✅ Data export (CSV + JSON, all entities, all-time)
+- ✅ Telegram alerts (daily renewal alerts, 3-day lead, configurable)
+- ✅ PWA (offline-capable service worker, manifest, icon set)
+- ✅ Accessibility (WCAG AA audit, axe-core scan, error boundaries)
+
+Success criteria: all 5 criteria met (transaction entry ≤3 taps, Telegram alerts within 24h, dashboard overspending visible, export downloadable, OAuth + allowlist sign-in).
+
 ## References
 
 - Architecture: `docs/system-architecture.md`
+- Changelog: `docs/project-changelog.md`
 - Research reports: `plans/reports/`
-- Implementation plan: `plans/<timestamp-slug>/` (produced by `/ck:plan --hard`)
+- Implementation phases: `plans/` directory
