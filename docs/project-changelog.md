@@ -50,7 +50,59 @@
 
 ---
 
-## Phase 8: UI/UX Improvements (2026-06-27)
+## Phase 8: Dashboard & Reports UI/UX Improvements (2026-06-29)
+
+### Features Shipped
+
+**Report Polish & Loading States** — Smooth data fetch UX with skeletons and empty states
+
+- Loading skeletons: `loading.tsx` on dashboard + all three report pages; `skeleton.tsx` primitive for consistent visual
+- Empty states: shared `empty-state.tsx` component with calm message + CTA to Accounts setup (first-run experience)
+- Report page structure: `report-page-header.tsx` with page title + human-readable range label (via `formatRangeLabel()`)
+
+**Month-Over-Month Deltas** — Insight layer for spending and cash flow
+
+- New helper `src/features/reports/lib/delta.ts`: `computeDelta(current, previous)` for MoM calculations with income/expense coloring
+- Updated queries: `netCashFlowMoM()` returns current MTD + previous full month; `spendingTotalForRange()` supports custom range delta
+- Dashboard hero + hero-net-cash-flow card now display income/expense MoM delta with color coding
+- Spending report: MoM delta on the donut breakdown
+- Cash-flow report: MoM delta on the main chart
+
+**Net-Worth Trend** — Historical net worth via derived-on-read architecture
+
+- New query `src/features/reports/net-worth-trend-query.ts`: `netWorthTrend(userId, months)` computed purely on read from transaction history via single windowed SQL query (no snapshot table, no migration, no backfill). Current-month output verified equal to `netWorthSnapshot().net` for sign convention consistency.
+- Dashboard net-worth card: mini inline sparkline + MoM delta showing current vs previous month
+- Net-worth report: 12-month area chart with sr-only data table; reuses `chart-theme` + reduced-motion support
+- Known limitation: accounts use current status/existence across entire window (single-user scale acceptable)
+
+**Range Presets Enhancements** (`lib/range-presets.ts`)
+
+- `formatRangeLabel()` — Human-readable range description (e.g. "Jun 1–Jun 29, 2026")
+- `previousRange()` — Resolve preceding equivalent period for delta calculation (MTD → last month, etc.)
+- Exported `MAX_MONTHS_BACK` constant (24 months) — enforced DoS protection + hard cap for trend queries
+
+**Shared Report Primitives** (`src/features/reports/components/`)
+
+- `stat-delta.tsx` — Month-over-month delta display with semantic coloring (income green, expense red)
+- `section-title.tsx` — Consistent report section heading styling
+- `empty-state.tsx` — First-run CTA to account setup
+- `skeleton.tsx` — Loading placeholder matching final content height/width
+- `report-page-header.tsx` — Page title + resolved range label
+
+### Tests
+
+- Added: `tests/reports/net-worth-trend-query.test.ts` — verifies current-month trend output equals `netWorthSnapshot()` net
+- All: ✅ typecheck, lint, build pass; 14 unit + 5 live-Neon integration tests green
+
+### Notes
+
+- Derived-on-read net-worth trend: zero drift risk, no schema maintenance, single round-trip query. Validation decision from plan session.
+- MoM delta basis: MTD vs full previous month (early-month caveat noted in UX copy)
+- All charts retain sr-only `ChartDataTable` equivalents for WCAG accessibility parity
+
+---
+
+## Phase 8: UI/UX Chrome & Navigation (2026-06-27)
 
 ### Features Shipped
 

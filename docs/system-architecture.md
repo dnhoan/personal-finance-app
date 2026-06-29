@@ -2,7 +2,7 @@
 
 Personal finance management web PWA. Single-user, Vietnam locale, VND-only, Vietnamese UI (English deferred Phase 2+).
 
-Last updated: 2026-06-27 (Phase 8 reports & dashboard shipped).
+Last updated: 2026-06-29 (Phase 8 UI/UX improvements + net-worth trend shipped).
 
 ## Tech Stack (Locked)
 
@@ -84,15 +84,22 @@ Reports module (`src/features/reports/`) provides financial insights via time-sc
 **Core Queries** (`queries.ts`)
 
 - `netCashFlowMtd()` — Current month inflow vs. outflow (transfers excluded), used in hero card
+- `netCashFlowMoM()` — Current and previous month cash flows for delta calculation
 - `netWorthSnapshot()` — Aggregate account balances grouped by type (accounts, debts, receivables), used in net-worth card
 - `topCategoriesThisMonth()` — Top 5 expense categories by sum this month, used in top-categories card
 - `upcomingRenewals()` — Next 30 days of due recurring transactions, used in upcoming-renewals card
 - `cashFlowSeries()` — Daily/weekly/monthly income vs. expense historical series (time-range scoped), feeds cash-flow-chart
 - `cronHeartbeat()` — Reads `cron_state.last_renewal_check_at`, used to calculate staleness for cron-status-badge
 
+**Net-Worth Trend** (`net-worth-trend-query.ts` & `lib/delta.ts`)
+
+- `netWorthTrend(userId, months)` — Historical net worth derived purely on read from transaction history. Per-month balance is computed as `initial_balance` + cumulative signed transactions up to that month-end, grouped by account type per the same convention as `netWorthSnapshot()` (assets/liabilities). **Key architecture decision:** no snapshot table, migration, or backfill — fully derived via a single windowed SQL query (`generate_series` of month-ends × per-account cumulative sums). The current-month output is verified to equal `netWorthSnapshot().net` in tests to ensure sign convention consistency. Known limitation: accounts use their current status across the entire window (acceptable for single-user scale).
+- `computeDelta(current, previous)` — Pure helper to calculate month-over-month deltas (income/expense colored)
+
 **Spending Breakdown** (`spending-by-category-query.ts`)
 
 - `spendingByCategoryQuery()` — Category-level expense aggregation within a date range
+- `spendingTotalForRange()` — Total spending for a given date range (used for MoM delta calculation)
 - Supports drill-down: user selects donut slice to focus on sub-category transactions
 - "Khác" (Other) category cap: limits chart to top 8 categories + rolls remaining into "Other"
 - URL-state drill: `?category=slug` persists drill-down selection for shareable reports
@@ -100,17 +107,28 @@ Reports module (`src/features/reports/`) provides financial insights via time-sc
 **Time-Range Presets** (`lib/range-presets.ts`)
 
 - Predefined ranges: this month (mtd), last month, last 3 months, last 12 months, custom date picker
-- DoS protection: enforced 24-month maximum span to prevent expensive queries on large date ranges
+- `formatRangeLabel()` — Human-readable range description (e.g. "Jun 1–Jun 29, 2026")
+- `previousRange()` — Resolve preceding equivalent period for delta calculation (e.g. last month when showing MTD)
+- `MAX_MONTHS_BACK` — Exported constant (24 months) enforced as DoS protection + hard cap for trend queries
 - User-selectable via range-picker component (dropdown + custom date inputs)
+
+**Shared Report Primitives** (`src/features/reports/components/`)
+
+- `stat-delta.tsx` — Month-over-month delta display with income/expense coloring
+- `section-title.tsx` — Report section heading with consistent styling
+- `empty-state.tsx` — First-run state with CTA linking to account setup
+- `skeleton.tsx` — Loading placeholder for report data
+- `report-page-header.tsx` — Page title + range label for report surfaces
 
 **Chart Components** (`components/`)
 
-- `hero-net-cash-flow.tsx` — MTD cash flow hero with large "XYZ VNĐ" display, Fraunces 40 weight
-- `net-worth-card.tsx` — Net worth snapshot with account breakdown (spending/debt/receivable split)
+- `hero-net-cash-flow.tsx` — MTD cash flow hero with large "XYZ VNĐ" display, Fraunces 40 weight; includes MoM delta
+- `net-worth-card.tsx` — Net worth snapshot with account breakdown (spending/debt/receivable split); includes mini sparkline + MoM delta
 - `top-categories-card.tsx` — Top 5 expense categories bar chart
 - `upcoming-renewals-card.tsx` — Upcoming transactions list with renewal dates
 - `cash-flow-chart.tsx` — Recharts ComposedChart (income bars + expense line) over time
-- `spending-donut.tsx` — Recharts PieChart with drill-down + URL-state persistence
+- `spending-donut.tsx` — Recharts PieChart with drill-down + URL-state persistence; legend shows amount + %
+- `net-worth-trend-chart.tsx` — Recharts AreaChart of 12-month net-worth history with sr-only data table
 - `range-picker.tsx` — Dropdown presets + custom date input
 - `report-tabs.tsx` — Navigation between /reports/cash-flow, /reports/spending, /reports/net-worth
 - `chart-theme.ts` — CSS-var token definitions (--color-income, --color-expense, etc.) + reduced-motion support
@@ -150,7 +168,7 @@ src/
     recurring/          # Bill/subscription materialization
     goals/              # Savings buckets
     debts/              # Liability/asset tracking
-    reports/            # Analytics queries + chart components
+    reports/            # Analytics queries + chart components + net-worth trend
     dashboard/          # Dashboard layout + cron health
   lib/
     auth.ts             # Better Auth + allowlist

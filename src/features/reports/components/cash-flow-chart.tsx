@@ -3,6 +3,7 @@ import {
   ComposedChart,
   Area,
   Line,
+  ReferenceLine,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -14,14 +15,19 @@ import { CHART_COLORS, compactVnd, reducedMotion } from "./chart-theme";
 import type { CashFlowBucket } from "../queries";
 import type { Granularity } from "../lib/range-presets";
 
-// Income/expense areas + net line over time. Colors come from CSS vars so dark
-// mode flips them automatically. Bucket labels formatted per granularity.
+// Income/expense areas + net line over time, with an optional dashed reference
+// line at the average net so a bucket reads against its own trend. Colors come
+// from CSS vars so dark mode flips them automatically. Labels formatted per
+// granularity.
 export function CashFlowChart({
   data,
   granularity,
+  avgNet,
 }: {
   data: CashFlowBucket[];
   granularity: Granularity;
+  /** Average net per bucket; rendered as a dashed reference line when provided. */
+  avgNet?: number;
 }) {
   const animationDuration = reducedMotion() ? 0 : 400;
 
@@ -34,8 +40,9 @@ export function CashFlowChart({
   // plus the net line which can go negative). Recharts' auto domain can settle on
   // a floor of 0 and let a negative net line overflow below the plot rectangle;
   // padding both ends by 10% keeps strokes inside the rounded card. Always include
-  // 0 so the area baselines sit on a real gridline.
+  // 0 so the area baselines sit on a real gridline, and the avg line if present.
   const values = data.flatMap((b) => [b.income, b.expense, b.net, 0]);
+  if (avgNet !== undefined) values.push(avgNet);
   const dataMin = Math.min(...values);
   const dataMax = Math.max(...values);
   const pad = Math.max((dataMax - dataMin) * 0.1, 1);
@@ -106,6 +113,14 @@ export function CashFlowChart({
             fill="url(#cf-expense)"
             animationDuration={animationDuration}
           />
+          {avgNet !== undefined && (
+            <ReferenceLine
+              y={avgNet}
+              stroke={CHART_COLORS.axis}
+              strokeDasharray="4 4"
+              ifOverflow="extendDomain"
+            />
+          )}
           <Line
             type="linear"
             dataKey="net"

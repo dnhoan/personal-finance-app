@@ -1,21 +1,25 @@
 import Link from "next/link";
 import type { Route } from "next";
+import { Wallet } from "lucide-react";
 import { requireSession } from "@/lib/auth-session";
 import { listTransactions } from "@/features/transactions/queries";
 import { listActiveAccounts } from "@/features/accounts/queries";
 import { listCategoriesFlat } from "@/features/categories/queries";
 import { listActiveGoals } from "@/features/goals/queries";
 import {
-  netCashFlowMtd,
+  netCashFlowMoM,
   netWorthSnapshot,
   topCategoriesThisMonth,
   upcomingRenewals,
   cronHeartbeat,
 } from "@/features/reports/queries";
+import { netWorthTrend } from "@/features/reports/net-worth-trend-query";
 import { HeroNetCashFlow } from "@/features/reports/components/hero-net-cash-flow";
 import { NetWorthCard } from "@/features/reports/components/net-worth-card";
 import { TopCategoriesCard } from "@/features/reports/components/top-categories-card";
 import { UpcomingRenewalsCard } from "@/features/reports/components/upcoming-renewals-card";
+import { SectionTitle } from "@/features/reports/components/section-title";
+import { EmptyState } from "@/features/reports/components/empty-state";
 import { CronStatusBadge } from "@/features/dashboard/components/cron-status-badge";
 import { TransactionList } from "@/features/transactions/components/transaction-list";
 import { QuickAddLauncher } from "@/features/transactions/components/quick-add-launcher";
@@ -27,18 +31,33 @@ export default async function DashboardPage() {
 
   // All independent reads fan out in one round-trip-bounded batch so total
   // latency ≈ the slowest query, not the sum (red-team F14).
-  const [flow, netWorth, topCats, renewals, heartbeat, recent, accounts, categories, goals] =
-    await Promise.all([
-      netCashFlowMtd(user.id),
-      netWorthSnapshot(user.id),
-      topCategoriesThisMonth(user.id, 3),
-      upcomingRenewals(user.id, 7),
-      cronHeartbeat(),
-      listTransactions(user.id, { limit: 8 }),
-      listActiveAccounts(user.id),
-      listCategoriesFlat(user.id),
-      listActiveGoals(user.id),
-    ]);
+  const [
+    flow,
+    netWorth,
+    netWorthSpark,
+    topCats,
+    renewals,
+    heartbeat,
+    recent,
+    accounts,
+    categories,
+    goals,
+  ] = await Promise.all([
+    netCashFlowMoM(user.id),
+    netWorthSnapshot(user.id),
+    netWorthTrend(user.id, 7),
+    topCategoriesThisMonth(user.id, 3),
+    upcomingRenewals(user.id, 7),
+    cronHeartbeat(),
+    listTransactions(user.id, { limit: 8 }),
+    listActiveAccounts(user.id),
+    listCategoriesFlat(user.id),
+    listActiveGoals(user.id),
+  ]);
+
+  // First run: no accounts AND no transactions. Gate on accounts too so a user
+  // who deleted every transaction but kept an account still sees the metric layout.
+  const firstRun = accounts.length === 0 && recent.length === 0;
 
   return (
     <div className="flex flex-col gap-5">
@@ -46,30 +65,48 @@ export default async function DashboardPage() {
         <h1 className="text-2xl font-semibold text-fg" style={{ fontFamily: "var(--font-serif)" }}>
           Trang chủ
         </h1>
-        <Link href={"/reports/cash-flow" as Route} className="text-sm font-medium text-primary">
-          Báo cáo
-        </Link>
+        {!firstRun && (
+          <Link href={"/reports/cash-flow" as Route} className="text-sm font-medium text-primary">
+            Báo cáo
+          </Link>
+        )}
       </div>
 
-      <HeroNetCashFlow flow={flow} />
+      {firstRun ? (
+        <EmptyState
+          icon={<Wallet size={32} strokeWidth={1.5} />}
+          title="Bắt đầu theo dõi tài chính"
+          description="Thêm tài khoản đầu tiên để ghi lại thu chi và xem dòng tiền của bạn."
+          cta={{ href: "/accounts" as Route, label: "Thêm tài khoản" }}
+        />
+      ) : (
+        <>
+          <HeroNetCashFlow flow={flow.current} previous={flow.previous} />
 
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <NetWorthCard snapshot={netWorth} />
-        <TopCategoriesCard categories={topCats} />
-        <UpcomingRenewalsCard renewals={renewals} />
-      </section>
+          <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <NetWorthCard snapshot={netWorth} trend={netWorthSpark} />
+            <TopCategoriesCard categories={topCats} />
+            <UpcomingRenewalsCard renewals={renewals} />
+          </section>
 
-      <section className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-fg">Giao dịch gần đây</h2>
-          <Link href={"/transactions" as Route} className="text-sm font-medium text-primary">
-            Xem tất cả
-          </Link>
-        </div>
-        <TransactionList transactions={recent} accounts={accounts} />
-      </section>
+          <section className="flex flex-col gap-2">
+            <SectionTitle
+              action={
+                <Link href={"/transactions" as Route} className="text-sm font-medium text-primary">
+                  Xem tất cả
+                </Link>
+              }
+            >
+              Giao dịch gần đây
+            </SectionTitle>
+            <TransactionList transactions={recent} accounts={accounts} />
+          </section>
+        </>
+      )}
 
-      <CronStatusBadge lastCheckedAt={heartbeat.lastCheckedAt} />
+      <div className="mt-2 border-t border-border pt-4">
+        <CronStatusBadge lastCheckedAt={heartbeat.lastCheckedAt} />
+      </div>
 
       <QuickAddLauncher accounts={accounts} categories={categories} goals={goals} />
     </div>

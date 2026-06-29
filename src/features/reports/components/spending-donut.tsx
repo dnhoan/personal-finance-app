@@ -118,7 +118,10 @@ export function SpendingDonut({ breakdown }: { breakdown: SpendingBreakdown }) {
                     />
                     <span className="truncate text-fg">{s.name}</span>
                   </span>
-                  <span className="shrink-0 font-semibold tabular-nums text-fg-muted">{pct}%</span>
+                  <span className="flex shrink-0 items-center gap-2 tabular-nums">
+                    <span className="font-semibold text-fg">{formatVnd(s.total)}</span>
+                    <span className="text-fg-muted">{pct}%</span>
+                  </span>
                 </button>
               </li>
             );

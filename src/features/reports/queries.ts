@@ -26,24 +26,58 @@ function ictDate(d: Date): string {
 // TZ math from occurred_at. Day buckets cast occurred_at into ICT once.
 
 const CURRENT_MONTH_ICT = sql`date_trunc('month', now() AT TIME ZONE 'Asia/Ho_Chi_Minh')::date`;
+const PREVIOUS_MONTH_ICT = sql`(date_trunc('month', now() AT TIME ZONE 'Asia/Ho_Chi_Minh') - interval '1 month')::date`;
 
 export type NetCashFlow = { income: number; expense: number; net: number };
 
-// Hero metric: income − expenses for the current ICT month, transfers excluded.
-export async function netCashFlowMtd(userId: string): Promise<NetCashFlow> {
-  const rows = await db.execute<{ income: string; expense: string }>(sql`
+/**
+ * Current vs previous ICT-month net cash flow in one round-trip.
+ *
+ * Delta basis: `current` is month-TO-DATE (the live month, partial), `previous`
+ * is the FULL previous calendar month. Early in a month the MoM delta therefore
+ * reads large-negative (partial vs whole) — the StatDelta copy frames it as a
+ * plain "so với tháng trước" comparison, no false precision.
+ */
+export type NetCashFlowMoM = { current: NetCashFlow; previous: NetCashFlow };
+
+function toFlow(income: string | undefined, expense: string | undefined): NetCashFlow {
+  const i = Number(income ?? 0);
+  const e = Number(expense ?? 0);
+  return { income: i, expense: e, net: i - e };
+}
+
+// Hero metric source: income − expenses for the current AND previous ICT month,
+// transfers excluded. Both months come back in a single query (two FILTER sets on
+// the indexed `occurred_month_ict`) so the dashboard keeps its single Promise.all
+// fan-out with no extra latency.
+export async function netCashFlowMoM(userId: string): Promise<NetCashFlowMoM> {
+  const rows = await db.execute<{
+    cur_income: string;
+    cur_expense: string;
+    prev_income: string;
+    prev_expense: string;
+  }>(sql`
     SELECT
-      COALESCE(SUM(amount) FILTER (WHERE kind = 'income'), 0)::text  AS income,
-      COALESCE(SUM(amount) FILTER (WHERE kind = 'expense'), 0)::text AS expense
+      COALESCE(SUM(amount) FILTER (WHERE kind = 'income'  AND occurred_month_ict = ${CURRENT_MONTH_ICT}), 0)::text  AS cur_income,
+      COALESCE(SUM(amount) FILTER (WHERE kind = 'expense' AND occurred_month_ict = ${CURRENT_MONTH_ICT}), 0)::text AS cur_expense,
+      COALESCE(SUM(amount) FILTER (WHERE kind = 'income'  AND occurred_month_ict = ${PREVIOUS_MONTH_ICT}), 0)::text  AS prev_income,
+      COALESCE(SUM(amount) FILTER (WHERE kind = 'expense' AND occurred_month_ict = ${PREVIOUS_MONTH_ICT}), 0)::text AS prev_expense
     FROM transactions
     WHERE user_id = ${userId}
       AND kind <> 'transfer'
-      AND occurred_month_ict = ${CURRENT_MONTH_ICT}
+      AND occurred_month_ict IN (${CURRENT_MONTH_ICT}, ${PREVIOUS_MONTH_ICT})
   `);
   const r = rows.rows[0];
-  const income = Number(r?.income ?? 0);
-  const expense = Number(r?.expense ?? 0);
-  return { income, expense, net: income - expense };
+  return {
+    current: toFlow(r?.cur_income, r?.cur_expense),
+    previous: toFlow(r?.prev_income, r?.prev_expense),
+  };
+}
+
+// Current-month-only net cash flow. Delegates to netCashFlowMoM (same single
+// query) so the two stay in lockstep — callers that don't need the prior month.
+export async function netCashFlowMtd(userId: string): Promise<NetCashFlow> {
+  return (await netCashFlowMoM(userId)).current;
 }
 
 export type NetWorthSnapshot = {
