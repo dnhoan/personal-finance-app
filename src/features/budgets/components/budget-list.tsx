@@ -59,16 +59,17 @@ export function BudgetList({
           <p className="text-sm text-fg-subtle">Thêm hạn mức hoặc sao chép từ tháng trước.</p>
         </div>
       ) : (
-        <Card className="divide-y divide-border overflow-hidden">
-          {rows.map((row) => (
-            <BudgetRow key={row.categoryId} row={row} onEdit={() => openEdit(row)} />
-          ))}
-        </Card>
+        <>
+          <Card className="divide-y border border-border divide-border overflow-hidden">
+            {rows.map((row) => (
+              <BudgetRow key={row.categoryId} row={row} onEdit={() => openEdit(row)} />
+            ))}
+          </Card>
+          <p className="text-center text-[12px] text-fg-subtle">
+            Nhấn vào hàng để chỉnh sửa hạn mức hoặc bật chuyển tháng.
+          </p>
+        </>
       )}
-
-      <p className="text-center text-[12px] text-fg-subtle">
-        Nhấn vào hàng để chỉnh sửa hạn mức hoặc bật chuyển tháng.
-      </p>
 
       <BudgetFormSheet
         open={sheetOpen}

@@ -26,7 +26,7 @@ export function TransactionSummary({ summary }: { summary: TxSummary }) {
   const netColor = net > 0 ? "text-income" : net < 0 ? "text-expense" : "text-fg-muted";
 
   return (
-    <Card className="grid grid-cols-3 gap-3 p-4">
+    <Card className="grid grid-cols-3 gap-3 p-4 border border-border">
       <Cell label="Thu" text={`+ ${formatVnd(summary.income)}`} color="text-income" />
       <Cell label="Chi" text={`${MINUS} ${formatVnd(summary.expense)}`} color="text-expense" />
       <Cell label="Còn lại" text={netText} color={netColor} />
