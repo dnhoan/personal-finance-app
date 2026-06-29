@@ -89,7 +89,7 @@ export function RecurringList({
             onClick={() => setFilter(t.value)}
             className={cn(
               "rounded-full px-3.5 py-2 text-[13px] font-semibold transition-colors",
-              filter === t.value ? "bg-surface text-fg shadow-sm" : "text-fg-muted",
+              filter === t.value ? "bg-surface text-fg shadow-sm" : "text-fg-muted hover:text-fg",
             )}
           >
             {t.label}

@@ -63,7 +63,7 @@ export function DebtList({ view }: { view: DebtsView }) {
             onClick={() => setFilter(s.key)}
             className={cn(
               "rounded-full px-3.5 py-2 text-[13px] font-semibold transition-colors",
-              filter === s.key ? "bg-surface text-fg shadow-sm" : "text-fg-muted",
+              filter === s.key ? "bg-surface text-fg shadow-sm" : "text-fg-muted hover:text-fg",
             )}
           >
             {s.label}

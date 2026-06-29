@@ -105,7 +105,7 @@ export function RruleBuilderFields({
             spellCheck={false}
             placeholder={"DTSTART:20260601T120000Z\nRRULE:FREQ=MONTHLY;BYMONTHDAY=1"}
             aria-label="Chuỗi RRULE"
-            className="w-full rounded-md border border-border bg-surface px-3 py-2 font-mono text-[12px] text-fg focus:outline-none focus:ring-2 focus:ring-ring"
+            className="w-full rounded-md border border-border bg-surface px-3 py-2 font-mono text-[12px] text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
           <p className="text-[12px] text-fg-subtle">Nhập chuỗi RFC 5545 (RRULE).</p>
         </div>
@@ -120,7 +120,9 @@ export function RruleBuilderFields({
                 onClick={() => set({ freq: f.value })}
                 className={cn(
                   "min-h-[40px] rounded-sm text-sm font-medium transition-colors",
-                  state.freq === f.value ? "bg-surface text-fg shadow-sm" : "text-fg-muted",
+                  state.freq === f.value
+                    ? "bg-surface text-fg shadow-sm"
+                    : "text-fg-muted hover:text-fg",
                 )}
               >
                 {f.label}
@@ -154,7 +156,7 @@ export function RruleBuilderFields({
                   className={cn(
                     "min-h-[36px] min-w-[40px] rounded-full border px-2 text-[13px] font-medium transition-colors",
                     state.byWeekday.includes(w)
-                      ? "border-primary bg-primary text-white"
+                      ? "border-primary bg-primary text-primary-foreground"
                       : "border-border text-fg-muted",
                   )}
                 >

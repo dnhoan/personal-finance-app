@@ -36,7 +36,7 @@ export function KindToggle({
             onClick={() => onChange(v)}
             className={cn(
               "flex min-h-[44px] items-center justify-center gap-1.5 rounded-sm text-sm font-medium transition-colors",
-              active ? cn("bg-surface shadow-sm", activeText) : "text-fg-muted",
+              active ? cn("bg-surface shadow-sm", activeText) : "text-fg-muted hover:text-fg",
             )}
           >
             <Icon size={18} aria-hidden="true" />

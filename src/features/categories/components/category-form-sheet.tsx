@@ -128,7 +128,7 @@ export function CategoryFormSheet({
                     }}
                     className={cn(
                       "min-h-[40px] rounded-sm text-sm font-medium transition-colors",
-                      kind === k ? "bg-surface text-fg shadow-sm" : "text-fg-muted",
+                      kind === k ? "bg-surface text-fg shadow-sm" : "text-fg-muted hover:text-fg",
                     )}
                   >
                     {k === "expense" ? "Chi tiêu" : "Thu nhập"}
