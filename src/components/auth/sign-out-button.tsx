@@ -17,7 +17,7 @@ export function SignOutButton() {
         setPending(true);
         void signOutWithCacheClear();
       }}
-      className="flex min-h-[64px] w-full touch-manipulation items-center gap-3 rounded-lg border bg-card p-4 text-left text-danger shadow-sm transition-colors [-webkit-tap-highlight-color:transparent] hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-60"
+      className="flex min-h-[64px] w-full border border-border touch-manipulation items-center gap-3 rounded-lg bg-card p-4 text-left text-danger shadow-sm transition-colors [-webkit-tap-highlight-color:transparent] hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-60"
     >
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-expense-soft text-danger">
         <LogOut size={20} strokeWidth={1.75} aria-hidden="true" />

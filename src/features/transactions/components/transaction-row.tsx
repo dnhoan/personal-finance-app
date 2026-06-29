@@ -9,9 +9,9 @@ import {
   HandCoins,
   ArrowDownLeft,
   ArrowLeftRight,
-  Tag,
   type LucideIcon,
 } from "lucide-react";
+import { getCategoryIcon } from "@/features/categories/category-icons";
 import { formatVnd } from "@/lib/vnd";
 import { formatDateTime, formatTime } from "@/lib/locale";
 import { cn } from "@/lib/utils";
@@ -98,7 +98,11 @@ export function TransactionRow({
   if (removed) return null;
 
   const isTransfer = tx.kind === "transfer";
-  const Icon = isTransfer ? ArrowLeftRight : tx.categoryName ? Tag : ACCOUNT_ICON[tx.accountType];
+  const Icon = isTransfer
+    ? ArrowLeftRight
+    : tx.categoryName
+      ? getCategoryIcon(tx.categoryIcon)
+      : ACCOUNT_ICON[tx.accountType];
   const abs = Math.abs(tx.amount);
   const amountText = isTransfer
     ? formatVnd(abs)
