@@ -9,10 +9,14 @@ const envSchema = z.object({
     .string()
     .email()
     .transform((v) => v.toLowerCase()),
-  BOT_TOKEN: z.string().min(32),
-  TELEGRAM_OWNER_USER_ID: z.string().regex(/^\d+$/, "must be numeric"),
-  TELEGRAM_DM_CHAT_ID: z.string().regex(/^-?\d+$/, "must be numeric"),
-  WEBHOOK_SECRET: z.string().min(32),
+  // Brevo SMTP relay credentials for outbound renewal-alert emails.
+  BREVO_SMTP_USER: z.string().min(1),
+  BREVO_SMTP_KEY: z.string().min(1),
+  ALERT_FROM_EMAIL: z.string().email(),
+  ALERT_TO_EMAIL: z
+    .string()
+    .email()
+    .transform((v) => v.toLowerCase()),
   CRON_SECRET: z.string().min(32),
   NEXT_PUBLIC_APP_URL: z.string().url(),
 });

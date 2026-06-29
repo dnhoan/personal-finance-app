@@ -6,18 +6,18 @@ A single-user personal finance management **web PWA** for tracking VND finances 
 
 ## Features (MVP scope)
 
-| Feature             | Notes                                                                                     |
-| ------------------- | ----------------------------------------------------------------------------------------- |
-| **Transactions**    | Income / expense / transfer; bottom-sheet quick-add; VND shortcut parser (`50k`, `1.5tr`) |
-| **Accounts**        | Cash, Bank, Credit Card, E-Wallet                                                         |
-| **Categories**      | Hierarchical; VN-aware seeded buckets                                                     |
-| **Budgets**         | Monthly per category; progress bars; over-budget indicator; rollover toggle               |
-| **Recurring**       | RRULE rules; lazy next-instance generation; edit one vs series                            |
-| **Savings goals**   | Virtual buckets within accounts; target amount + date                                     |
-| **Debts / loans**   | Liability type; lifecycle Open → Partial → Settled                                        |
-| **Reports**         | Cash flow, spending by category (drill-down), net worth                                   |
-| **Data export**     | CSV + JSON, all entities                                                                  |
-| **Telegram alerts** | Daily DM for upcoming renewals (configurable lead time)                                   |
+| Feature           | Notes                                                                                     |
+| ----------------- | ----------------------------------------------------------------------------------------- |
+| **Transactions**  | Income / expense / transfer; bottom-sheet quick-add; VND shortcut parser (`50k`, `1.5tr`) |
+| **Accounts**      | Cash, Bank, Credit Card, E-Wallet                                                         |
+| **Categories**    | Hierarchical; VN-aware seeded buckets                                                     |
+| **Budgets**       | Monthly per category; progress bars; over-budget indicator; rollover toggle               |
+| **Recurring**     | RRULE rules; lazy next-instance generation; edit one vs series                            |
+| **Savings goals** | Virtual buckets within accounts; target amount + date                                     |
+| **Debts / loans** | Liability type; lifecycle Open → Partial → Settled                                        |
+| **Reports**       | Cash flow, spending by category (drill-down), net worth                                   |
+| **Data export**   | CSV + JSON, all entities                                                                  |
+| **Email alerts**  | Daily email for upcoming renewals via Brevo SMTP (configurable lead time)                 |
 
 **Out of scope (Phase 2+):** receipt OCR, bank statement import, SMS/email parsing, multi-currency, multi-user, investment tracking, English UI.
 
@@ -27,7 +27,7 @@ A single-user personal finance management **web PWA** for tracking VND finances 
 - **Styling:** Tailwind CSS v4 (CSS-first `@theme`) + [shadcn/ui](https://ui.shadcn.com/) (Radix primitives)
 - **Database:** [Neon](https://neon.tech/) Postgres (serverless) + [Drizzle ORM](https://orm.drizzle.team/) / drizzle-kit
 - **Auth:** Better Auth — Google OAuth gated by email allowlist (single tenant)
-- **Notifications:** Telegram Bot API
+- **Notifications:** Email via Nodemailer over [Brevo](https://www.brevo.com/) SMTP relay
 - **Testing:** [Vitest](https://vitest.dev/) (unit) + [Playwright](https://playwright.dev/) (e2e)
 - **Tooling:** ESLint 9, Prettier, Husky + lint-staged (pre-commit typecheck)
 - **Hosting:** Vercel Hobby + Neon free tier + [cron-job.org](https://cron-job.org/) (external cron)
@@ -38,7 +38,7 @@ A single-user personal finance management **web PWA** for tracking VND finances 
 
 - Node.js 20+
 - A [Neon](https://neon.tech/) Postgres database (Singapore region recommended)
-- Google OAuth credentials & a Telegram bot token (for auth and alerts)
+- Google OAuth credentials & a free [Brevo](https://www.brevo.com/) account (SMTP relay for email alerts)
 
 ### Setup
 
@@ -63,15 +63,44 @@ App runs at [http://localhost:3000](http://localhost:3000).
 
 All variables in `.env.example` are required. The app validates them at startup via Zod (`src/lib/env.ts`) and refuses to boot if any are missing.
 
-| Variable                                                       | Purpose                                  |
-| -------------------------------------------------------------- | ---------------------------------------- |
-| `DATABASE_URL`                                                 | Neon Postgres connection string          |
-| `BETTER_AUTH_SECRET`                                           | Auth signing secret (32+ chars)          |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`                    | Google OAuth                             |
-| `ALLOWED_EMAIL`                                                | The single allowlisted owner email       |
-| `BOT_TOKEN` / `TELEGRAM_OWNER_USER_ID` / `TELEGRAM_DM_CHAT_ID` | Telegram alerts                          |
-| `WEBHOOK_SECRET` / `CRON_SECRET`                               | Webhook + cron endpoint auth (32+ chars) |
-| `NEXT_PUBLIC_APP_URL`                                          | Public app URL                           |
+| Variable                                    | Purpose                             |
+| ------------------------------------------- | ----------------------------------- |
+| `DATABASE_URL`                              | Neon Postgres connection string     |
+| `BETTER_AUTH_SECRET`                        | Auth signing secret (32+ chars)     |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth                        |
+| `ALLOWED_EMAIL`                             | The single allowlisted owner email  |
+| `BREVO_SMTP_USER` / `BREVO_SMTP_KEY`        | Brevo SMTP relay credentials        |
+| `ALERT_FROM_EMAIL` / `ALERT_TO_EMAIL`       | Verified sender + destination inbox |
+| `CRON_SECRET`                               | Cron endpoint auth (32+ chars)      |
+| `NEXT_PUBLIC_APP_URL`                       | Public app URL                      |
+
+### Email Alerts (Brevo SMTP)
+
+Daily renewal reminders are sent as email via Brevo's free SMTP relay (300 emails/day — far above a single user's needs). One-time setup:
+
+1. Create a free [Brevo](https://www.brevo.com/) account.
+2. **Verify a single sender** — Senders → _Add a sender_ → confirm via the email Brevo sends. This can be your own Gmail; no domain or DNS is required. Use that verified address as `ALERT_FROM_EMAIL`. Brevo rejects sends from unverified senders.
+3. SMTP & API → generate an **SMTP key** → set `BREVO_SMTP_USER` (your login email) and `BREVO_SMTP_KEY`.
+4. Set `ALERT_TO_EMAIL` to the inbox that should receive alerts.
+
+### Cron Setup (cron-job.org)
+
+Vercel Hobby has no built-in cron, so an external scheduler hits the renewal endpoint daily. In [cron-job.org](https://cron-job.org/):
+
+- **URL:** `https://<your-app>/api/cron/renewal-check`
+- **Method:** `POST`
+- **Header:** `Authorization: Bearer <CRON_SECRET>`
+- **Schedule:** `0 9 * * *` with timezone `Asia/Ho_Chi_Minh` (09:00 ICT daily)
+
+The endpoint is idempotent (`notified_at` is date-keyed), so extra fires within the same day are no-ops. The dashboard surfaces a heartbeat badge from `cron_state.last_renewal_check_at` so a silently-broken cron is visible.
+
+Smoke test after deploy:
+
+```bash
+curl -X POST https://<your-app>/api/cron/renewal-check \
+  -H "Authorization: Bearer <CRON_SECRET>"
+# → {"processed":N,"sent":N,"claimed_but_failed":N}
+```
 
 ## Scripts
 
@@ -117,7 +146,7 @@ e2e/ · tests/            # Playwright & Vitest suites
 - [x] **Phase 3** — Database schema & core entities
 - [x] **Phase 4** — Transactions, accounts, quick-add (VND parser, atomic transfers)
 - [ ] **Phase 5** — Budgets, recurring, goals, debts
-- [ ] **Phase 6** — Reports, export, Telegram alerts
+- [ ] **Phase 6** — Reports, export, email alerts
 - [x] **CI/CD & Deploy** — GitHub Actions gates (lint·typecheck·migrate-check·unit·build·gitleaks), Vercel Git-integration deploy, gated Neon prod migrations, runbook ([`docs/deployment-guide.md`](docs/deployment-guide.md)). _Live account setup pending — see runbook §2._
 
 See [`docs/project-overview-pdr.md`](docs/project-overview-pdr.md) for full requirements and [`docs/system-architecture.md`](docs/system-architecture.md) for architecture.
