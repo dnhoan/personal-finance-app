@@ -1,7 +1,8 @@
 import { db } from "@/lib/db/client";
 import { requireSession } from "@/lib/auth-session";
 import { materialiseDueInstances } from "@/features/recurring/lib/materialise";
-import { listTransactions } from "@/features/transactions/queries";
+import { listTransactionsPage, summariseTransactions } from "@/features/transactions/queries";
+import { TRANSACTIONS_PAGE_SIZE } from "@/features/transactions/lib/page-size";
 import { listActiveAccounts } from "@/features/accounts/queries";
 import { listCategoriesFlat } from "@/features/categories/queries";
 import { listActiveGoals } from "@/features/goals/queries";
@@ -10,10 +11,10 @@ import {
   RANGE_PRESETS,
   type RangePreset,
 } from "@/features/transactions/date-range";
-import { TransactionList } from "@/features/transactions/components/transaction-list";
+import { TransactionLedger } from "@/features/transactions/components/transaction-ledger";
+import { TransactionSummary } from "@/features/transactions/components/transaction-summary";
 import { TransactionFilters } from "@/features/transactions/components/transaction-filters";
 import { QuickAddLauncher } from "@/features/transactions/components/quick-add-launcher";
-import { console } from "inspector/promises";
 
 export const metadata = { title: "Giao dịch · Personal Finance" };
 
@@ -50,8 +51,10 @@ export default async function TransactionsPage({
   const accountId = sp.accountId && UUID_RE.test(sp.accountId) ? sp.accountId : undefined;
   const categoryId = sp.categoryId && UUID_RE.test(sp.categoryId) ? sp.categoryId : undefined;
 
-  const [transactions, accounts, categories, goals] = await Promise.all([
-    listTransactions(user.id, { from, to, kind, accountId, categoryId }),
+  const filter = { from, to, kind, accountId, categoryId };
+  const [page, summary, accounts, categories, goals] = await Promise.all([
+    listTransactionsPage(user.id, { ...filter, limit: TRANSACTIONS_PAGE_SIZE }),
+    summariseTransactions(user.id, filter),
     listActiveAccounts(user.id),
     listCategoriesFlat(user.id),
     listActiveGoals(user.id),
@@ -63,7 +66,13 @@ export default async function TransactionsPage({
         Giao dịch
       </h1>
       <TransactionFilters accounts={accounts} categories={categories} />
-      <TransactionList transactions={transactions} accounts={accounts} />
+      <TransactionSummary summary={summary} />
+      <TransactionLedger
+        initialItems={page.items}
+        initialHasMore={page.hasMore}
+        filter={filter}
+        accounts={accounts}
+      />
       <QuickAddLauncher accounts={accounts} categories={categories} goals={goals} />
     </div>
   );

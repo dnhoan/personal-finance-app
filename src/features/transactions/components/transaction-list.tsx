@@ -1,9 +1,10 @@
-import { Receipt } from "lucide-react";
 import type { TxListItem } from "../queries";
 import { TransactionRow } from "./transaction-row";
+import { TransactionsEmptyState } from "./transactions-empty-state";
 
-// Server-rendered transaction list with a calm empty state. `accounts` is
-// forwarded to each row's edit sheet.
+// Flat, server-rendered transaction list with a calm empty state — used by the
+// dashboard "recent" section. `accounts` is forwarded to each row's edit sheet.
+// (The main transactions screen uses the grouped TransactionLedger instead.)
 export function TransactionList({
   transactions,
   accounts,
@@ -11,15 +12,7 @@ export function TransactionList({
   transactions: TxListItem[];
   accounts: { id: string; name: string }[];
 }) {
-  if (transactions.length === 0) {
-    return (
-      <div className="flex flex-col items-center gap-2 py-16 text-center">
-        <Receipt size={32} className="text-fg-subtle" aria-hidden="true" />
-        <p className="text-fg-muted">Chưa có giao dịch nào.</p>
-        <p className="text-sm text-fg-subtle">Nhấn nút + để thêm giao dịch đầu tiên.</p>
-      </div>
-    );
-  }
+  if (transactions.length === 0) return <TransactionsEmptyState />;
 
   return (
     <ul className="divide-y divide-border">

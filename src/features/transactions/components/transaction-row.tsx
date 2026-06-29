@@ -13,7 +13,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { formatVnd } from "@/lib/vnd";
-import { formatDateTime } from "@/lib/locale";
+import { formatDateTime, formatTime } from "@/lib/locale";
 import { cn } from "@/lib/utils";
 import type { TxListItem } from "../queries";
 import { deleteTransaction } from "../actions";
@@ -41,9 +41,14 @@ const MINUS = "−"; // U+2212, not a hyphen — per design guidelines.
 export function TransactionRow({
   tx,
   accounts,
+  // Surfaces with a day header (the grouped ledger) pass `false` to show time
+  // only — the date already lives in the header. Flat surfaces (dashboard) keep
+  // the full date+time so the day isn't lost.
+  showDate = true,
 }: {
   tx: TxListItem;
   accounts: { id: string; name: string }[];
+  showDate?: boolean;
 }) {
   const [, startTransition] = React.useTransition();
   // Optimistic removal: the row hides the instant the user deletes and reappears
@@ -121,7 +126,7 @@ export function TransactionRow({
       <div className="min-w-0 flex-1">
         <p className="truncate font-medium text-fg">{title}</p>
         <p className="truncate text-sm text-fg-muted">
-          {tx.accountName} · {formatDateTime(tx.occurredAt)}
+          {tx.accountName} · {showDate ? formatDateTime(tx.occurredAt) : formatTime(tx.occurredAt)}
         </p>
       </div>
 
