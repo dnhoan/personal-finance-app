@@ -4,3 +4,4 @@ export { createTransaction } from "./create";
 export { updateTransaction } from "./update";
 export { deleteTransaction } from "./delete";
 export { createTransfer } from "./transfer";
+export { loadMoreTransactions } from "./load-more-transactions";

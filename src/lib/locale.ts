@@ -20,6 +20,13 @@ const dateTimeFormatter = new Intl.DateTimeFormat("vi-VN", {
   timeZone: "Asia/Ho_Chi_Minh",
 });
 
+const timeFormatter = new Intl.DateTimeFormat("vi-VN", {
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+  timeZone: "Asia/Ho_Chi_Minh",
+});
+
 /** `15/06/2026` */
 export function formatDate(date: Date): string {
   return dateFormatter.format(date);
@@ -28,6 +35,11 @@ export function formatDate(date: Date): string {
 /** `15/06/2026 09:30` */
 export function formatDateTime(date: Date): string {
   return dateTimeFormatter.format(date);
+}
+
+/** `09:30` — ICT time of day, paired with a day header that carries the date. */
+export function formatTime(date: Date): string {
+  return timeFormatter.format(date);
 }
 
 /**
