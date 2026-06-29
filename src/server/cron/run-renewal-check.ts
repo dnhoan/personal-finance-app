@@ -5,6 +5,7 @@ import { materialiseDueInstances } from "@/features/recurring/lib/materialise";
 import { nextOccurrences, anchorToVnDate } from "@/features/recurring/lib/rrule-builder";
 import { formatRenewalMessage } from "./lib/format-renewal-message";
 import { sendMail as defaultSendMail } from "@/lib/mailer";
+import { env } from "@/lib/env";
 
 export type RenewalCheckResult = {
   processed: number;
@@ -121,6 +122,7 @@ export async function runRenewalCheck(
         nextDue: upcoming,
       },
       daysUntil,
+      env.NEXT_PUBLIC_APP_URL,
     );
 
     try {
