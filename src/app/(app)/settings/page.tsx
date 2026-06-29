@@ -1,14 +1,5 @@
 import type { Route } from "next";
-import {
-  Wallet,
-  Tags,
-  Repeat,
-  Flag,
-  HandCoins,
-  BadgeCheck,
-  Mail,
-  type LucideIcon,
-} from "lucide-react";
+import { Wallet, Tags, Repeat, Flag, HandCoins, BadgeCheck, type LucideIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { SettingsRow } from "@/features/settings/components/settings-row";
 import { SignOutButton } from "@/components/auth/sign-out-button";
@@ -34,7 +25,6 @@ const GROUPS: { label: string; rows: Row[] }[] = [
     rows: [
       { href: "/settings/categories" as Route, label: "Danh mục", icon: Tags },
       { href: "/settings/recurring" as Route, label: "Định kỳ", icon: Repeat },
-      { href: "/settings/email-alerts" as Route, label: "Email", icon: Mail },
     ],
   },
 ];

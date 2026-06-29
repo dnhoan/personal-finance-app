@@ -68,6 +68,8 @@ describe("runRenewalCheck idempotency + heartbeat", () => {
     const first = await runRenewalCheck(db, OWNER_ID, NOW, sendMail);
     expect(first.sent).toBe(1);
     expect(sendMail).toHaveBeenCalledTimes(1);
+    // Alert routes to the rule owner's account email, not a fixed inbox.
+    expect(sendMail).toHaveBeenCalledWith(expect.objectContaining({ to: OWNER_EMAIL }));
     const hb1 = await heartbeat();
     expect(hb1).not.toBeNull();
 

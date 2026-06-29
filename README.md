@@ -63,16 +63,16 @@ App runs at [http://localhost:3000](http://localhost:3000).
 
 All variables in `.env.example` are required. The app validates them at startup via Zod (`src/lib/env.ts`) and refuses to boot if any are missing.
 
-| Variable                                    | Purpose                             |
-| ------------------------------------------- | ----------------------------------- |
-| `DATABASE_URL`                              | Neon Postgres connection string     |
-| `BETTER_AUTH_SECRET`                        | Auth signing secret (32+ chars)     |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth                        |
-| `ALLOWED_EMAIL`                             | The single allowlisted owner email  |
-| `BREVO_SMTP_USER` / `BREVO_SMTP_KEY`        | Brevo SMTP relay credentials        |
-| `ALERT_FROM_EMAIL` / `ALERT_TO_EMAIL`       | Verified sender + destination inbox |
-| `CRON_SECRET`                               | Cron endpoint auth (32+ chars)      |
-| `NEXT_PUBLIC_APP_URL`                       | Public app URL                      |
+| Variable                                    | Purpose                                                  |
+| ------------------------------------------- | -------------------------------------------------------- |
+| `DATABASE_URL`                              | Neon Postgres connection string                          |
+| `BETTER_AUTH_SECRET`                        | Auth signing secret (32+ chars)                          |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth                                             |
+| `ALLOWED_EMAIL`                             | The single allowlisted owner email                       |
+| `BREVO_SMTP_USER` / `BREVO_SMTP_KEY`        | Brevo SMTP relay credentials                             |
+| `ALERT_FROM_EMAIL`                          | Verified sender (alerts go to the owner's account email) |
+| `CRON_SECRET`                               | Cron endpoint auth (32+ chars)                           |
+| `NEXT_PUBLIC_APP_URL`                       | Public app URL                                           |
 
 ### Email Alerts (Brevo SMTP)
 
@@ -81,7 +81,8 @@ Daily renewal reminders are sent as email via Brevo's free SMTP relay (300 email
 1. Create a free [Brevo](https://www.brevo.com/) account.
 2. **Verify a single sender** — Senders → _Add a sender_ → confirm via the email Brevo sends. This can be your own Gmail; no domain or DNS is required. Use that verified address as `ALERT_FROM_EMAIL`. Brevo rejects sends from unverified senders.
 3. SMTP & API → generate an **SMTP key** → set `BREVO_SMTP_USER` (your login email) and `BREVO_SMTP_KEY`.
-4. Set `ALERT_TO_EMAIL` to the inbox that should receive alerts.
+
+Alerts are delivered to the rule owner's account email (`user.email`) — the address you signed in with — so there is no separate destination to configure.
 
 ### Cron Setup (cron-job.org)
 

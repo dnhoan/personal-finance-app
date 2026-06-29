@@ -36,7 +36,6 @@ jobs:
       BREVO_SMTP_USER: "ci@example.com"
       BREVO_SMTP_KEY: "ci-dummy-brevo-smtp-key-not-a-real-value-000000"
       ALERT_FROM_EMAIL: "ci@example.com"
-      ALERT_TO_EMAIL: "ci@example.com"
       CRON_SECRET: "ci-dummy-cron-secret-not-a-real-value-000000000"
       NEXT_PUBLIC_APP_URL: "http://localhost:3000"
 

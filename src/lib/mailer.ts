@@ -22,21 +22,23 @@ export class MailError extends Error {
 }
 
 /**
- * Send one HTML email from the verified sender to the single alert inbox. Throws
- * `MailError` on any SMTP failure — the caller decides whether to skip or fail.
- * Never swallows the error here.
+ * Send one HTML email from the verified sender to `to`. Throws `MailError` on any
+ * SMTP failure — the caller decides whether to skip or fail. Never swallows the
+ * error here.
  */
 export async function sendMail({
+  to,
   subject,
   html,
 }: {
+  to: string;
   subject: string;
   html: string;
 }): Promise<void> {
   try {
     await transport.sendMail({
       from: env.ALERT_FROM_EMAIL,
-      to: env.ALERT_TO_EMAIL,
+      to,
       subject,
       html,
     });
