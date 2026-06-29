@@ -12,7 +12,7 @@ const STATUS_LABEL: Record<DebtStatus, string> = {
 
 const STATUS_PILL: Record<DebtStatus, string> = {
   open: "bg-expense-soft text-expense",
-  partial: "bg-[#FEF3C7] text-[#92400E]",
+  partial: "bg-warning/15 text-warning",
   settled: "bg-income-soft text-income",
 };
 
@@ -23,7 +23,11 @@ export function DebtRow({ debt }: { debt: DebtRowData }) {
   const isOwed = debt.direction === "owed";
   const amountColor = isOwed ? "text-income" : "text-expense";
   const barColor =
-    debt.status === "partial" ? "var(--warning)" : isOwed ? "var(--income)" : "var(--expense)";
+    debt.status === "partial"
+      ? "var(--color-warning)"
+      : isOwed
+        ? "var(--color-income)"
+        : "var(--color-expense)";
   // Partial/settled tone the same for both directions; only an `open` receivable
   // reads green (a healthy asset to collect) rather than debt-red.
   const pillClass =

@@ -69,7 +69,7 @@ export function RecurringRow({
                 <PauseCircle size={12} aria-hidden="true" /> Tạm dừng
               </Pill>
             ) : rule.dueSoon ? (
-              <Pill className="bg-amber-100 text-amber-800">
+              <Pill className="bg-warning/15 text-warning">
                 <AlarmClock size={12} aria-hidden="true" /> Đến hạn {fmtShort(nextDate)}
               </Pill>
             ) : (

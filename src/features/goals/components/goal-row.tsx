@@ -53,7 +53,7 @@ export function GoalRow({
               cy="32"
               r={R}
               fill="none"
-              stroke="var(--surface-muted)"
+              stroke="var(--color-surface-muted)"
               strokeWidth="6"
             />
             <circle
@@ -61,7 +61,7 @@ export function GoalRow({
               cy="32"
               r={R}
               fill="none"
-              stroke="var(--accent)"
+              stroke="var(--color-accent)"
               strokeWidth="6"
               strokeLinecap="round"
               strokeDasharray={CIRC}

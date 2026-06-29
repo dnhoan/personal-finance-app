@@ -123,13 +123,14 @@ export function BudgetFormSheet({
 
           <button
             type="button"
+            role="switch"
+            aria-checked={rollover}
             onClick={() => setRollover((v) => !v)}
-            className="flex items-center justify-between rounded-md border border-border p-3"
+            className="flex items-center justify-between rounded-md border border-border p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <span className="text-sm font-medium text-fg">Chuyển số dư sang tháng sau</span>
             <span
-              role="switch"
-              aria-checked={rollover}
+              aria-hidden="true"
               className={cn(
                 "relative h-5 w-9 rounded-full transition-colors",
                 rollover ? "bg-accent" : "bg-surface-muted",
@@ -158,6 +159,7 @@ export function BudgetFormSheet({
                 onClick={handleDelete}
                 disabled={submitting}
                 className="h-12 text-expense"
+                aria-label="Xóa hạn mức"
               >
                 <Trash2 size={16} aria-hidden="true" />
               </Button>

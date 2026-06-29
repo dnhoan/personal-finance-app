@@ -75,7 +75,7 @@ export function CategoryTree({
             onClick={() => setKind(k)}
             className={cn(
               "rounded-full px-4 py-2 text-[13px] font-semibold transition-colors",
-              kind === k ? "bg-surface text-fg shadow-sm" : "text-fg-muted",
+              kind === k ? "bg-surface text-fg shadow-sm" : "text-fg-muted hover:text-fg",
             )}
           >
             {k === "expense" ? "Chi tiêu" : "Thu nhập"}
