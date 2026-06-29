@@ -1,6 +1,7 @@
 import { and, eq, isNull, or, sql } from "drizzle-orm";
 import type { Db } from "@/lib/db/client";
 import { recurringRules, categories } from "@/lib/db/schema";
+import { user } from "@/lib/db/auth-schema";
 import { materialiseDueInstances } from "@/features/recurring/lib/materialise";
 import { nextOccurrences, anchorToVnDate } from "@/features/recurring/lib/rrule-builder";
 import { formatRenewalMessage } from "./lib/format-renewal-message";
@@ -58,6 +59,19 @@ export async function runRenewalCheck(
   sendMail: typeof defaultSendMail = defaultSendMail,
 ): Promise<RenewalCheckResult> {
   await materialiseDueInstances(database, userId, now);
+
+  // Alerts go to the rule owner's account email — the recipient is the user, not a
+  // fixed inbox. No fallback: a missing email is a misconfigured account, so fail
+  // loudly rather than silently routing the owner's alerts elsewhere.
+  const [owner] = await database
+    .select({ email: user.email })
+    .from(user)
+    .where(eq(user.id, userId))
+    .limit(1);
+  if (!owner?.email) {
+    throw new Error(`renewal-check: no email for user ${userId}`);
+  }
+  const to = owner.email;
 
   const today = ictDate(now);
 
@@ -126,7 +140,7 @@ export async function runRenewalCheck(
     );
 
     try {
-      await sendMail({ subject, html });
+      await sendMail({ to, subject, html });
       sent++;
       console.info(`[alert] rule=${rule.id} next_due=${upcoming} status=sent`);
     } catch (err) {

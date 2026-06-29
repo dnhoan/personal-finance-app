@@ -19,6 +19,6 @@ describe("middleware matcher excludes the cron endpoint", () => {
   it("still matches protected app routes", () => {
     expect(matcher.test("/dashboard")).toBe(true);
     expect(matcher.test("/transactions")).toBe(true);
-    expect(matcher.test("/settings/email-alerts")).toBe(true);
+    expect(matcher.test("/settings/categories")).toBe(true);
   });
 });

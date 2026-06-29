@@ -13,10 +13,6 @@ const envSchema = z.object({
   BREVO_SMTP_USER: z.string().min(1),
   BREVO_SMTP_KEY: z.string().min(1),
   ALERT_FROM_EMAIL: z.string().email(),
-  ALERT_TO_EMAIL: z
-    .string()
-    .email()
-    .transform((v) => v.toLowerCase()),
   CRON_SECRET: z.string().min(32),
   NEXT_PUBLIC_APP_URL: z.string().url(),
 });
