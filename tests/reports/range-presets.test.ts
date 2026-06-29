@@ -4,6 +4,8 @@ import {
   parsePreset,
   defaultGranularity,
   presetLabel,
+  formatRangeLabel,
+  previousRange,
 } from "@/features/reports/lib/range-presets";
 
 // Fixed "now": 2026-06-15 10:00 UTC = 17:00 ICT, still 15 June ICT.
@@ -67,5 +69,46 @@ describe("range-presets", () => {
   it("presetLabel returns Vietnamese labels", () => {
     expect(presetLabel("mtd")).toBe("Tháng này");
     expect(presetLabel("last-12m")).toBe("12 tháng");
+  });
+
+  it("formatRangeLabel shows the year once for a same-year range", () => {
+    expect(formatRangeLabel({ from: "2026-06-01", to: "2026-06-30" })).toBe("1/6 – 30/6/2026");
+  });
+
+  it("formatRangeLabel shows both years for a cross-year range", () => {
+    expect(formatRangeLabel({ from: "2025-12-01", to: "2026-01-05" })).toBe("1/12/2025 – 5/1/2026");
+  });
+
+  it("formatRangeLabel collapses a same-day range to a single date", () => {
+    expect(formatRangeLabel({ from: "2026-06-15", to: "2026-06-15" })).toBe("15/6/2026");
+  });
+
+  it("previousRange for mtd is the full previous calendar month", () => {
+    expect(previousRange("mtd", getRange("mtd", NOW), NOW)).toEqual({
+      from: "2026-05-01",
+      to: "2026-05-31",
+    });
+  });
+
+  it("previousRange for last-month is the month before last", () => {
+    expect(previousRange("last-month", getRange("last-month", NOW), NOW)).toEqual({
+      from: "2026-04-01",
+      to: "2026-04-30",
+    });
+  });
+
+  it("previousRange for last-3m is the preceding 3-month block", () => {
+    expect(previousRange("last-3m", getRange("last-3m", NOW), NOW)).toEqual({
+      from: "2026-01-01",
+      to: "2026-03-31",
+    });
+  });
+
+  it("previousRange for custom is an equal-length window ending the day before", () => {
+    // 10-day window 6–15 June → preceding 10 days 27 May–5 June.
+    expect(previousRange("custom", { from: "2026-06-06", to: "2026-06-15" }, NOW)).toEqual({
+      from: "2026-05-27",
+      to: "2026-06-05",
+    });
   });
 });

@@ -17,7 +17,8 @@ export type DateRange = { from: string; to: string };
 export type Granularity = "daily" | "monthly";
 
 // Hard cap so a crafted ?from=... can't trigger a full-table scan across years.
-const MAX_MONTHS_BACK = 24;
+// Exported as the shared windowing cap (e.g. the net-worth trend query reuses it).
+export const MAX_MONTHS_BACK = 24;
 
 const VI_PRESET_LABELS: Record<RangePreset, string> = {
   mtd: "Tháng này",
@@ -98,4 +99,69 @@ export function getRange(
 /** Daily for a single-month span (mtd / last-month), monthly otherwise. */
 export function defaultGranularity(preset: RangePreset): Granularity {
   return preset === "mtd" || preset === "last-month" ? "daily" : "monthly";
+}
+
+/** ISO "YYYY-MM-DD" of a UTC-anchored Date (the day math below stays in UTC). */
+function isoDate(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+
+// Equal-length window ending the day before `range.from` (used for custom ranges).
+function precedingEqualWindow(range: DateRange): DateRange {
+  const dayMs = 86_400_000;
+  const from = new Date(`${range.from}T00:00:00Z`);
+  const to = new Date(`${range.to}T00:00:00Z`);
+  const spanDays = Math.round((to.getTime() - from.getTime()) / dayMs) + 1;
+  const prevTo = new Date(from.getTime() - dayMs);
+  const prevFrom = new Date(prevTo.getTime() - (spanDays - 1) * dayMs);
+  return { from: isoDate(prevFrom), to: isoDate(prevTo) };
+}
+
+/**
+ * The period immediately preceding a resolved range, for month-over-month style
+ * deltas. Same basis family as the dashboard hero:
+ *  - mtd          → the FULL previous calendar month (MTD compares against whole)
+ *  - last-month   → the month before last (full)
+ *  - last-3m      → the 3 full months before the current 3-month window
+ *  - last-12m     → the 12 full months before the current 12-month window
+ *  - custom       → an equal-length window ending the day before `range.from`
+ * `now` is injectable for deterministic tests.
+ */
+export function previousRange(
+  preset: RangePreset,
+  range: DateRange,
+  now: Date = new Date(),
+): DateRange {
+  const thisMonth = currentIctMonth(now);
+  const monthSpan = (startBack: number, endBack: number): DateRange => ({
+    from: monthStartDate(addMonths(thisMonth, startBack)),
+    to: monthEndDate(addMonths(thisMonth, endBack)),
+  });
+  switch (preset) {
+    case "mtd":
+      return monthSpan(-1, -1);
+    case "last-month":
+      return monthSpan(-2, -2);
+    case "last-3m":
+      return monthSpan(-5, -3);
+    case "last-12m":
+      return monthSpan(-23, -12);
+    case "custom":
+      return precedingEqualWindow(range);
+  }
+}
+
+/**
+ * Human-readable Vietnamese label for a resolved range, e.g. "1/6 – 30/6/2026".
+ * Pure string math on the inclusive ICT bounds — no TZ re-derivation:
+ *  - same day            → "15/6/2026"
+ *  - same year           → "1/6 – 30/6/2026" (year shown once, on the end)
+ *  - spanning years      → "1/12/2025 – 5/1/2026"
+ */
+export function formatRangeLabel(range: DateRange): string {
+  const [fy, fm, fd] = range.from.split("-").map(Number) as [number, number, number];
+  const [ty, tm, td] = range.to.split("-").map(Number) as [number, number, number];
+  if (range.from === range.to) return `${fd}/${fm}/${fy}`;
+  const start = fy === ty ? `${fd}/${fm}` : `${fd}/${fm}/${fy}`;
+  return `${start} – ${td}/${tm}/${ty}`;
 }

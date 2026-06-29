@@ -2,7 +2,7 @@
 
 Personal finance web PWA built with Next.js 15, TypeScript, Drizzle ORM, Neon Postgres, Better Auth, shadcn/ui, and Recharts.
 
-Last updated: 2026-06-27
+Last updated: 2026-06-29
 
 ## Project Overview
 
@@ -90,10 +90,13 @@ src/features/
     └── components/ (debt-list, debt-row, etc.)
 
   reports/
-    ├── queries.ts (netCashFlowMtd, netWorthSnapshot, topCategoriesThisMonth, etc.)
-    ├── spending-by-category-query.ts (donut breakdown)
-    ├── lib/range-presets.ts (time-range controls + DoS cap)
-    └── components/ (hero-net-cash-flow, net-worth-card, cash-flow-chart, etc.)
+    ├── queries.ts (netCashFlowMtd, netCashFlowMoM, netWorthSnapshot, etc.)
+    ├── net-worth-trend-query.ts (derived-on-read 12-month trend via windowed SQL)
+    ├── spending-by-category-query.ts (donut breakdown + spendingTotalForRange helper)
+    ├── lib/
+    │   ├── range-presets.ts (time-range controls + formatRangeLabel + previousRange)
+    │   └── delta.ts (computeDelta helper)
+    └── components/ (stat-delta, section-title, empty-state, skeleton, report-page-header, net-worth-trend-chart, etc.)
 
   dashboard/
     ├── lib/cron-health.ts (staleness check)

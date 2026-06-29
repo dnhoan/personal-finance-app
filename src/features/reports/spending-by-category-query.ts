@@ -45,6 +45,18 @@ const RANGE_FILTER = (userId: string, range: DateRange) => sql`
       BETWEEN ${range.from}::date AND ${range.to}::date
 `;
 
+// Single-SUM total expense over a range (same filter as the breakdown), for the
+// spending header's period total + month-over-month delta. Lighter than pulling
+// the whole breakdown a second time just to total it.
+export async function spendingTotalForRange(userId: string, range: DateRange): Promise<number> {
+  const rows = await db.execute<{ total: string }>(sql`
+    SELECT COALESCE(SUM(t.amount), 0)::text AS total
+    FROM transactions t
+    WHERE ${RANGE_FILTER(userId, range)}
+  `);
+  return Number(rows.rows[0]?.total ?? 0);
+}
+
 // Top-level: every expense rolled up to its root category, descending by spend.
 async function rootSpending(userId: string, range: DateRange): Promise<SpendingSlice[]> {
   const rows = await db.execute<{

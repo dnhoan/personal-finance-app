@@ -1,13 +1,18 @@
-import type { Route } from "next";
 import { requireSession } from "@/lib/auth-session";
 import { formatVnd } from "@/lib/vnd";
+import { compactVnd } from "@/features/reports/components/chart-theme";
 import { cashFlowSeries } from "@/features/reports/queries";
-import { getRange, parsePreset, defaultGranularity } from "@/features/reports/lib/range-presets";
-import { BackLink } from "@/components/app-shell/back-link";
-import { ReportTabs } from "@/features/reports/components/report-tabs";
+import {
+  getRange,
+  parsePreset,
+  defaultGranularity,
+  formatRangeLabel,
+} from "@/features/reports/lib/range-presets";
+import { ReportPageHeader } from "@/features/reports/components/report-page-header";
 import { RangePicker } from "@/features/reports/components/range-picker";
 import { CashFlowChart } from "@/features/reports/components/cash-flow-chart";
 import { ChartDataTable } from "@/features/reports/components/chart-data-table";
+import { EmptyState } from "@/features/reports/components/empty-state";
 
 export const metadata = { title: "Dòng tiền · Báo cáo" };
 
@@ -28,17 +33,27 @@ export default async function CashFlowReportPage({
   const totalIncome = series.reduce((s, b) => s + b.income, 0);
   const totalExpense = series.reduce((s, b) => s + b.expense, 0);
   const net = totalIncome - totalExpense;
+  // Average net per bucket — the reference line on the chart and the sub-line on
+  // the net KPI both read against it. Rounded to whole VND for display.
+  const avgNet = series.length ? Math.round(net / series.length) : 0;
 
   return (
     <div className="flex flex-col gap-5">
-      <BackLink href={"/dashboard" as Route} label="Báo cáo" />
-      <ReportTabs active="cash-flow" />
-      <RangePicker />
+      <ReportPageHeader title="Dòng tiền" active="cash-flow" />
+      <div className="flex flex-col gap-1">
+        <RangePicker />
+        <p className="px-1 text-[12px] text-fg-subtle">{formatRangeLabel(range)}</p>
+      </div>
 
       <section className="grid grid-cols-3 gap-2">
         <Kpi label="Vào" value={formatVnd(totalIncome)} tone="income" />
         <Kpi label="Ra" value={formatVnd(totalExpense)} tone="expense" />
-        <Kpi label="Thuần" value={formatVnd(net)} tone={net >= 0 ? "income" : "expense"} />
+        <Kpi
+          label="Thuần"
+          value={formatVnd(net)}
+          tone={net >= 0 ? "income" : "expense"}
+          sub={series.length ? `TB/kỳ ${compactVnd(avgNet)}` : undefined}
+        />
       </section>
 
       <section className="rounded-2xl border border-border bg-surface p-5">
@@ -47,14 +62,21 @@ export default async function CashFlowReportPage({
           <span className="text-[11px] text-fg-subtle">Không gồm chuyển khoản</span>
         </div>
         {series.length === 0 ? (
-          <p className="py-8 text-center text-[13px] text-fg-muted">
-            Chưa có dữ liệu trong kỳ này.
-          </p>
+          <EmptyState
+            bare
+            title="Chưa có dữ liệu"
+            description="Chưa có giao dịch nào trong kỳ này."
+            cta={{ href: "/transactions", label: "Thêm giao dịch" }}
+          />
         ) : (
-          <CashFlowChart data={series} granularity={granularity} />
+          <CashFlowChart data={series} granularity={granularity} avgNet={avgNet} />
         )}
         <ChartDataTable
-          caption="Dòng tiền theo kỳ"
+          caption={
+            series.length
+              ? `Dòng tiền theo kỳ — trung bình thuần ${formatVnd(avgNet)}`
+              : "Dòng tiền theo kỳ"
+          }
           columns={[
             { key: "income", label: "Thu nhập" },
             { key: "expense", label: "Chi tiêu" },
@@ -70,7 +92,17 @@ export default async function CashFlowReportPage({
   );
 }
 
-function Kpi({ label, value, tone }: { label: string; value: string; tone: "income" | "expense" }) {
+function Kpi({
+  label,
+  value,
+  tone,
+  sub,
+}: {
+  label: string;
+  value: string;
+  tone: "income" | "expense";
+  sub?: string;
+}) {
   // Static class strings — Tailwind's JIT can't see runtime-built `text-${tone}`.
   const toneClass = tone === "income" ? "text-income" : "text-expense";
   return (
@@ -79,8 +111,11 @@ function Kpi({ label, value, tone }: { label: string; value: string; tone: "inco
     // (grid items default to min-width:auto), overflowing the screen. truncate
     // keeps an over-long value inside its cell on the narrowest phones.
     <div className="min-w-0 rounded-2xl border border-border bg-surface p-3">
-      <p className="text-[10px] uppercase tracking-wider text-fg-subtle">{label}</p>
-      <p className={`mt-1 truncate text-[13px] font-semibold tabular-nums ${toneClass}`}>{value}</p>
+      <p className="text-[11px] font-medium uppercase tracking-wider text-fg-subtle">{label}</p>
+      <p className={`mt-1 truncate text-[15px] font-semibold tabular-nums ${toneClass}`}>{value}</p>
+      {sub ? (
+        <p className="mt-0.5 truncate text-[11px] tabular-nums text-fg-subtle">{sub}</p>
+      ) : null}
     </div>
   );
 }
