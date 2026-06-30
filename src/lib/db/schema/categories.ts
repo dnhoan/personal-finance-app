@@ -2,6 +2,7 @@ import {
   pgTable,
   uuid,
   text,
+  integer,
   timestamp,
   index,
   uniqueIndex,
@@ -31,11 +32,16 @@ export const categories = pgTable(
     parentId: uuid("parent_id").references((): AnyPgColumn => categories.id, {
       onDelete: "restrict",
     }),
+    // User-controlled ordering within a sibling group (lower = earlier). Drives the
+    // picker display order and the quick-add default category (first root per kind).
+    sortOrder: integer("sort_order").notNull().default(0),
     archivedAt: timestamp("archived_at", { withTimezone: true }),
     ...timestamps,
   },
   (t) => [
     uniqueIndex("categories_user_slug_uniq").on(t.userId, t.slug),
     index("categories_parent_idx").on(t.parentId),
+    // Keep ordered reads (listCategoriesFlat, getDefaultCategoryIds) cheap.
+    index("categories_user_kind_order_idx").on(t.userId, t.kind, t.sortOrder),
   ],
 );

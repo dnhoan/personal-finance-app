@@ -8,7 +8,9 @@ import { buildCategoryTree } from "./category-hierarchy";
 export type { CategoryKind, CategoryRow, CategoryChild, CategoryNode } from "./category-hierarchy";
 import type { CategoryKind, CategoryRow, CategoryNode } from "./category-hierarchy";
 
-// Non-archived categories (optionally filtered by kind), name-ordered.
+// Non-archived categories (optionally filtered by kind), ordered by the user's
+// sort_order then name. CategoryPicker and the settings tree render in received
+// order, so ordering here drives both displays and the default-category pick.
 export async function listCategoriesFlat(
   userId: string,
   kind?: CategoryKind,
@@ -27,7 +29,25 @@ export async function listCategoriesFlat(
     })
     .from(categories)
     .where(and(...conds))
-    .orderBy(categories.name);
+    .orderBy(categories.sortOrder, categories.name);
+}
+
+// Default category id per kind for quick-add: the first root (parentId IS NULL,
+// non-archived) of each kind by (sort_order, name). Null when a kind has no root.
+export async function getDefaultCategoryIds(
+  userId: string,
+): Promise<{ income: string | null; expense: string | null }> {
+  const rows = await db.execute<{ kind: CategoryKind; id: string }>(sql`
+    SELECT DISTINCT ON (kind) kind, id
+    FROM categories
+    WHERE user_id = ${userId} AND parent_id IS NULL AND archived_at IS NULL
+    ORDER BY kind, sort_order, name
+  `);
+  const byKind = new Map(rows.rows.map((r) => [r.kind, r.id]));
+  return {
+    income: byKind.get("income") ?? null,
+    expense: byKind.get("expense") ?? null,
+  };
 }
 
 // Per-category transaction sum for one month, keyed by category_id, scoped to a

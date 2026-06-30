@@ -7,7 +7,7 @@ import {
   listActiveAccounts,
 } from "@/features/accounts/queries";
 import { listTransactions } from "@/features/transactions/queries";
-import { listCategoriesFlat } from "@/features/categories/queries";
+import { listCategoriesFlat, getDefaultCategoryIds } from "@/features/categories/queries";
 import { AccountDetailHeader } from "@/features/accounts/components/account-detail-header";
 import { AccountMonthStats } from "@/features/accounts/components/account-month-stats";
 import { GroupedTransactionList } from "@/features/transactions/components/grouped-transaction-list";
@@ -31,16 +31,22 @@ export default async function AccountDetailPage({ params }: { params: Promise<Pa
   const account = await getAccountWithBalance(user.id, id);
   if (!account) notFound();
 
-  const [stats, transactions, accounts, categories] = await Promise.all([
+  const [stats, transactions, accounts, categories, defaultCategoryByKind] = await Promise.all([
     getAccountMonthStats(user.id, id),
     listTransactions(user.id, { accountId: id }),
     listActiveAccounts(user.id),
     listCategoriesFlat(user.id),
+    getDefaultCategoryIds(user.id),
   ]);
 
   return (
     <div className="flex flex-col gap-5">
-      <AccountDetailHeader account={account} accounts={accounts} categories={categories} />
+      <AccountDetailHeader
+        account={account}
+        accounts={accounts}
+        categories={categories}
+        defaultCategoryByKind={defaultCategoryByKind}
+      />
       <AccountMonthStats stats={stats} />
       <section>
         <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-fg-muted">

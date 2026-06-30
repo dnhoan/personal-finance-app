@@ -9,6 +9,7 @@ import {
   renameAccountSchema,
   archiveAccountSchema,
   unarchiveAccountSchema,
+  setDefaultAccountSchema,
   type CreateAccountInput,
 } from "./schemas";
 
@@ -55,9 +56,11 @@ export async function archiveAccount(input: { id: string }): Promise<void> {
   const { user } = await requireSession();
   const data = archiveAccountSchema.parse(input);
 
+  // Clearing isDefault keeps the invariant that the default account is always
+  // active — an archived account must not stay the quick-add default.
   await db
     .update(accounts)
-    .set({ status: "archived", updatedAt: new Date() })
+    .set({ status: "archived", isDefault: false, updatedAt: new Date() })
     .where(and(eq(accounts.id, data.id), eq(accounts.userId, user.id)));
 
   revalidateAccountViews();
@@ -77,4 +80,37 @@ export async function unarchiveAccount(input: { id: string }): Promise<void> {
     .where(and(eq(accounts.id, data.id), eq(accounts.userId, user.id)));
 
   revalidateAccountViews();
+}
+
+// Marks one account as the user's default (the quick-add pre-selection). Clears
+// the prior default in the same transaction so the partial unique index never
+// trips in the normal flow; the index is the backstop. Archived accounts are
+// rejected (no-op) — the default must stay active.
+export async function setDefaultAccount(input: { id: string }): Promise<void> {
+  const { user } = await requireSession();
+  const data = setDefaultAccountSchema.parse(input);
+
+  await db.transaction(async (tx) => {
+    // Validate the target is the user's and active BEFORE clearing the prior
+    // default — otherwise a bad/archived id would clear the existing default and
+    // set nothing, leaving the user with no default at all.
+    const [target] = await tx
+      .select({ id: accounts.id, status: accounts.status })
+      .from(accounts)
+      .where(and(eq(accounts.id, data.id), eq(accounts.userId, user.id)));
+    if (!target || target.status === "archived") return;
+
+    await tx
+      .update(accounts)
+      .set({ isDefault: false })
+      .where(and(eq(accounts.userId, user.id), eq(accounts.isDefault, true)));
+    await tx
+      .update(accounts)
+      .set({ isDefault: true, updatedAt: new Date() })
+      .where(and(eq(accounts.id, data.id), eq(accounts.userId, user.id)));
+  });
+
+  revalidateAccountViews();
+  // Quick-add defaults are read on these surfaces.
+  revalidatePath("/transactions");
 }

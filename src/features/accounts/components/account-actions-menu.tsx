@@ -1,14 +1,14 @@
 "use client";
 import * as React from "react";
 import { toast } from "sonner";
-import { MoreVertical, Pencil, Archive } from "lucide-react";
+import { MoreVertical, Pencil, Archive, Star } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { archiveAccount, unarchiveAccount } from "../actions";
+import { archiveAccount, unarchiveAccount, setDefaultAccount } from "../actions";
 
 // Undo window for the archive toast.
 const UNDO_WINDOW_MS = 5000;
@@ -19,11 +19,14 @@ const UNDO_WINDOW_MS = 5000;
 export function AccountActionsMenu({
   accountId,
   archived,
+  isDefault = false,
   onEdit,
   onArchived,
 }: {
   accountId: string;
   archived: boolean;
+  /** When true the account is already the default — hide the "set default" item. */
+  isDefault?: boolean;
   onEdit: () => void;
   onArchived?: () => void;
 }) {
@@ -57,6 +60,20 @@ export function AccountActionsMenu({
         <DropdownMenuItem onSelect={() => onEdit()}>
           <Pencil size={16} aria-hidden="true" /> Sửa tên
         </DropdownMenuItem>
+        {!archived && !isDefault && (
+          <DropdownMenuItem
+            disabled={pending}
+            onSelect={(e) => {
+              e.preventDefault();
+              startTransition(async () => {
+                await setDefaultAccount({ id: accountId });
+                toast("Đã đặt làm tài khoản mặc định");
+              });
+            }}
+          >
+            <Star size={16} aria-hidden="true" /> Đặt làm mặc định
+          </DropdownMenuItem>
+        )}
         {!archived && (
           <DropdownMenuItem
             disabled={pending}

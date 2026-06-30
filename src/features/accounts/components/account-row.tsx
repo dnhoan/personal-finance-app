@@ -43,7 +43,14 @@ export function AccountRow({
           <Icon size={20} strokeWidth={1.75} aria-hidden="true" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate font-medium text-fg">{account.name}</p>
+          <p className="flex items-center gap-1.5 truncate font-medium text-fg">
+            <span className="truncate">{account.name}</span>
+            {account.isDefault && (
+              <span className="inline-flex shrink-0 items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                Mặc định
+              </span>
+            )}
+          </p>
           <p className="text-sm text-fg-subtle">{meta.label}</p>
         </div>
         <div className="shrink-0 text-right">
@@ -70,6 +77,7 @@ export function AccountRow({
       <AccountActionsMenu
         accountId={account.id}
         archived={account.status === "archived"}
+        isDefault={account.isDefault}
         onEdit={onEdit}
       />
     </div>

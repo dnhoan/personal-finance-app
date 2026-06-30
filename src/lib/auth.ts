@@ -33,6 +33,11 @@ export const auth = betterAuth({
     google: {
       clientId: env.GOOGLE_CLIENT_ID,
       clientSecret: env.GOOGLE_CLIENT_SECRET,
+      // Always show Google's account chooser. Without this, after a rejected
+      // (non-allowlisted) sign-in Google silently re-authorizes the same active
+      // account on the next attempt, so the user can never switch to the allowed
+      // one — every retry loops back to /unauthorized.
+      prompt: "select_account",
     },
   },
   // 30-day rolling session: re-extended once per day of activity.

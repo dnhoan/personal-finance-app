@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "sonner";
+import { Wallet, ArrowDownToLine, Tag, Target, StickyNote, type LucideIcon } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -15,16 +16,43 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { VndAmountInput } from "@/components/forms/vnd-amount-input";
 import {
   CategoryPicker,
   type CategoryPickerOption,
 } from "@/features/categories/components/category-picker";
 import { GoalPicker, type GoalPickerOption } from "@/features/goals/components/goal-picker";
 import { KindToggle, type TxKind } from "./kind-toggle";
+import { QuickAddAmountField } from "./quick-add-amount-field";
 import { createTransaction, createTransfer } from "../actions";
 
 export type AccountOption = { id: string; name: string };
+
+// Direction-specific submit copy — "Lưu khoản chi" reads more deliberately than a
+// generic "Lưu giao dịch" and confirms what's about to be written.
+const SUBMIT_LABEL: Record<TxKind, string> = {
+  expense: "Lưu khoản chi",
+  income: "Lưu khoản thu",
+  transfer: "Lưu chuyển khoản",
+};
+
+// Icon-led label for the subordinate fields below the amount hero — the leading
+// glyph makes the stack scannable and visually distinct from a plain form.
+function FieldLabel({
+  icon: Icon,
+  htmlFor,
+  children,
+}: {
+  icon: LucideIcon;
+  htmlFor?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Label htmlFor={htmlFor} className="flex items-center gap-1.5 text-fg-muted">
+      <Icon size={15} aria-hidden="true" className="text-fg-subtle" />
+      {children}
+    </Label>
+  );
+}
 
 type FormValues = {
   kind: TxKind;
@@ -39,6 +67,16 @@ type FormValues = {
 // Bottom-sheet quick-add. One submit creates an income/expense row, or — in
 // transfer mode — an atomic linked pair. A fresh clientOpId is minted each open
 // so a retry/double-tap is idempotent server-side. Category is a slot (Phase 5).
+/** Default category id to pre-select per kind (transfer ignores category). */
+export type DefaultCategoryByKind = { income: string | null; expense: string | null };
+
+// First-category seed for a given kind. Transfer has no category; income/expense
+// read their default, falling back to null ("Không có danh mục").
+function seedCategory(byKind: DefaultCategoryByKind | undefined, kind: TxKind): string | null {
+  if (kind === "transfer") return null;
+  return byKind?.[kind] ?? null;
+}
+
 export function QuickAddSheet({
   accounts,
   categories,
@@ -47,6 +85,7 @@ export function QuickAddSheet({
   onOpenChange,
   defaultAccountId,
   defaultKind,
+  defaultCategoryByKind,
 }: {
   accounts: AccountOption[];
   categories: CategoryPickerOption[];
@@ -57,6 +96,8 @@ export function QuickAddSheet({
   defaultAccountId?: string;
   /** Pre-select the transaction kind on open. */
   defaultKind?: TxKind;
+  /** Pre-select the first-ordered category for the current kind on open + kind switch. */
+  defaultCategoryByKind?: DefaultCategoryByKind;
 }) {
   const clientOpId = React.useRef("");
   const [submitError, setSubmitError] = React.useState<string | null>(null);
@@ -67,7 +108,7 @@ export function QuickAddSheet({
         amount: null,
         accountId: defaultAccountId ?? "",
         toAccountId: "",
-        categoryId: null,
+        categoryId: seedCategory(defaultCategoryByKind, defaultKind ?? "expense"),
         goalId: null,
         note: "",
       },
@@ -86,12 +127,12 @@ export function QuickAddSheet({
         amount: null,
         accountId: defaultAccountId ?? "",
         toAccountId: "",
-        categoryId: null,
+        categoryId: seedCategory(defaultCategoryByKind, defaultKind ?? "expense"),
         goalId: null,
         note: "",
       });
     }
-  }, [open, defaultAccountId, defaultKind, reset]);
+  }, [open, defaultAccountId, defaultKind, defaultCategoryByKind, reset]);
 
   async function onSubmit(values: FormValues) {
     setSubmitError(null);
@@ -133,7 +174,7 @@ export function QuickAddSheet({
         amount: null,
         accountId: values.accountId,
         toAccountId: "",
-        categoryId: null,
+        categoryId: seedCategory(defaultCategoryByKind, kind),
         goalId: null,
         note: "",
       });
@@ -195,41 +236,35 @@ export function QuickAddSheet({
                   value={field.value}
                   onChange={(k) => {
                     field.onChange(k);
-                    // Category options are kind-specific; clear on switch.
-                    setValue("categoryId", null);
+                    // Category options are kind-specific; re-seed to the new kind's
+                    // default (null for transfer / when the kind has no default).
+                    setValue("categoryId", seedCategory(defaultCategoryByKind, k));
                   }}
                 />
               )}
             />
 
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="qa-amount">Số tiền</Label>
-              <Controller
-                control={control}
-                name="amount"
-                render={({ field }) => (
-                  <VndAmountInput
-                    id="qa-amount"
-                    aria-label="Số tiền"
-                    onValueChange={field.onChange}
-                  />
-                )}
-              />
-            </div>
+            <Controller
+              control={control}
+              name="amount"
+              render={({ field }) => (
+                <QuickAddAmountField id="qa-amount" kind={kind} onValueChange={field.onChange} />
+              )}
+            />
 
             <div className="flex flex-col gap-1.5">
-              <Label>{isTransfer ? "Từ tài khoản" : "Tài khoản"}</Label>
+              <FieldLabel icon={Wallet}>{isTransfer ? "Từ tài khoản" : "Tài khoản"}</FieldLabel>
               {accountSelect("accountId", "Chọn tài khoản")}
             </div>
 
             {isTransfer ? (
               <div className="flex flex-col gap-1.5">
-                <Label>Đến tài khoản</Label>
+                <FieldLabel icon={ArrowDownToLine}>Đến tài khoản</FieldLabel>
                 {accountSelect("toAccountId", "Chọn tài khoản")}
               </div>
             ) : (
               <div className="flex flex-col gap-1.5">
-                <Label>Danh mục</Label>
+                <FieldLabel icon={Tag}>Danh mục</FieldLabel>
                 <Controller
                   control={control}
                   name="categoryId"
@@ -247,7 +282,7 @@ export function QuickAddSheet({
 
             {!isTransfer && goals.length > 0 && (
               <div className="flex flex-col gap-1.5">
-                <Label>Gắn mục tiêu (tùy chọn)</Label>
+                <FieldLabel icon={Target}>Gắn mục tiêu (tùy chọn)</FieldLabel>
                 <Controller
                   control={control}
                   name="goalId"
@@ -259,7 +294,9 @@ export function QuickAddSheet({
             )}
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="qa-note">Ghi chú</Label>
+              <FieldLabel icon={StickyNote} htmlFor="qa-note">
+                Ghi chú
+              </FieldLabel>
               <Input
                 id="qa-note"
                 {...register("note")}
@@ -276,7 +313,7 @@ export function QuickAddSheet({
             )}
 
             <Button type="submit" disabled={formState.isSubmitting} className="h-12 w-full">
-              {formState.isSubmitting ? "Đang lưu…" : "Lưu giao dịch"}
+              {formState.isSubmitting ? "Đang lưu…" : SUBMIT_LABEL[kind]}
             </Button>
           </form>
         )}

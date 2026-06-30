@@ -1,5 +1,47 @@
 # Project Changelog
 
+## Default Account & Category on Quick-Add (2026-06-30)
+
+### Features Shipped
+
+**Default account** — User-marked default account, DB-persisted (cross-device)
+
+- Schema: `accounts.is_default boolean` + partial unique index `accounts_user_default_uniq`
+  (`UNIQUE (user_id) WHERE is_default`) — at most one default per user, DB-enforced
+- `setDefaultAccount` action: clear-then-set in one transaction; validates the target is the
+  user's and active before clearing the prior default (archived/unknown id rejected outright,
+  so the user is never left without a default)
+- `archiveAccount` now clears `is_default` (an archived account can't stay the default)
+- Settings/accounts: "Đặt làm mặc định" overflow item (hidden when already default or archived)
+  - "Mặc định" badge on the default row
+- `getDefaultAccountId` query + `is_default` surfaced on `AccountWithBalance`
+
+**Default category** — Derived from a user-controlled category order, DB-persisted
+
+- Schema: `categories.sort_order integer` (+ `categories_user_kind_order_idx`); backfilled from
+  the prior alphabetical order so existing categories keep a stable initial order
+- `reorderCategories({ kind, parentId, orderedIds })` action: full-order write per sibling
+  scope, ownership + scope + length validated (a stale/cross-scope list is rejected, not applied)
+- `listCategoriesFlat` now orders by `(sort_order, name)` — drives both the picker and the
+  settings tree display; `getDefaultCategoryIds` returns the first root per kind
+- `createCategory` appends new items via `MAX(sort_order)+1` within their scope
+- Settings/categories: drag-and-drop reordering (`@dnd-kit`) within each sibling group
+  (roots; a root's children), pointer + keyboard sensors, vertical-axis restriction,
+  optimistic reorder reverting on server reject; cross-parent / cross-kind drags prevented
+
+**Quick-add pre-fill** — Opens pre-selected instead of empty
+
+- Account: page-level resolver — explicit default → single active account fallback → none
+- Category: first-ordered category for the current kind, re-seeded on income↔expense switch
+  (transfer ignores category); the "Không có danh mục" option remains
+- Dashboard, transactions, and account-detail surfaces resolve and pass the defaults;
+  account-detail still pins its own account as the "from" account
+
+**Behavior change**: quick-add now pre-fills a category where it previously defaulted to none.
+
+**Migration**: `drizzle/0004_round_nightcrawler.sql`. **New dep**: `@dnd-kit/core|sortable|modifiers`.
+**Tests**: `resolveDefaultAccountId` (unit), `default-account` + `category-order` (integration).
+
 ## Phase 10: PWA Export & Polish (2026-06-30)
 
 ### Features Shipped
