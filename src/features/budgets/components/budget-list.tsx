@@ -3,6 +3,7 @@ import * as React from "react";
 import { Plus, CopyPlus, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { copyFromLastMonth } from "../actions";
 import type { BudgetRowData, BudgetableCategory } from "../queries";
 import { BudgetRow } from "./budget-row";
@@ -22,6 +23,7 @@ export function BudgetList({
 }) {
   const [sheetOpen, setSheetOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<BudgetEditTarget>(null);
+  const [copyConfirmOpen, setCopyConfirmOpen] = React.useState(false);
   const [copying, startCopy] = React.useTransition();
 
   function openAdd() {
@@ -43,10 +45,7 @@ export function BudgetList({
           size="sm"
           variant="outline"
           disabled={copying}
-          onClick={() => {
-            if (window.confirm("Sao chép hạn mức (không gồm loại chuyển tháng) từ tháng trước?"))
-              startCopy(() => void copyFromLastMonth({ periodMonth }));
-          }}
+          onClick={() => setCopyConfirmOpen(true)}
         >
           <CopyPlus size={18} aria-hidden="true" /> Sao chép tháng trước
         </Button>
@@ -77,6 +76,15 @@ export function BudgetList({
         periodMonth={periodMonth}
         editing={editing}
         budgetableCategories={budgetableCategories}
+      />
+
+      <ConfirmDialog
+        open={copyConfirmOpen}
+        onOpenChange={setCopyConfirmOpen}
+        title="Sao chép tháng trước"
+        description="Sao chép hạn mức (không gồm loại chuyển tháng) từ tháng trước?"
+        confirmLabel="Sao chép"
+        onConfirm={() => startCopy(() => void copyFromLastMonth({ periodMonth }))}
       />
     </div>
   );

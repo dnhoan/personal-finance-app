@@ -11,6 +11,7 @@ import { listCategoriesFlat, getDefaultCategoryIds } from "@/features/categories
 import { AccountDetailHeader } from "@/features/accounts/components/account-detail-header";
 import { AccountMonthStats } from "@/features/accounts/components/account-month-stats";
 import { GroupedTransactionList } from "@/features/transactions/components/grouped-transaction-list";
+import { ENTER, enterDelay } from "@/lib/enter-animation";
 
 type Params = { id: string };
 
@@ -41,14 +42,18 @@ export default async function AccountDetailPage({ params }: { params: Promise<Pa
 
   return (
     <div className="flex flex-col gap-5">
-      <AccountDetailHeader
-        account={account}
-        accounts={accounts}
-        categories={categories}
-        defaultCategoryByKind={defaultCategoryByKind}
-      />
-      <AccountMonthStats stats={stats} />
-      <section>
+      <div className={ENTER}>
+        <AccountDetailHeader
+          account={account}
+          accounts={accounts}
+          categories={categories}
+          defaultCategoryByKind={defaultCategoryByKind}
+        />
+      </div>
+      <div className={ENTER} style={enterDelay(60)}>
+        <AccountMonthStats stats={stats} />
+      </div>
+      <section className={ENTER} style={enterDelay(120)}>
         <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-fg-muted">
           Lịch sử
         </p>

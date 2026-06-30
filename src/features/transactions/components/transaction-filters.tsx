@@ -12,6 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { RANGE_PRESETS, type RangePreset } from "../date-range";
 import { FilterChip } from "./filter-chip";
+import { FilterSegmented } from "./filter-segmented";
 
 const KIND_OPTIONS = ["all", "income", "expense", "transfer"] as const;
 
@@ -23,7 +24,7 @@ const RANGE_LABELS: Record<RangePreset, string> = {
   custom: "Tùy chỉnh",
 };
 
-const KIND_LABELS: Record<string, string> = {
+const KIND_LABELS: Record<(typeof KIND_OPTIONS)[number], string> = {
   all: "Tất cả",
   income: "Thu",
   expense: "Chi",
@@ -85,38 +86,26 @@ export function TransactionFilters({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="-mx-4 flex gap-2 overflow-x-auto overscroll-x-contain px-4 pb-1">
-        {RANGE_PRESETS.map((p) => (
-          <FilterChip
-            key={p}
-            active={range === p}
-            onClick={() => setParams({ range: p === "month" ? null : p })}
-          >
-            {RANGE_LABELS[p]}
-          </FilterChip>
-        ))}
-      </div>
-
-      <div className="-mx-4 flex items-center gap-2 overflow-x-auto overscroll-x-contain px-4 pb-1">
-        {KIND_OPTIONS.map((k) => (
-          <FilterChip
-            key={k}
-            active={kind === k}
-            ariaLabel={`Lọc theo loại: ${KIND_LABELS[k]}`}
-            onClick={() => setParams({ kind: k === "all" ? null : k })}
-          >
-            {KIND_LABELS[k]}
-          </FilterChip>
-        ))}
-        {hasActiveFilters && (
-          <button
-            type="button"
-            onClick={clearFilters}
-            className="ml-auto inline-flex min-h-[44px] shrink-0 items-center gap-1 rounded-full px-3 text-sm font-medium text-fg-muted transition-colors hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          >
-            <X size={14} aria-hidden="true" /> Xóa bộ lọc
-          </button>
-        )}
+      {/* Date-range presets scroll horizontally when they overflow. The scrollbar
+          is hidden and a right-edge gradient over the screen bleed signals the
+          row continues, so a clipped last preset reads as "more →" instead of a
+          broken label. */}
+      <div className="relative -mx-4">
+        <div className="flex gap-2 overflow-x-auto overscroll-x-contain px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {RANGE_PRESETS.map((p) => (
+            <FilterChip
+              key={p}
+              active={range === p}
+              onClick={() => setParams({ range: p === "month" ? null : p })}
+            >
+              {RANGE_LABELS[p]}
+            </FilterChip>
+          ))}
+        </div>
+        <div
+          className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-background to-transparent"
+          aria-hidden="true"
+        />
       </div>
 
       {range === "custom" && (
@@ -136,43 +125,79 @@ export function TransactionFilters({
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        <Select
-          value={accountId}
-          onValueChange={(v) => setParams({ accountId: v === "all" ? null : v })}
-        >
-          <SelectTrigger aria-label="Lọc theo tài khoản">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Mọi tài khoản</SelectItem>
-            {accounts.map((a) => (
-              <SelectItem key={a.id} value={a.id}>
-                {a.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      {/* One shared filter row: the kind segmented control on the left, account +
+          category selects on the right. On a phone the segmented control spans
+          full width and the selects wrap to their own line (control + two
+          dropdowns can't legibly share ~360px); from sm up all three sit on one
+          row with the selects flexing to fill the space past the control. */}
+      <div className="flex flex-wrap items-center gap-2">
+        <FilterSegmented
+          ariaLabel="Lọc theo loại"
+          value={kind}
+          onChange={(k) => setParams({ kind: k === "all" ? null : k })}
+          options={KIND_OPTIONS.map((k) => ({ value: k, label: KIND_LABELS[k] }))}
+        />
 
-        {categoryOptions.length > 0 && (
-          <Select
-            value={categoryId}
-            onValueChange={(v) => setParams({ categoryId: v === "all" ? null : v })}
-          >
-            <SelectTrigger aria-label="Lọc theo danh mục">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Mọi danh mục</SelectItem>
-              {categoryOptions.map((c) => (
-                <SelectItem key={c.id} value={c.id}>
-                  {c.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
+        <div className="flex basis-full gap-2 sm:basis-auto sm:flex-1">
+          <div className="min-w-0 flex-1">
+            <Select
+              value={accountId}
+              onValueChange={(v) => setParams({ accountId: v === "all" ? null : v })}
+            >
+              <SelectTrigger
+                aria-label="Lọc theo tài khoản"
+                className="min-w-0 [&>span]:min-w-0 [&>span]:truncate"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Mọi tài khoản</SelectItem>
+                {accounts.map((a) => (
+                  <SelectItem key={a.id} value={a.id}>
+                    {a.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {categoryOptions.length > 0 && (
+            <div className="min-w-0 flex-1">
+              <Select
+                value={categoryId}
+                onValueChange={(v) => setParams({ categoryId: v === "all" ? null : v })}
+              >
+                <SelectTrigger
+                  aria-label="Lọc theo danh mục"
+                  className="min-w-0 [&>span]:min-w-0 [&>span]:truncate"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Mọi danh mục</SelectItem>
+                  {categoryOptions.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
       </div>
+
+      {hasActiveFilters && (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="inline-flex min-h-[44px] items-center gap-1 rounded-full px-3 text-sm font-medium text-fg-muted transition-colors hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            <X size={14} aria-hidden="true" /> Xóa bộ lọc
+          </button>
+        </div>
+      )}
     </div>
   );
 }

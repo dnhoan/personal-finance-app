@@ -3,10 +3,11 @@ import { ShieldX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { signOutWithCacheClear } from "@/lib/auth-client";
+import { ENTER } from "@/lib/enter-animation";
 
 export default function UnauthorizedPage() {
   return (
-    <Card className="w-full">
+    <Card className={`w-full ${ENTER}`}>
       <CardHeader className="items-center text-center">
         <span className="flex h-12 w-12 items-center justify-center rounded-full bg-expense-soft">
           <ShieldX size={24} strokeWidth={1.75} className="text-danger" aria-hidden="true" />

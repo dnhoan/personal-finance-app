@@ -233,7 +233,12 @@ export function BudgetFormSheet({
                 <Trash2 size={16} aria-hidden="true" />
               </Button>
             )}
-            <Button type="submit" disabled={submitting || noCategories} className="h-12 flex-1">
+            <Button
+              type="submit"
+              loading={submitting}
+              disabled={noCategories}
+              className="h-12 flex-1"
+            >
               {submitting ? "Đang lưu…" : "Lưu"}
             </Button>
           </div>

@@ -32,9 +32,10 @@ export function TransactionDayGroups({
   return (
     <div className="space-y-3">
       {groups.map((group) => {
-        // "Hôm nay · 23/05/2026"; older days collapse to just the date.
-        const heading =
-          group.label === group.dateLabel ? group.dateLabel : `${group.label} · ${group.dateLabel}`;
+        // The relative label ("Hôm nay" / "Hôm qua") leads in stronger ink; the
+        // calendar date trails as a quiet timestamp. Older days have no relative
+        // label, so the date alone leads.
+        const hasRelative = group.label !== group.dateLabel;
         const rows = (
           <ul className="divide-y divide-border">
             {group.items.map((tx) => (
@@ -42,14 +43,36 @@ export function TransactionDayGroups({
             ))}
           </ul>
         );
+        // In the main (card-less) list the header pins to the top while its rows
+        // scroll under it, so the day context never leaves the screen. Inside the
+        // account-detail Card the header stays static — sticky would fight the
+        // card's own clipping and rounded corners.
+        const header = (
+          <div
+            className={cn(
+              "flex items-baseline justify-between gap-3",
+              card
+                ? "mb-2 px-1"
+                : "sticky top-0 z-10 -mx-4 mb-1 bg-background/85 px-4 py-2 backdrop-blur-sm",
+            )}
+          >
+            <p className="flex items-baseline gap-1.5 truncate">
+              {hasRelative && <span className="text-sm font-semibold text-fg">{group.label}</span>}
+              <span
+                className={cn(
+                  "tabular-nums",
+                  hasRelative ? "text-xs text-fg-subtle" : "text-sm font-semibold text-fg",
+                )}
+              >
+                {group.dateLabel}
+              </span>
+            </p>
+            <DaySubtotal subtotal={group.subtotal} />
+          </div>
+        );
         return (
           <section key={group.key}>
-            <div className="mb-2 flex items-center justify-between px-1">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-fg-subtle">
-                {heading}
-              </p>
-              <DaySubtotal subtotal={group.subtotal} />
-            </div>
+            {header}
             {card ? <Card className="px-4 py-0">{rows}</Card> : rows}
           </section>
         );

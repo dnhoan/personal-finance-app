@@ -37,9 +37,14 @@ export function AccountRow({
       <Link
         href={href}
         aria-label={account.name}
-        className="flex min-w-0 flex-1 items-center gap-3 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="flex min-w-0 flex-1 touch-manipulation items-center gap-3 rounded-md transition-[transform,background-color] duration-100 [-webkit-tap-highlight-color:transparent] active:scale-[0.98] active:bg-surface-muted motion-reduce:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-surface-muted text-fg-muted">
+        <span
+          className={cn(
+            "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
+            meta.tint,
+          )}
+        >
           <Icon size={20} strokeWidth={1.75} aria-hidden="true" />
         </span>
         <div className="min-w-0 flex-1">

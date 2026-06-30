@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { Route } from "next";
 import { Wallet } from "lucide-react";
 import { DashboardHeader } from "@/features/dashboard/components/dashboard-header";
@@ -20,11 +19,10 @@ import { HeroNetCashFlow } from "@/features/reports/components/hero-net-cash-flo
 import { NetWorthCard } from "@/features/reports/components/net-worth-card";
 import { TopCategoriesCard } from "@/features/reports/components/top-categories-card";
 import { UpcomingRenewalsCard } from "@/features/reports/components/upcoming-renewals-card";
-import { SectionTitle } from "@/features/reports/components/section-title";
 import { EmptyState } from "@/features/reports/components/empty-state";
 import { CronStatusBadge } from "@/features/dashboard/components/cron-status-badge";
-import { TransactionList } from "@/features/transactions/components/transaction-list";
 import { QuickAddLauncher } from "@/features/transactions/components/quick-add-launcher";
+import { ENTER, enterDelay } from "@/lib/enter-animation";
 
 export const metadata = { title: "Trang chủ · Personal Finance" };
 
@@ -69,26 +67,35 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <DashboardHeader showReportLink={!firstRun} />
+      <div className={ENTER}>
+        <DashboardHeader showReportLink={!firstRun} />
+      </div>
 
       {firstRun ? (
-        <EmptyState
-          icon={<Wallet size={32} strokeWidth={1.5} />}
-          title="Bắt đầu theo dõi tài chính"
-          description="Thêm tài khoản đầu tiên để ghi lại thu chi và xem dòng tiền của bạn."
-          cta={{ href: "/accounts" as Route, label: "Thêm tài khoản" }}
-        />
+        <div className={ENTER} style={enterDelay(60)}>
+          <EmptyState
+            icon={<Wallet size={32} strokeWidth={1.5} />}
+            title="Bắt đầu theo dõi tài chính"
+            description="Thêm tài khoản đầu tiên để ghi lại thu chi và xem dòng tiền của bạn."
+            cta={{ href: "/accounts" as Route, label: "Thêm tài khoản" }}
+          />
+        </div>
       ) : (
         <>
-          <HeroNetCashFlow flow={flow.current} previous={flow.previous} />
+          <div className={ENTER} style={enterDelay(60)}>
+            <HeroNetCashFlow flow={flow.current} previous={flow.previous} />
+          </div>
 
-          <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <section
+            className={`grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 ${ENTER}`}
+            style={enterDelay(120)}
+          >
             <NetWorthCard snapshot={netWorth} trend={netWorthSpark} />
             <TopCategoriesCard categories={topCats} />
             <UpcomingRenewalsCard renewals={renewals} />
           </section>
 
-          <section className="flex flex-col gap-2">
+          {/* <section className={`flex flex-col gap-2 ${ENTER}`} style={enterDelay(180)}>
             <SectionTitle
               action={
                 <Link href={"/transactions" as Route} className="text-sm font-medium text-primary">
@@ -99,11 +106,11 @@ export default async function DashboardPage() {
               Giao dịch gần đây
             </SectionTitle>
             <TransactionList transactions={recent} accounts={accounts} />
-          </section>
+          </section> */}
         </>
       )}
 
-      <div className="mt-2 border-t border-border pt-4">
+      <div className={`mt-2 border-t border-border pt-4 ${ENTER}`} style={enterDelay(240)}>
         <CronStatusBadge lastCheckedAt={heartbeat.lastCheckedAt} />
       </div>
 

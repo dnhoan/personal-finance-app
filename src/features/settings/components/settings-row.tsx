@@ -35,7 +35,7 @@ export function SettingsRow({
     <Link
       href={href}
       aria-label={label}
-      className="group flex min-h-[68px] touch-manipulation items-center gap-3.5 border-b border-border p-3.5 transition-colors [-webkit-tap-highlight-color:transparent] last:border-b-0 hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+      className="group flex min-h-[68px] touch-manipulation items-center gap-3.5 border-b border-border p-3.5 transition-[background-color,color] duration-100 [-webkit-tap-highlight-color:transparent] last:border-b-0 hover:bg-surface-muted active:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
     >
       <span
         className={cn(

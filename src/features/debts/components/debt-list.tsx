@@ -8,6 +8,7 @@ import { formatVnd } from "@/lib/vnd";
 import { cn } from "@/lib/utils";
 import type { DebtsView } from "../queries";
 import { DebtRow } from "./debt-row";
+import { ENTER, enterDelay } from "@/lib/enter-animation";
 
 type Filter = "active" | "settled" | "all";
 
@@ -30,9 +31,14 @@ export function DebtList({ view }: { view: DebtsView }) {
 
   return (
     <div className="flex flex-col gap-5">
-      <PageHeader href="/settings" label="Nợ & Vay" />
+      <div className={ENTER}>
+        <PageHeader href="/settings" label="Nợ & Vay" />
+      </div>
 
-      <section className="grid grid-cols-2 gap-3 rounded-2xl border border-border bg-surface p-5">
+      <section
+        className={`grid grid-cols-2 gap-3 rounded-2xl border border-border bg-surface p-5 ${ENTER}`}
+        style={enterDelay(60)}
+      >
         <div className="border-r border-border">
           <p className="text-[11px] uppercase tracking-wider text-fg-subtle">Bạn đang nợ</p>
           <p
@@ -55,7 +61,10 @@ export function DebtList({ view }: { view: DebtsView }) {
         </div>
       </section>
 
-      <div className="inline-flex gap-1 self-start rounded-full bg-surface-muted p-1">
+      <div
+        className={`inline-flex gap-1 self-start rounded-full bg-surface-muted p-1 ${ENTER}`}
+        style={enterDelay(120)}
+      >
         {segments.map((s) => (
           <button
             key={s.key}
@@ -72,7 +81,10 @@ export function DebtList({ view }: { view: DebtsView }) {
       </div>
 
       {view.rows.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 py-16 text-center">
+        <div
+          className={`flex flex-col items-center gap-2 py-16 text-center ${ENTER}`}
+          style={enterDelay(180)}
+        >
           <HandCoins size={32} className="text-fg-subtle" aria-hidden="true" />
           <p className="text-fg-muted">Chưa có khoản nợ nào.</p>
           <p className="text-sm text-fg-subtle">
@@ -84,16 +96,18 @@ export function DebtList({ view }: { view: DebtsView }) {
           </p>
         </div>
       ) : visible.length === 0 ? (
-        <p className="py-10 text-center text-sm text-fg-subtle">Không có khoản nào.</p>
+        <p className={`py-10 text-center text-sm text-fg-subtle ${ENTER}`} style={enterDelay(180)}>
+          Không có khoản nào.
+        </p>
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className={`flex flex-col gap-4 ${ENTER}`} style={enterDelay(180)}>
           {visible.map((d) => (
             <DebtRow key={d.id} debt={d} />
           ))}
         </div>
       )}
 
-      <p className="text-center text-[12px] text-fg-subtle">
+      <p className={`text-center text-[12px] text-fg-subtle ${ENTER}`} style={enterDelay(240)}>
         Ghi nhận thanh toán bằng cách thêm một giao dịch vào tài khoản nợ tương ứng.
       </p>
     </div>

@@ -8,6 +8,7 @@ import type { CategoryPickerOption } from "@/features/categories/components/cate
 import { RecurringRow } from "./recurring-row";
 import { RecurringFormSheet, type AccountOption } from "./recurring-form-sheet";
 import type { RecurringRuleItem } from "../queries";
+import { ENTER, enterDelay } from "@/lib/enter-animation";
 
 type Filter = "active" | "paused" | "all";
 
@@ -60,27 +61,36 @@ export function RecurringList({
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader
-        href="/settings"
-        label="Định kỳ"
-        action={
-          <Button
-            size="icon"
-            className="rounded-full"
-            aria-label="Tạo quy tắc định kỳ mới"
-            onClick={() => {
-              setEditing(null);
-              setOpen(true);
-            }}
-          >
-            <Plus size={20} aria-hidden="true" />
-          </Button>
-        }
-      />
+      <div className={ENTER}>
+        <PageHeader
+          href="/settings"
+          label="Định kỳ"
+          action={
+            <Button
+              size="icon"
+              className="rounded-full"
+              aria-label="Tạo quy tắc định kỳ mới"
+              onClick={() => {
+                setEditing(null);
+                setOpen(true);
+              }}
+            >
+              <Plus size={20} aria-hidden="true" />
+            </Button>
+          }
+        />
+      </div>
 
-      {children}
+      {children ? (
+        <div className={ENTER} style={enterDelay(60)}>
+          {children}
+        </div>
+      ) : null}
 
-      <div className="flex gap-1 self-start rounded-full bg-surface-muted p-1">
+      <div
+        className={`flex gap-1 self-start rounded-full bg-surface-muted p-1 ${ENTER}`}
+        style={enterDelay(120)}
+      >
         {TABS.map((t) => (
           <button
             key={t.value}
@@ -98,12 +108,15 @@ export function RecurringList({
       </div>
 
       {visible.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 py-12 text-center">
+        <div
+          className={`flex flex-col items-center gap-2 py-12 text-center ${ENTER}`}
+          style={enterDelay(180)}
+        >
           <CalendarClock size={32} className="text-fg-subtle" aria-hidden="true" />
           <p className="text-fg-muted">Chưa có quy tắc định kỳ nào.</p>
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className={`flex flex-col gap-3 ${ENTER}`} style={enterDelay(180)}>
           {visible.map((rule) => (
             <RecurringRow key={rule.id} rule={rule} onEdit={openEdit} />
           ))}
@@ -116,7 +129,8 @@ export function RecurringList({
           setEditing(null);
           setOpen(true);
         }}
-        className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-border text-sm font-semibold text-fg-muted transition-colors hover:bg-surface-muted"
+        style={enterDelay(240)}
+        className={`flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-border text-sm font-semibold text-fg-muted transition-colors hover:bg-surface-muted ${ENTER}`}
       >
         <Plus size={16} aria-hidden="true" /> Tạo quy tắc định kỳ mới
       </button>

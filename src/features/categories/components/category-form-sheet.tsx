@@ -240,7 +240,7 @@ export function CategoryFormSheet({
             </p>
           )}
 
-          <Button type="submit" disabled={submitting} className="h-12 w-full">
+          <Button type="submit" loading={submitting} className="h-12 w-full">
             {submitting ? "Đang lưu…" : "Lưu"}
           </Button>
         </form>

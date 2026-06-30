@@ -354,7 +354,7 @@ export function RecurringFormSheet({
                 <Trash2 size={16} aria-hidden="true" />
               </Button>
             )}
-            <Button type="submit" disabled={submitting} className="h-12 flex-1">
+            <Button type="submit" loading={submitting} className="h-12 flex-1">
               {submitting ? "Đang lưu…" : "Lưu"}
             </Button>
           </div>

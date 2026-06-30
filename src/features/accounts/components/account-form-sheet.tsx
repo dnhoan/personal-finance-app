@@ -5,14 +5,8 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
 import { VndAmountInput } from "@/components/forms/vnd-amount-input";
+import { cn } from "@/lib/utils";
 import { ACCOUNT_META, type AccountType } from "../account-meta";
 import { ACCOUNT_TYPES } from "../schemas";
 import { createAccount, renameAccount } from "../actions";
@@ -102,20 +96,46 @@ export function AccountFormSheet({
 
           {!isEdit && (
             <>
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-2">
                 <Label>Loại tài khoản</Label>
-                <Select value={type} onValueChange={(v) => setType(v as AccountType)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ACCOUNT_TYPES.map((t) => (
-                      <SelectItem key={t} value={t}>
-                        {ACCOUNT_META[t].label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div
+                  role="radiogroup"
+                  aria-label="Loại tài khoản"
+                  className="grid grid-cols-2 gap-2"
+                >
+                  {ACCOUNT_TYPES.map((t) => {
+                    const m = ACCOUNT_META[t];
+                    const Icon = m.icon;
+                    const selected = type === t;
+                    return (
+                      <button
+                        key={t}
+                        type="button"
+                        role="radio"
+                        aria-checked={selected}
+                        onClick={() => setType(t)}
+                        className={cn(
+                          "flex items-center gap-2.5 rounded-xl border p-2.5 text-left transition-colors touch-manipulation [-webkit-tap-highlight-color:transparent]",
+                          selected
+                            ? "border-accent bg-accent/10 ring-1 ring-accent"
+                            : "border-border bg-surface hover:bg-surface-muted",
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+                            m.tint,
+                          )}
+                        >
+                          <Icon size={18} strokeWidth={1.85} aria-hidden="true" />
+                        </span>
+                        <span className="min-w-0 flex-1 text-[13px] font-medium leading-snug text-fg">
+                          {m.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <div className="flex flex-col gap-1.5">
@@ -149,7 +169,7 @@ export function AccountFormSheet({
             </p>
           )}
 
-          <Button type="submit" disabled={submitting} className="h-12 w-full">
+          <Button type="submit" loading={submitting} className="h-12 w-full">
             {submitting ? "Đang lưu…" : "Lưu"}
           </Button>
         </form>

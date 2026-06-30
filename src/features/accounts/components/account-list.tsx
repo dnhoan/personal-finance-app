@@ -10,6 +10,7 @@ import type { AccountWithBalance } from "../queries";
 import { AccountsSummaryCard } from "./accounts-summary-card";
 import { AccountGroup } from "./account-group";
 import { AccountFormSheet, type EditTarget } from "./account-form-sheet";
+import { ENTER, enterDelay } from "@/lib/enter-animation";
 
 // Account detail works for any account, so debt rows link there too for now;
 // switch debt rows to /debts when that surface ships.
@@ -38,53 +39,65 @@ export function AccountList({ accounts }: { accounts: AccountWithBalance[] }) {
 
   return (
     <div className="flex flex-col gap-5">
-      <PageHeader
-        href="/settings"
-        label="Tài khoản"
-        action={
-          <Button
-            size="icon"
-            className="rounded-full"
-            aria-label="Thêm tài khoản"
-            onClick={openCreate}
-          >
-            <Plus size={20} aria-hidden="true" />
-          </Button>
-        }
-      />
+      <div className={ENTER}>
+        <PageHeader
+          href="/settings"
+          label="Tài khoản"
+          action={
+            <Button
+              size="icon"
+              className="rounded-full"
+              aria-label="Thêm tài khoản"
+              onClick={openCreate}
+            >
+              <Plus size={20} aria-hidden="true" />
+            </Button>
+          }
+        />
+      </div>
 
       {isEmpty ? (
-        <EmptyState
-          icon={<Wallet size={32} aria-hidden="true" />}
-          title="Chưa có tài khoản"
-          description="Thêm tài khoản đầu tiên để bắt đầu theo dõi số dư và giao dịch."
-        />
+        <div className={ENTER} style={enterDelay(60)}>
+          <EmptyState
+            icon={<Wallet size={32} aria-hidden="true" />}
+            title="Chưa có tài khoản"
+            description="Thêm tài khoản đầu tiên để bắt đầu theo dõi số dư và giao dịch."
+          />
+        </div>
       ) : (
         <>
-          <AccountsSummaryCard
-            total={grouped.total}
-            assetCount={grouped.assets.rows.length}
-            debtCount={grouped.liabilities.rows.length}
-          />
+          <div className={ENTER} style={enterDelay(60)}>
+            <AccountsSummaryCard
+              total={grouped.total}
+              assetsTotal={grouped.assets.subtotal}
+              liabilitiesTotal={grouped.liabilities.subtotal}
+              assetCount={grouped.assets.rows.length}
+              debtCount={grouped.liabilities.rows.length}
+            />
+          </div>
 
-          <AccountGroup
-            title="Tài sản"
-            subtotal={grouped.assets.subtotal}
-            rows={grouped.assets.rows}
-            hrefFor={detailHref}
-            onEdit={openEdit}
-          />
+          <div className={ENTER} style={enterDelay(120)}>
+            <AccountGroup
+              title="Tài sản"
+              subtotal={grouped.assets.subtotal}
+              rows={grouped.assets.rows}
+              hrefFor={detailHref}
+              onEdit={openEdit}
+            />
+          </div>
 
-          <AccountGroup
-            title="Nợ phải trả"
-            subtotal={grouped.liabilities.subtotal}
-            rows={grouped.liabilities.rows}
-            hrefFor={detailHref}
-            onEdit={openEdit}
-          />
+          <div className={ENTER} style={enterDelay(180)}>
+            <AccountGroup
+              title="Nợ phải trả"
+              subtotal={grouped.liabilities.subtotal}
+              rows={grouped.liabilities.rows}
+              hrefFor={detailHref}
+              onEdit={openEdit}
+            />
+          </div>
 
           {grouped.archived.length > 0 && (
-            <div className="opacity-70">
+            <div className={`opacity-70 ${ENTER}`} style={enterDelay(240)}>
               <AccountGroup
                 title="Đã lưu trữ"
                 subtotal={grouped.archived.reduce((acc, r) => acc + r.balance, 0)}
@@ -100,7 +113,8 @@ export function AccountList({ accounts }: { accounts: AccountWithBalance[] }) {
       <button
         type="button"
         onClick={openCreate}
-        className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border text-sm font-semibold text-fg-muted transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        style={enterDelay(isEmpty ? 120 : 300)}
+        className={`flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border text-sm font-semibold text-fg-muted transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${ENTER}`}
       >
         <Plus size={18} aria-hidden="true" /> Thêm tài khoản
       </button>

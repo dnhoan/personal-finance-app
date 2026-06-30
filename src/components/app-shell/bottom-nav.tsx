@@ -32,6 +32,10 @@ export function BottomNav() {
                 className={cn(
                   "flex min-h-[56px] flex-col items-center justify-center gap-1 rounded-md text-[11px] font-medium",
                   "touch-manipulation [-webkit-tap-highlight-color:transparent]",
+                  // Instant finger-down feedback: the tab dims + nudges down on
+                  // press (hover never fires on touch), then the route's
+                  // loading.tsx skeleton covers the content wait.
+                  "transition-[transform,color] duration-100 active:scale-95 active:text-primary motion-reduce:active:scale-100",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
                   active ? "text-primary" : "text-fg-subtle hover:text-fg",
                 )}

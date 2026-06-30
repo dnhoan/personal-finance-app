@@ -16,6 +16,7 @@ import { SpendingDonut } from "@/features/reports/components/spending-donut";
 import { ChartDataTable } from "@/features/reports/components/chart-data-table";
 import { EmptyState } from "@/features/reports/components/empty-state";
 import { StatDelta } from "@/features/reports/components/stat-delta";
+import { ENTER, enterDelay } from "@/lib/enter-animation";
 
 export const metadata = { title: "Theo danh mục · Báo cáo" };
 
@@ -47,14 +48,19 @@ export default async function SpendingReportPage({
 
   return (
     <div className="flex flex-col gap-5">
-      <ReportPageHeader title="Theo danh mục" active="spending" />
-      <div className="flex flex-col gap-1">
+      <div className={ENTER}>
+        <ReportPageHeader title="Theo danh mục" active="spending" />
+      </div>
+      <div className={`flex flex-col gap-1 ${ENTER}`} style={enterDelay(60)}>
         <RangePicker />
         <p className="px-1 text-[12px] text-fg-subtle">{formatRangeLabel(range)}</p>
       </div>
 
       {hasSpend && (
-        <section className="rounded-2xl border border-border bg-surface p-5">
+        <section
+          className={`rounded-2xl border border-border bg-surface p-5 ${ENTER}`}
+          style={enterDelay(120)}
+        >
           <p className="text-[11px] font-medium uppercase tracking-wider text-fg-subtle">
             Tổng chi tiêu · toàn kỳ
           </p>
@@ -75,7 +81,10 @@ export default async function SpendingReportPage({
         </section>
       )}
 
-      <section className="rounded-2xl border border-border bg-surface p-5">
+      <section
+        className={`rounded-2xl border border-border bg-surface p-5 ${ENTER}`}
+        style={enterDelay(180)}
+      >
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-fg">Chi theo danh mục</h2>
           <span className="text-[11px] text-fg-subtle">Chỉ chi tiêu</span>
