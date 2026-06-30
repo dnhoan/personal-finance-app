@@ -312,7 +312,7 @@ export function QuickAddSheet({
               </p>
             )}
 
-            <Button type="submit" disabled={formState.isSubmitting} className="h-12 w-full">
+            <Button type="submit" loading={formState.isSubmitting} className="h-12 w-full">
               {formState.isSubmitting ? "Đang lưu…" : SUBMIT_LABEL[kind]}
             </Button>
           </form>

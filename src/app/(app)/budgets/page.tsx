@@ -11,15 +11,11 @@ import { budgetStatus } from "@/features/budgets/lib/effective-budget";
 import { MonthNavigator } from "@/features/budgets/components/month-navigator";
 import { BudgetSummaryCard } from "@/features/budgets/components/budget-summary-card";
 import { BudgetList } from "@/features/budgets/components/budget-list";
+import { ENTER, enterDelay } from "@/lib/enter-animation";
 
 export const metadata = { title: "Ngân sách · Personal Finance" };
 
 type SearchParams = Record<string, string | undefined>;
-
-// Section entrance: a gentle staggered rise on load. `fill-mode-both` holds the
-// pre-animation state so nothing flashes; `motion-reduce` drops it entirely.
-const ENTER =
-  "animate-in fade-in slide-in-from-bottom-3 fill-mode-both duration-500 motion-reduce:animate-none";
 
 export default async function BudgetsPage({
   searchParams,
@@ -50,14 +46,14 @@ export default async function BudgetsPage({
         Ngân sách
       </h1>
 
-      <div className={ENTER} style={{ animationDelay: "60ms" }}>
+      <div className={ENTER} style={enterDelay(60)}>
         <MonthNavigator monthKey={monthKey} />
       </div>
 
       {/* The summary gauge only earns its space once a budget exists; otherwise
           the list's empty state below carries the call to action. */}
       {hasBudgets && (
-        <div className={ENTER} style={{ animationDelay: "120ms" }}>
+        <div className={ENTER} style={enterDelay(120)}>
           <BudgetSummaryCard
             spent={summary.totalSpent}
             effective={summary.totalEffective}
@@ -71,7 +67,7 @@ export default async function BudgetsPage({
         </div>
       )}
 
-      <div className={ENTER} style={{ animationDelay: hasBudgets ? "180ms" : "120ms" }}>
+      <div className={ENTER} style={enterDelay(hasBudgets ? 180 : 120)}>
         <BudgetList
           rows={rows}
           budgetableCategories={budgetableCategories}

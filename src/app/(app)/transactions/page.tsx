@@ -16,6 +16,7 @@ import { TransactionLedger } from "@/features/transactions/components/transactio
 import { TransactionSummary } from "@/features/transactions/components/transaction-summary";
 import { TransactionFilters } from "@/features/transactions/components/transaction-filters";
 import { QuickAddLauncher } from "@/features/transactions/components/quick-add-launcher";
+import { ENTER, enterDelay } from "@/lib/enter-animation";
 
 export const metadata = { title: "Giao dịch · Personal Finance" };
 
@@ -75,17 +76,26 @@ export default async function TransactionsPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-semibold text-fg" style={{ fontFamily: "var(--font-serif)" }}>
+      <h1
+        className={`text-2xl font-semibold text-fg ${ENTER}`}
+        style={{ fontFamily: "var(--font-serif)" }}
+      >
         Giao dịch
       </h1>
-      <TransactionFilters accounts={accounts} categories={categories} />
-      <TransactionSummary summary={summary} />
-      <TransactionLedger
-        initialItems={page.items}
-        initialHasMore={page.hasMore}
-        filter={filter}
-        accounts={accounts}
-      />
+      <div className={ENTER} style={enterDelay(60)}>
+        <TransactionFilters accounts={accounts} categories={categories} />
+      </div>
+      <div className={ENTER} style={enterDelay(120)}>
+        <TransactionSummary summary={summary} />
+      </div>
+      <div className={ENTER} style={enterDelay(180)}>
+        <TransactionLedger
+          initialItems={page.items}
+          initialHasMore={page.hasMore}
+          filter={filter}
+          accounts={accounts}
+        />
+      </div>
       <QuickAddLauncher
         accounts={accounts}
         categories={categories}

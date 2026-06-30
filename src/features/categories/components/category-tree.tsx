@@ -34,6 +34,7 @@ import { getCategoryIcon } from "../category-icons";
 import { archiveCategory, reorderCategories } from "../actions";
 import type { CategoryNode, CategoryChild, CategoryKind } from "../queries";
 import { CategoryFormSheet, type CategoryEditTarget, type RootOption } from "./category-form-sheet";
+import { ENTER, enterDelay } from "@/lib/enter-animation";
 
 // /settings/categories manager: Chi tiêu/Thu nhập tabs (both trees fetched
 // server-side, toggled client-side), per-category month spend, add/edit/archive,
@@ -141,20 +142,23 @@ export function CategoryTree({
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader
-        href="/settings"
-        label="Danh mục"
-        action={
-          <Button size="sm" onClick={openCreate}>
-            <Plus size={18} aria-hidden="true" /> Thêm
-          </Button>
-        }
-      />
+      <div className={ENTER}>
+        <PageHeader
+          href="/settings"
+          label="Danh mục"
+          action={
+            <Button size="sm" onClick={openCreate}>
+              <Plus size={18} aria-hidden="true" /> Thêm
+            </Button>
+          }
+        />
+      </div>
 
       <div
         role="radiogroup"
         aria-label="Loại danh mục"
-        className="inline-flex gap-1 self-start rounded-full bg-surface-muted p-1"
+        style={enterDelay(60)}
+        className={`inline-flex gap-1 self-start rounded-full bg-surface-muted p-1 ${ENTER}`}
       >
         {(["expense", "income"] as const).map((k) => (
           <button
@@ -174,39 +178,43 @@ export function CategoryTree({
       </div>
 
       {kind === "expense" && (
-        <p className="text-[12px] text-fg-muted">
+        <p className={`text-[12px] text-fg-muted ${ENTER}`} style={enterDelay(120)}>
           {tree.length} danh mục · {childCount} danh mục con · Đã chi{" "}
           <span className="font-semibold tabular-nums text-expense">{formatVnd(totalExpense)}</span>
         </p>
       )}
 
       {tree.length === 0 ? (
-        <p className="py-12 text-center text-fg-muted">Chưa có danh mục nào.</p>
+        <p className={`py-12 text-center text-fg-muted ${ENTER}`} style={enterDelay(180)}>
+          Chưa có danh mục nào.
+        </p>
       ) : (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          modifiers={[restrictToVerticalAxis]}
-          onDragEnd={handleDragEnd}
-        >
-          <Card className="divide-y divide-border overflow-hidden">
-            <SortableContext items={tree.map((r) => r.id)} strategy={verticalListSortingStrategy}>
-              {tree.map((root) => (
-                <div key={root.id}>
-                  <CategoryRow node={root} onEdit={openEdit} />
-                  <SortableContext
-                    items={root.children.map((c) => c.id)}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    {root.children.map((child) => (
-                      <ChildRow key={child.id} child={child} onEdit={openEdit} />
-                    ))}
-                  </SortableContext>
-                </div>
-              ))}
-            </SortableContext>
-          </Card>
-        </DndContext>
+        <div className={ENTER} style={enterDelay(180)}>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            modifiers={[restrictToVerticalAxis]}
+            onDragEnd={handleDragEnd}
+          >
+            <Card className="divide-y divide-border overflow-hidden">
+              <SortableContext items={tree.map((r) => r.id)} strategy={verticalListSortingStrategy}>
+                {tree.map((root) => (
+                  <div key={root.id}>
+                    <CategoryRow node={root} onEdit={openEdit} />
+                    <SortableContext
+                      items={root.children.map((c) => c.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      {root.children.map((child) => (
+                        <ChildRow key={child.id} child={child} onEdit={openEdit} />
+                      ))}
+                    </SortableContext>
+                  </div>
+                ))}
+              </SortableContext>
+            </Card>
+          </DndContext>
+        </div>
       )}
 
       <CategoryFormSheet

@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SignInButton } from "@/components/auth/sign-in-button";
+import { ENTER } from "@/lib/enter-animation";
 
 export const metadata = { title: "Đăng nhập · Personal Finance" };
 
@@ -11,7 +12,7 @@ export default async function SignInPage({
   const { from } = await searchParams;
 
   return (
-    <Card className="w-full">
+    <Card className={`w-full ${ENTER}`}>
       <CardHeader className="text-center">
         <h1
           className="text-3xl font-semibold leading-tight text-fg"

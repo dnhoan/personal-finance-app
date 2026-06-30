@@ -13,6 +13,7 @@ import { RangePicker } from "@/features/reports/components/range-picker";
 import { CashFlowChart } from "@/features/reports/components/cash-flow-chart";
 import { ChartDataTable } from "@/features/reports/components/chart-data-table";
 import { EmptyState } from "@/features/reports/components/empty-state";
+import { ENTER, enterDelay } from "@/lib/enter-animation";
 
 export const metadata = { title: "Dòng tiền · Báo cáo" };
 
@@ -39,13 +40,15 @@ export default async function CashFlowReportPage({
 
   return (
     <div className="flex flex-col gap-5">
-      <ReportPageHeader title="Dòng tiền" active="cash-flow" />
-      <div className="flex flex-col gap-1">
+      <div className={ENTER}>
+        <ReportPageHeader title="Dòng tiền" active="cash-flow" />
+      </div>
+      <div className={`flex flex-col gap-1 ${ENTER}`} style={enterDelay(60)}>
         <RangePicker />
         <p className="px-1 text-[12px] text-fg-subtle">{formatRangeLabel(range)}</p>
       </div>
 
-      <section className="grid grid-cols-3 gap-2">
+      <section className={`grid grid-cols-3 gap-2 ${ENTER}`} style={enterDelay(120)}>
         <Kpi label="Vào" value={formatVnd(totalIncome)} tone="income" />
         <Kpi label="Ra" value={formatVnd(totalExpense)} tone="expense" />
         <Kpi
@@ -56,7 +59,10 @@ export default async function CashFlowReportPage({
         />
       </section>
 
-      <section className="rounded-2xl border border-border bg-surface p-5">
+      <section
+        className={`rounded-2xl border border-border bg-surface p-5 ${ENTER}`}
+        style={enterDelay(180)}
+      >
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-fg">Dòng tiền</h2>
           <span className="text-[11px] text-fg-subtle">Không gồm chuyển khoản</span>

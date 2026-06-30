@@ -15,6 +15,7 @@ import { SettingsDownloadRow } from "@/features/settings/components/settings-dow
 import { AccountHeroCard } from "@/features/settings/components/account-hero-card";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { requireSession } from "@/lib/auth-session";
+import { ENTER, enterDelay } from "@/lib/enter-animation";
 
 export const metadata = { title: "Cài đặt · Personal Finance" };
 
@@ -77,12 +78,6 @@ const GROUPS: { label: string; rows: Row[] }[] = [
   },
 ];
 
-// Section entrance: a gentle staggered rise on load. `fill-mode-both` holds the
-// pre-animation (hidden) state so nothing flashes before its turn;
-// `motion-reduce:animate-none` drops the motion entirely for users who ask.
-const ENTER =
-  "animate-in fade-in slide-in-from-bottom-3 fill-mode-both duration-500 motion-reduce:animate-none";
-
 export default async function SettingsPage() {
   const { user } = await requireSession();
 
@@ -95,7 +90,7 @@ export default async function SettingsPage() {
         <p className="mt-1 text-sm text-fg-muted">Tài khoản, thiết lập và dữ liệu</p>
       </header>
 
-      <div className={ENTER} style={{ animationDelay: "60ms" }}>
+      <div className={ENTER} style={enterDelay(60)}>
         <AccountHeroCard email={user.email} />
       </div>
 
@@ -103,7 +98,7 @@ export default async function SettingsPage() {
         <section
           key={group.label}
           className={`flex flex-col gap-2.5 ${ENTER}`}
-          style={{ animationDelay: `${120 + i * 60}ms` }}
+          style={enterDelay(120 + i * 60)}
         >
           <h2 className="pl-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-fg-muted">
             {group.label}
@@ -125,7 +120,7 @@ export default async function SettingsPage() {
 
       {/* Data export. Download rows fetch the attachment from the API route and
           save it; the server-set Content-Disposition filename wins. */}
-      <section className={`flex flex-col gap-2.5 ${ENTER}`} style={{ animationDelay: "240ms" }}>
+      <section className={`flex flex-col gap-2.5 ${ENTER}`} style={enterDelay(240)}>
         <h2 className="pl-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-fg-muted">
           Dữ liệu
         </h2>
@@ -147,7 +142,7 @@ export default async function SettingsPage() {
         </Card>
       </section>
 
-      <section className={`flex flex-col gap-4 ${ENTER}`} style={{ animationDelay: "300ms" }}>
+      <section className={`flex flex-col gap-4 ${ENTER}`} style={enterDelay(300)}>
         <SignOutButton />
         <p className="text-center text-xs text-fg-subtle">Tài chính Cá nhân · v1.0</p>
       </section>

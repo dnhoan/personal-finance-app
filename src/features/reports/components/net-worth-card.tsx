@@ -71,7 +71,7 @@ export function NetWorthCard({
   return (
     <Link
       href={"/reports/net-worth" as Route}
-      className="block rounded-2xl border border-border bg-surface p-5 transition-colors hover:bg-surface-muted"
+      className="block touch-manipulation rounded-2xl border border-border bg-surface p-5 transition-[transform,background-color] duration-100 [-webkit-tap-highlight-color:transparent] hover:bg-surface-muted active:scale-[0.99] active:bg-surface-muted motion-reduce:active:scale-100"
     >
       <div className="flex items-center justify-between">
         <p className="text-[11px] font-medium uppercase tracking-wider text-fg-subtle">

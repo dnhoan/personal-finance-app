@@ -32,6 +32,21 @@ const ACCOUNT_ICON: Record<TxListItem["accountType"], LucideIcon> = {
   receivable: ArrowDownLeft,
 };
 
+// Soft direction wash behind each row's icon. Income/expense rows pick up a gentle
+// green/red tint so the list reads as a flow of money down the left edge before
+// any number is parsed; transfers stay neutral. The glyph keeps the category color
+// on top (set via inline `color`), so category identity survives the tint.
+const KIND_ICON_BG: Record<TxListItem["kind"], string> = {
+  income: "bg-income-soft",
+  expense: "bg-expense-soft",
+  transfer: "bg-surface-muted",
+};
+const KIND_ICON_FG: Record<TxListItem["kind"], string> = {
+  income: "text-income",
+  expense: "text-expense",
+  transfer: "text-transfer",
+};
+
 const MINUS = "−"; // U+2212, not a hyphen — per design guidelines.
 
 // 64px display row: tinted icon circle, title + meta stack, colored amount right.
@@ -120,11 +135,18 @@ export function TransactionRow({
     // row height so the scrollbar and scroll position stay stable while culled.
     <li className="flex min-h-[64px] items-center gap-3 py-2 [contain-intrinsic-size:auto_64px] [content-visibility:auto]">
       <span
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-muted"
+        className={cn(
+          "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
+          KIND_ICON_BG[tx.kind],
+        )}
         style={tx.categoryColor ? { color: tx.categoryColor } : undefined}
         aria-hidden="true"
       >
-        <Icon size={20} strokeWidth={1.75} className={cn(!tx.categoryColor && "text-fg-muted")} />
+        <Icon
+          size={20}
+          strokeWidth={1.75}
+          className={cn(!tx.categoryColor && KIND_ICON_FG[tx.kind])}
+        />
       </span>
 
       <div className="min-w-0 flex-1">

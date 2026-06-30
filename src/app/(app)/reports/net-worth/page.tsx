@@ -9,6 +9,7 @@ import { EmptyState } from "@/features/reports/components/empty-state";
 import { NetWorthTrendChart } from "@/features/reports/components/net-worth-trend-chart";
 import { ChartDataTable } from "@/features/reports/components/chart-data-table";
 import type { AccountWithBalance } from "@/features/accounts/queries";
+import { ENTER, enterDelay } from "@/lib/enter-animation";
 
 export const metadata = { title: "Giá trị ròng · Báo cáo" };
 
@@ -40,17 +41,24 @@ export default async function NetWorthReportPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <ReportPageHeader title="Giá trị ròng" active="net-worth" />
+      <div className={ENTER}>
+        <ReportPageHeader title="Giá trị ròng" active="net-worth" />
+      </div>
 
       {!hasAccounts ? (
-        <EmptyState
-          title="Chưa có tài khoản"
-          description="Thêm tài khoản đầu tiên để theo dõi giá trị ròng của bạn."
-          cta={{ href: "/accounts", label: "Thêm tài khoản" }}
-        />
+        <div className={ENTER} style={enterDelay(60)}>
+          <EmptyState
+            title="Chưa có tài khoản"
+            description="Thêm tài khoản đầu tiên để theo dõi giá trị ròng của bạn."
+            cta={{ href: "/accounts", label: "Thêm tài khoản" }}
+          />
+        </div>
       ) : (
         <>
-          <section className="rounded-2xl border border-border bg-surface p-5">
+          <section
+            className={`rounded-2xl border border-border bg-surface p-5 ${ENTER}`}
+            style={enterDelay(60)}
+          >
             <p className="text-[11px] font-medium uppercase tracking-wider text-fg-subtle">
               Tổng giá trị ròng · Tính đến {todayLabelIct()}
             </p>
@@ -76,7 +84,10 @@ export default async function NetWorthReportPage() {
           </section>
 
           {trend.length >= 2 && (
-            <section className="rounded-2xl border border-border bg-surface p-5">
+            <section
+              className={`rounded-2xl border border-border bg-surface p-5 ${ENTER}`}
+              style={enterDelay(120)}
+            >
               <h2 className="mb-3 text-lg font-semibold text-fg">Diễn biến 12 tháng</h2>
               <NetWorthTrendChart data={trend} />
               <ChartDataTable
@@ -95,10 +106,14 @@ export default async function NetWorthReportPage() {
           )}
 
           {grouped.assets.rows.length > 0 && (
-            <AccountGroup title="Tài sản" rows={grouped.assets.rows} />
+            <div className={ENTER} style={enterDelay(180)}>
+              <AccountGroup title="Tài sản" rows={grouped.assets.rows} />
+            </div>
           )}
           {grouped.liabilities.rows.length > 0 && (
-            <AccountGroup title="Nợ" rows={grouped.liabilities.rows} owed />
+            <div className={ENTER} style={enterDelay(240)}>
+              <AccountGroup title="Nợ" rows={grouped.liabilities.rows} owed />
+            </div>
           )}
         </>
       )}
