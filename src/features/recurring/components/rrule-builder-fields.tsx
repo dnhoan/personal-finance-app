@@ -185,13 +185,14 @@ export function RruleBuilderFields({
             </div>
           )}
 
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5 min-w-0">
             <Label htmlFor="rule-start">Bắt đầu từ</Label>
             <Input
               id="rule-start"
               type="date"
               value={state.startDate}
               onChange={(e) => e.target.value && set({ startDate: e.target.value })}
+              className="max-w-full"
             />
           </div>
         </>
