@@ -1,5 +1,5 @@
 "use server";
-import { and, eq, isNull, like } from "drizzle-orm";
+import { and, eq, isNull, like, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db/client";
 import { categories } from "@/lib/db/schema";
@@ -9,8 +9,10 @@ import {
   createCategorySchema,
   updateCategorySchema,
   archiveCategorySchema,
+  reorderCategoriesSchema,
   type CreateCategoryInput,
   type UpdateCategoryInput,
+  type ReorderCategoriesInput,
 } from "./schemas";
 
 function revalidateCategoryViews() {
@@ -51,6 +53,10 @@ export async function createCategory(input: CreateCategoryInput): Promise<{ id: 
     kind = parent.kind; // child inherits the parent's kind
   }
 
+  // Append after existing siblings (in the same kind + parent scope) so a new
+  // category lands last rather than colliding with everyone at sort_order 0.
+  const nextSortOrder = await nextSortOrderForScope(user.id, kind, data.parentId ?? null);
+
   const [row] = await db
     .insert(categories)
     .values({
@@ -61,6 +67,7 @@ export async function createCategory(input: CreateCategoryInput): Promise<{ id: 
       parentId: data.parentId ?? null,
       icon: data.icon ?? null,
       color: data.color ?? null,
+      sortOrder: nextSortOrder,
     })
     .returning({ id: categories.id });
 
@@ -109,6 +116,68 @@ export async function archiveCategory(input: { id: string }): Promise<void> {
     .update(categories)
     .set({ archivedAt: new Date(), updatedAt: new Date() })
     .where(and(eq(categories.id, id), eq(categories.userId, user.id)));
+
+  revalidateCategoryViews();
+}
+
+// Next sort_order for a sibling group: MAX(sort_order)+1, or 1 when the scope is
+// empty. parentId null = root group.
+async function nextSortOrderForScope(
+  userId: string,
+  kind: CreateCategoryInput["kind"],
+  parentId: string | null,
+): Promise<number> {
+  const rows = await db.execute<{ next: number }>(sql`
+    SELECT COALESCE(MAX(sort_order), 0) + 1 AS next
+    FROM categories
+    WHERE user_id = ${userId}
+      AND kind = ${kind}
+      AND parent_id IS NOT DISTINCT FROM ${parentId}
+  `);
+  return Number(rows.rows[0]?.next ?? 1);
+}
+
+// Persists a new order for ONE sibling group (drag-and-drop drop event sends the
+// full reordered id list). Validates every id belongs to the user and matches the
+// scope's non-archived sibling set before writing, so a client can't move another
+// user's, another scope's, or a stale (archived) row; assigns sort_order = index.
+export async function reorderCategories(input: ReorderCategoriesInput): Promise<void> {
+  const { user } = await requireSession();
+  const { kind, parentId, orderedIds } = reorderCategoriesSchema.parse(input);
+
+  await db.transaction(async (tx) => {
+    // The authoritative non-archived sibling set for this exact scope.
+    const siblings = await tx
+      .select({ id: categories.id })
+      .from(categories)
+      .where(
+        and(
+          eq(categories.userId, user.id),
+          eq(categories.kind, kind),
+          parentId === null ? isNull(categories.parentId) : eq(categories.parentId, parentId),
+          isNull(categories.archivedAt),
+        ),
+      );
+
+    const scopeIds = new Set(siblings.map((s) => s.id));
+    const incoming = new Set(orderedIds);
+    // Reject if the client list doesn't match the scope exactly (length + membership):
+    // a stale list (sibling archived/added since load) fails rather than corrupting order.
+    if (
+      orderedIds.length !== scopeIds.size ||
+      incoming.size !== orderedIds.length ||
+      orderedIds.some((id) => !scopeIds.has(id))
+    ) {
+      throw new Error("Danh sách danh mục đã thay đổi — hãy tải lại trang");
+    }
+
+    for (let i = 0; i < orderedIds.length; i++) {
+      await tx
+        .update(categories)
+        .set({ sortOrder: i, updatedAt: new Date() })
+        .where(and(eq(categories.id, orderedIds[i]!), eq(categories.userId, user.id)));
+    }
+  });
 
   revalidateCategoryViews();
 }

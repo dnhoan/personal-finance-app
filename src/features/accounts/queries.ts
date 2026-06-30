@@ -12,6 +12,8 @@ export type AccountWithBalance = {
   currency: string;
   /** initialBalance + signed sum of transactions, as a whole-VND number. */
   balance: number;
+  /** The user's single default account (quick-add pre-selection). */
+  isDefault: boolean;
 };
 
 // Balance for spending accounts = opening balance + signed sum of transactions
@@ -31,9 +33,10 @@ export async function listAccountsWithBalance(userId: string): Promise<AccountWi
     status: AccountWithBalance["status"];
     currency: string;
     balance: string;
+    is_default: boolean;
   }>(sql`
     SELECT
-      a.id, a.name, a.type, a.status, a.currency,
+      a.id, a.name, a.type, a.status, a.currency, a.is_default,
       CASE
         WHEN a.type = 'debt' THEN
           (a.initial_balance - COALESCE(SUM(t.amount) FILTER (WHERE t.kind = 'expense'), 0))::text
@@ -58,7 +61,21 @@ export async function listAccountsWithBalance(userId: string): Promise<AccountWi
     status: r.status,
     currency: r.currency,
     balance: Number(r.balance),
+    isDefault: r.is_default,
   }));
+}
+
+/**
+ * The user's default account id, or null when none is set. Scoped to active
+ * accounts so an archived (but still flagged, defensively) row never surfaces.
+ */
+export async function getDefaultAccountId(userId: string): Promise<string | null> {
+  const rows = await db.execute<{ id: string }>(sql`
+    SELECT id FROM accounts
+    WHERE user_id = ${userId} AND is_default AND status <> 'archived'
+    LIMIT 1
+  `);
+  return rows.rows[0]?.id ?? null;
 }
 
 /** Active (non-archived) accounts for pickers, ordered by creation. */
@@ -88,9 +105,10 @@ export const getAccountWithBalance = cache(async function getAccountWithBalance(
     status: AccountWithBalance["status"];
     currency: string;
     balance: string;
+    is_default: boolean;
   }>(sql`
     SELECT
-      a.id, a.name, a.type, a.status, a.currency,
+      a.id, a.name, a.type, a.status, a.currency, a.is_default,
       CASE
         WHEN a.type = 'debt' THEN
           (a.initial_balance - COALESCE(SUM(t.amount) FILTER (WHERE t.kind = 'expense'), 0))::text
@@ -116,6 +134,7 @@ export const getAccountWithBalance = cache(async function getAccountWithBalance(
     status: r.status,
     currency: r.currency,
     balance: Number(r.balance),
+    isDefault: r.is_default,
   };
 });
 

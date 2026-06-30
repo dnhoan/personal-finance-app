@@ -25,3 +25,4 @@ export const renameAccountSchema = z.object({
 
 export const archiveAccountSchema = z.object({ id: z.string().uuid() });
 export const unarchiveAccountSchema = z.object({ id: z.string().uuid() });
+export const setDefaultAccountSchema = z.object({ id: z.string().uuid() });

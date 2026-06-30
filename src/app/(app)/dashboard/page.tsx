@@ -3,8 +3,9 @@ import type { Route } from "next";
 import { Wallet } from "lucide-react";
 import { requireSession } from "@/lib/auth-session";
 import { listTransactions } from "@/features/transactions/queries";
-import { listActiveAccounts } from "@/features/accounts/queries";
-import { listCategoriesFlat } from "@/features/categories/queries";
+import { listActiveAccounts, getDefaultAccountId } from "@/features/accounts/queries";
+import { listCategoriesFlat, getDefaultCategoryIds } from "@/features/categories/queries";
+import { resolveDefaultAccountId } from "@/features/transactions/lib/resolve-default-account";
 import { listActiveGoals } from "@/features/goals/queries";
 import {
   netCashFlowMoM,
@@ -42,6 +43,8 @@ export default async function DashboardPage() {
     accounts,
     categories,
     goals,
+    explicitDefaultAccountId,
+    defaultCategoryByKind,
   ] = await Promise.all([
     netCashFlowMoM(user.id),
     netWorthSnapshot(user.id),
@@ -53,7 +56,11 @@ export default async function DashboardPage() {
     listActiveAccounts(user.id),
     listCategoriesFlat(user.id),
     listActiveGoals(user.id),
+    getDefaultAccountId(user.id),
+    getDefaultCategoryIds(user.id),
   ]);
+
+  const defaultAccountId = resolveDefaultAccountId(explicitDefaultAccountId, accounts) ?? undefined;
 
   // First run: no accounts AND no transactions. Gate on accounts too so a user
   // who deleted every transaction but kept an account still sees the metric layout.
@@ -108,7 +115,13 @@ export default async function DashboardPage() {
         <CronStatusBadge lastCheckedAt={heartbeat.lastCheckedAt} />
       </div>
 
-      <QuickAddLauncher accounts={accounts} categories={categories} goals={goals} />
+      <QuickAddLauncher
+        accounts={accounts}
+        categories={categories}
+        goals={goals}
+        defaultAccountId={defaultAccountId}
+        defaultCategoryByKind={defaultCategoryByKind}
+      />
     </div>
   );
 }

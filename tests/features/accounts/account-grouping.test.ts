@@ -10,6 +10,7 @@ function account(over: Partial<AccountWithBalance>): AccountWithBalance {
     status: over.status ?? "open",
     currency: over.currency ?? "VND",
     balance: over.balance ?? 0,
+    isDefault: over.isDefault ?? false,
   };
 }
 

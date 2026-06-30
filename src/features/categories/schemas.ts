@@ -28,3 +28,12 @@ export const updateCategorySchema = z.object({
 export type UpdateCategoryInput = z.infer<typeof updateCategorySchema>;
 
 export const archiveCategorySchema = z.object({ id: z.string().uuid() });
+
+// Reorder one sibling group: drag-and-drop sends the full reordered id list for a
+// single (kind, parentId) scope. `parentId` null = root group.
+export const reorderCategoriesSchema = z.object({
+  kind: z.enum(CATEGORY_KINDS),
+  parentId: z.string().uuid().nullable(),
+  orderedIds: z.array(z.string().uuid()).nonempty(),
+});
+export type ReorderCategoriesInput = z.infer<typeof reorderCategoriesSchema>;

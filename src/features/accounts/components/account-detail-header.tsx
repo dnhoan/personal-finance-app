@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import {
   QuickAddSheet,
   type AccountOption,
+  type DefaultCategoryByKind,
 } from "@/features/transactions/components/quick-add-sheet";
 import type { CategoryPickerOption } from "@/features/categories/components/category-picker";
 import type { TxKind } from "@/features/transactions/components/kind-toggle";
@@ -24,12 +25,15 @@ export function AccountDetailHeader({
   account,
   accounts,
   categories,
+  defaultCategoryByKind,
 }: {
   account: AccountWithBalance;
   /** Active accounts for the transfer picker. */
   accounts: AccountOption[];
   /** Categories for the quick-add category picker. */
   categories: CategoryPickerOption[];
+  /** Per-kind default category for the quick-add pre-fill (account stays this one). */
+  defaultCategoryByKind?: DefaultCategoryByKind;
 }) {
   const router = useRouter();
   const [quickAddOpen, setQuickAddOpen] = React.useState(false);
@@ -60,6 +64,7 @@ export function AccountDetailHeader({
         <AccountActionsMenu
           accountId={account.id}
           archived={account.status === "archived"}
+          isDefault={account.isDefault}
           onEdit={openRename}
           onArchived={() => router.push("/accounts")}
         />
@@ -109,6 +114,7 @@ export function AccountDetailHeader({
         onOpenChange={setQuickAddOpen}
         defaultAccountId={account.id}
         defaultKind={quickAddKind}
+        defaultCategoryByKind={defaultCategoryByKind}
       />
       <AccountFormSheet
         open={renaming !== null}
