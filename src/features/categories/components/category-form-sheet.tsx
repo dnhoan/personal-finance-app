@@ -91,21 +91,28 @@ export function CategoryFormSheet({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent title={isEdit ? "Sửa danh mục" : "Thêm danh mục"}>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="flex items-center gap-3">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          {/* Live identity preview — the chosen icon + color update here as the
+              user builds the category, so they see how it will appear in lists. */}
+          <div className="flex items-center gap-3.5">
             <span
-              className="flex h-12 w-12 items-center justify-center rounded-xl"
-              style={{ backgroundColor: `${color}1A`, color }}
+              className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl transition-colors"
+              style={{
+                backgroundColor: `${color}1A`,
+                color,
+                boxShadow: `inset 0 0 0 1px ${color}33`,
+              }}
             >
-              {React.createElement(getCategoryIcon(icon), { size: 22, "aria-hidden": true })}
+              {React.createElement(getCategoryIcon(icon), { size: 26, "aria-hidden": true })}
             </span>
             <Input
               aria-label="Tên danh mục"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="VD: Đi chợ…"
+              placeholder="VD: Đi chợ, Cà phê…"
               autoComplete="off"
               spellCheck={false}
+              className="text-base font-medium"
             />
           </div>
 
@@ -114,7 +121,7 @@ export function CategoryFormSheet({
               <div
                 role="radiogroup"
                 aria-label="Loại"
-                className="grid grid-cols-2 gap-1 rounded-md bg-surface-muted p-1"
+                className="grid grid-cols-2 gap-1 rounded-lg bg-surface-muted p-1"
               >
                 {(["expense", "income"] as const).map((k) => (
                   <button
@@ -127,10 +134,18 @@ export function CategoryFormSheet({
                       setParentId("none");
                     }}
                     className={cn(
-                      "min-h-[40px] rounded-sm text-sm font-medium transition-colors",
+                      "flex min-h-[42px] items-center justify-center gap-2 rounded-md text-sm font-medium transition-colors",
                       kind === k ? "bg-surface text-fg shadow-sm" : "text-fg-muted hover:text-fg",
                     )}
                   >
+                    <span
+                      aria-hidden="true"
+                      className="h-2 w-2 rounded-full"
+                      style={{
+                        backgroundColor:
+                          k === "expense" ? "var(--color-expense)" : "var(--color-income)",
+                      }}
+                    />
                     {k === "expense" ? "Chi tiêu" : "Thu nhập"}
                   </button>
                 ))}
@@ -155,22 +170,32 @@ export function CategoryFormSheet({
             </>
           )}
 
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <Label>Biểu tượng</Label>
             <div className="grid grid-cols-7 gap-1.5">
               {ICON_NAMES.map((nm) => {
                 const Icon = getCategoryIcon(nm);
+                const selected = icon === nm;
                 return (
                   <button
                     key={nm}
                     type="button"
                     aria-label={nm}
-                    aria-pressed={icon === nm}
+                    aria-pressed={selected}
                     onClick={() => setIcon(nm)}
                     className={cn(
-                      "flex h-10 items-center justify-center rounded-md border",
-                      icon === nm ? "border-primary bg-surface-muted" : "border-border",
+                      "flex h-11 items-center justify-center rounded-lg border transition-transform touch-manipulation [-webkit-tap-highlight-color:transparent]",
+                      selected
+                        ? "scale-105"
+                        : "border-border text-fg-muted hover:bg-surface-muted active:scale-90",
                     )}
+                    // Selected icon adopts the chosen color so the two pickers
+                    // read as one decision.
+                    style={
+                      selected
+                        ? { backgroundColor: `${color}1A`, color, borderColor: color }
+                        : undefined
+                    }
                   >
                     <Icon size={18} aria-hidden="true" />
                   </button>
@@ -179,22 +204,33 @@ export function CategoryFormSheet({
             </div>
           </div>
 
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <Label>Màu</Label>
-            <div className="flex flex-wrap gap-2">
-              {CATEGORY_COLORS.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  aria-label={c}
-                  aria-pressed={color === c}
-                  onClick={() => setColor(c)}
-                  className="flex h-8 w-8 items-center justify-center rounded-full"
-                  style={{ backgroundColor: c }}
-                >
-                  {color === c && <Check size={16} className="text-white" aria-hidden="true" />}
-                </button>
-              ))}
+            <div className="flex flex-wrap gap-2.5">
+              {CATEGORY_COLORS.map((c) => {
+                const selected = color === c;
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    aria-label={`Màu ${c}`}
+                    aria-pressed={selected}
+                    onClick={() => setColor(c)}
+                    className={cn(
+                      "flex h-9 w-9 items-center justify-center rounded-full transition-transform touch-manipulation [-webkit-tap-highlight-color:transparent]",
+                      selected ? "scale-110" : "hover:scale-105 active:scale-90",
+                    )}
+                    style={{
+                      backgroundColor: c,
+                      boxShadow: selected
+                        ? `0 0 0 2px var(--color-surface), 0 0 0 4px ${c}`
+                        : undefined,
+                    }}
+                  >
+                    {selected && <Check size={16} className="text-white" aria-hidden="true" />}
+                  </button>
+                );
+              })}
             </div>
           </div>
 

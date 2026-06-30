@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { Wallet } from "lucide-react";
+import { DashboardHeader } from "@/features/dashboard/components/dashboard-header";
 import { requireSession } from "@/lib/auth-session";
 import { listTransactions } from "@/features/transactions/queries";
 import { listActiveAccounts, getDefaultAccountId } from "@/features/accounts/queries";
@@ -68,16 +69,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-fg" style={{ fontFamily: "var(--font-serif)" }}>
-          Trang chủ
-        </h1>
-        {!firstRun && (
-          <Link href={"/reports/cash-flow" as Route} className="text-sm font-medium text-primary">
-            Báo cáo
-          </Link>
-        )}
-      </div>
+      <DashboardHeader showReportLink={!firstRun} />
 
       {firstRun ? (
         <EmptyState

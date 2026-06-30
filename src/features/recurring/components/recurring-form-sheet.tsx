@@ -17,13 +17,23 @@ import {
   CategoryPicker,
   type CategoryPickerOption,
 } from "@/features/categories/components/category-picker";
+import { getCategoryIcon } from "@/features/categories/category-icons";
+import { formatVnd } from "@/lib/vnd";
 import { cn } from "@/lib/utils";
 import { createRule, updateRule, deleteRule, pauseRule } from "../actions";
-import { isValidRrule } from "../lib/rrule-builder";
+import { isValidRrule, describeRrule, nextOccurrences, anchorToVnDate } from "../lib/rrule-builder";
 import { RruleBuilderFields } from "./rrule-builder-fields";
 import type { RecurringRuleItem } from "../queries";
 
 export type AccountOption = { id: string; name: string };
+
+// Common reminder leads, in days. 0 = remind on the due date itself.
+const LEAD_PRESETS = [0, 1, 3, 7, 14];
+
+function formatYmd(ymd: string): string {
+  const [y, m, d] = ymd.split("-");
+  return `${d}/${m}/${y}`;
+}
 
 const KIND_OPTS = [
   { value: "expense" as const, label: "Chi", icon: ArrowUpRight, active: "text-expense" },
@@ -117,6 +127,32 @@ export function RecurringFormSheet({
     }
   }
 
+  // Live rule summary — restates the configured rule in plain language so the
+  // user can verify it before saving. Only shown once the essentials are valid.
+  const summaryReady = amount !== null && amount > 0 && Boolean(accountId) && isValidRrule(rrule);
+  const summaryCategory = categoryId ? (categories.find((c) => c.id === categoryId) ?? null) : null;
+  const summaryAccount = accounts.find((a) => a.id === accountId)?.name ?? null;
+  const summaryTitle =
+    note.trim() ||
+    summaryCategory?.name ||
+    (kind === "expense" ? "Khoản chi định kỳ" : "Khoản thu định kỳ");
+  const SummaryIcon = summaryCategory
+    ? getCategoryIcon(summaryCategory.icon)
+    : kind === "expense"
+      ? ArrowUpRight
+      : ArrowDownLeft;
+  const summaryColor =
+    summaryCategory?.color ?? (kind === "expense" ? "var(--color-expense)" : "var(--color-income)");
+  const summaryNextDate = (() => {
+    if (!summaryReady) return null;
+    try {
+      const occ = nextOccurrences(rrule, 1);
+      return occ[0] ? formatYmd(anchorToVnDate(occ[0])) : null;
+    } catch {
+      return null;
+    }
+  })();
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent title={isEdit ? "Sửa quy tắc định kỳ" : "Quy tắc định kỳ mới"}>
@@ -201,18 +237,82 @@ export function RecurringFormSheet({
             />
           </div>
 
-          <div className="flex items-center justify-between gap-3">
-            <Label htmlFor="rule-lead">Nhắc trước (ngày)</Label>
-            <Input
-              id="rule-lead"
-              type="number"
-              min={0}
-              max={30}
-              inputMode="numeric"
-              value={leadDays}
-              onChange={(e) => setLeadDays(Math.min(30, Math.max(0, Number(e.target.value) || 0)))}
-              className="w-20"
-            />
+          <div className="flex flex-col gap-2">
+            <Label>Nhắc trước khi đến hạn</Label>
+            <div className="flex flex-wrap gap-2">
+              {Array.from(new Set([...LEAD_PRESETS, leadDays]))
+                .sort((a, b) => a - b)
+                .map((d) => {
+                  const active = leadDays === d;
+                  return (
+                    <button
+                      key={d}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => setLeadDays(d)}
+                      className={cn(
+                        "rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors touch-manipulation [-webkit-tap-highlight-color:transparent]",
+                        active
+                          ? "border-accent bg-accent/15 text-accent"
+                          : "border-border bg-surface text-fg-muted hover:bg-surface-muted",
+                      )}
+                    >
+                      {d === 0 ? "Đúng ngày" : `${d} ngày`}
+                    </button>
+                  );
+                })}
+            </div>
+          </div>
+
+          {/* Plain-language confirmation of the whole rule. */}
+          <div className="rounded-xl border border-border bg-surface-muted/40 p-3.5">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-fg-subtle">
+              Tóm tắt
+            </p>
+            {summaryReady ? (
+              <div className="mt-2 flex items-start gap-3">
+                <span
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+                  style={{
+                    backgroundColor: summaryCategory
+                      ? `${summaryCategory.color ?? "#64748B"}1A`
+                      : kind === "expense"
+                        ? "var(--color-expense-soft)"
+                        : "var(--color-income-soft)",
+                    color: summaryColor,
+                  }}
+                >
+                  <SummaryIcon size={20} strokeWidth={1.85} aria-hidden="true" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <p className="truncate text-sm font-semibold text-fg">{summaryTitle}</p>
+                    <p
+                      className={cn(
+                        "shrink-0 text-sm font-semibold tabular-nums",
+                        kind === "expense" ? "text-expense" : "text-income",
+                      )}
+                    >
+                      {kind === "expense" ? "−" : "+"}
+                      {formatVnd(amount!)}
+                    </p>
+                  </div>
+                  <p className="mt-0.5 text-[13px] text-fg-muted">
+                    {describeRrule(rrule)}
+                    {summaryAccount ? ` · từ ${summaryAccount}` : ""}
+                  </p>
+                  <p className="mt-0.5 text-[13px] text-fg-subtle">
+                    {summaryNextDate ? `Lần kế tiếp ${summaryNextDate}` : "Lịch kế tiếp"}
+                    {" · "}
+                    {leadDays === 0 ? "nhắc đúng ngày" : `nhắc trước ${leadDays} ngày`}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <p className="mt-1.5 text-[13px] text-fg-subtle">
+                Điền số tiền, tài khoản và lịch lặp để xem tóm tắt quy tắc.
+              </p>
+            )}
           </div>
 
           {error && (
