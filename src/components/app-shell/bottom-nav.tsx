@@ -2,7 +2,7 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { usePathname } from "next/navigation";
-import { Home, ArrowLeftRight, Target, Menu, type LucideIcon } from "lucide-react";
+import { Home, ArrowLeftRight, Target, Settings, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // All four tabs now resolve under typedRoutes (their pages exist), so no casts.
@@ -10,7 +10,7 @@ const TABS: { href: Route; label: string; icon: LucideIcon }[] = [
   { href: "/dashboard", label: "Trang chủ", icon: Home },
   { href: "/transactions", label: "Giao dịch", icon: ArrowLeftRight },
   { href: "/budgets", label: "Ngân sách", icon: Target },
-  { href: "/settings", label: "Thêm", icon: Menu },
+  { href: "/settings", label: "Cài đặt", icon: Settings },
 ];
 
 export function BottomNav() {

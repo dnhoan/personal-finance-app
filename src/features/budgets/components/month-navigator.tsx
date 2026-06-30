@@ -18,23 +18,20 @@ export function MonthNavigator({ monthKey }: { monthKey: string }) {
   }
 
   const navBtn =
-    "flex h-8 w-8 items-center justify-center rounded-full bg-surface-muted text-fg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+    "flex h-10 w-10 shrink-0 touch-manipulation items-center justify-center rounded-full bg-surface-muted text-fg-muted transition-colors [-webkit-tap-highlight-color:transparent] hover:bg-border hover:text-fg active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
   return (
-    <div className="flex items-center justify-between">
-      <p className="text-[11px] font-medium uppercase tracking-wider text-fg-subtle">Kỳ</p>
-      <div className="flex items-center gap-2">
-        <button type="button" aria-label="Tháng trước" className={navBtn} onClick={() => go(-1)}>
-          <ChevronLeft size={16} aria-hidden="true" />
-        </button>
-        <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1.5 text-[13px] font-semibold">
-          <Calendar size={16} className="text-fg-muted" aria-hidden="true" />
-          {formatMonthLabel(monthKey)}
-        </span>
-        <button type="button" aria-label="Tháng sau" className={navBtn} onClick={() => go(1)}>
-          <ChevronRight size={16} aria-hidden="true" />
-        </button>
-      </div>
+    <div className="flex items-center gap-2">
+      <button type="button" aria-label="Tháng trước" className={navBtn} onClick={() => go(-1)}>
+        <ChevronLeft size={18} aria-hidden="true" />
+      </button>
+      <span className="flex flex-1 items-center justify-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-semibold">
+        <Calendar size={16} className="text-fg-muted" aria-hidden="true" />
+        {formatMonthLabel(monthKey)}
+      </span>
+      <button type="button" aria-label="Tháng sau" className={navBtn} onClick={() => go(1)}>
+        <ChevronRight size={18} aria-hidden="true" />
+      </button>
     </div>
   );
 }
