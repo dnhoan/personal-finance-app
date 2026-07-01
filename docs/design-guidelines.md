@@ -119,7 +119,7 @@ Finance-specific (use existing Lucide):
 - **Easing**: `standard cubic-bezier(0.2, 0, 0, 1)` (Material emphasized) · `decel cubic-bezier(0, 0, 0, 1)` for entries · `accel cubic-bezier(0.3, 0, 1, 1)` for exits
 - **Key transitions**:
   - Bottom-sheet up: `slow` `decel`, translateY 100% → 0 + backdrop fade-in
-  - FAB tap: scale 1 → 0.94 → expand into sheet (shared element if feasible)
+  - Add button tap (nav ＋ / desktop FAB): scale 1 → 0.94, then navigate to the `/add` capture route
   - List-item amount update: `base` colour pulse (income/expense soft bg) then fade
   - Tab switch: `fast` opacity crossfade only
 - Respect `prefers-reduced-motion` → collapse all to ≤80ms opacity-only.

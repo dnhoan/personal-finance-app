@@ -66,7 +66,7 @@ src/features/
     ├── queries.ts, actions.ts, schemas.ts
     ├── transaction-kind.ts (income/expense/transfer classification)
     ├── transfer-pairing.ts (bidirectional linking logic)
-    └── components/ (transaction-list, quick-add, etc.)
+    └── components/ (transaction-list, add/ capture screen + numeric keypad, etc.)
 
   recurring/
     ├── queries.ts, actions.ts, schemas.ts
@@ -122,7 +122,8 @@ src/features/
 
 - `/` — Dashboard (hero, net worth, top categories, upcoming renewals, recent txs, cron badge)
 - `/accounts` — Account list with balance/status
-- `/transactions` — Full transaction history with filters + quick-add
+- `/transactions` — Full transaction history with filters
+- `/add` — Dedicated capture screen (numeric keypad, pre-filled context, optimistic save)
 - `/recurring` — Bill/subscription management
 - `/budgets` — Monthly budget tracking
 - `/categories` — Category hierarchy

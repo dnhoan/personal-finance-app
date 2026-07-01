@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { BottomNav } from "@/components/app-shell/bottom-nav";
+import { DesktopAddFab } from "@/components/app-shell/desktop-add-fab";
 import { Toaster } from "@/components/ui/toaster";
 import { requireSession, UnauthorizedError } from "@/lib/auth-session";
 
@@ -33,6 +34,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         {children}
       </main>
       <BottomNav />
+      <DesktopAddFab />
       <Toaster />
     </div>
   );

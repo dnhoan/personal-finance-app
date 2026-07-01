@@ -3,10 +3,8 @@ import { requireSession } from "@/lib/auth-session";
 import { materialiseDueInstances } from "@/features/recurring/lib/materialise";
 import { listTransactionsPage, summariseTransactions } from "@/features/transactions/queries";
 import { TRANSACTIONS_PAGE_SIZE } from "@/features/transactions/lib/page-size";
-import { listActiveAccounts, getDefaultAccountId } from "@/features/accounts/queries";
-import { listCategoriesFlat, getDefaultCategoryIds } from "@/features/categories/queries";
-import { resolveDefaultAccountId } from "@/features/transactions/lib/resolve-default-account";
-import { listActiveGoals } from "@/features/goals/queries";
+import { listActiveAccounts } from "@/features/accounts/queries";
+import { listCategoriesFlat } from "@/features/categories/queries";
 import {
   resolveDateRange,
   RANGE_PRESETS,
@@ -15,7 +13,6 @@ import {
 import { TransactionLedger } from "@/features/transactions/components/transaction-ledger";
 import { TransactionSummary } from "@/features/transactions/components/transaction-summary";
 import { TransactionFilters } from "@/features/transactions/components/transaction-filters";
-import { QuickAddLauncher } from "@/features/transactions/components/quick-add-launcher";
 import { ENTER, enterDelay } from "@/lib/enter-animation";
 
 export const metadata = { title: "Giao dịch · Personal Finance" };
@@ -54,25 +51,12 @@ export default async function TransactionsPage({
   const categoryId = sp.categoryId && UUID_RE.test(sp.categoryId) ? sp.categoryId : undefined;
 
   const filter = { from, to, kind, accountId, categoryId };
-  const [
-    page,
-    summary,
-    accounts,
-    categories,
-    goals,
-    explicitDefaultAccountId,
-    defaultCategoryByKind,
-  ] = await Promise.all([
+  const [page, summary, accounts, categories] = await Promise.all([
     listTransactionsPage(user.id, { ...filter, limit: TRANSACTIONS_PAGE_SIZE }),
     summariseTransactions(user.id, filter),
     listActiveAccounts(user.id),
     listCategoriesFlat(user.id),
-    listActiveGoals(user.id),
-    getDefaultAccountId(user.id),
-    getDefaultCategoryIds(user.id),
   ]);
-
-  const defaultAccountId = resolveDefaultAccountId(explicitDefaultAccountId, accounts) ?? undefined;
 
   return (
     <div className="flex flex-col gap-4">
@@ -96,13 +80,6 @@ export default async function TransactionsPage({
           accounts={accounts}
         />
       </div>
-      <QuickAddLauncher
-        accounts={accounts}
-        categories={categories}
-        goals={goals}
-        defaultAccountId={defaultAccountId}
-        defaultCategoryByKind={defaultCategoryByKind}
-      />
     </div>
   );
 }

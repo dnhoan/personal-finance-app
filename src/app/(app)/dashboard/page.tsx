@@ -3,10 +3,7 @@ import { Wallet } from "lucide-react";
 import { DashboardHeader } from "@/features/dashboard/components/dashboard-header";
 import { requireSession } from "@/lib/auth-session";
 import { listTransactions } from "@/features/transactions/queries";
-import { listActiveAccounts, getDefaultAccountId } from "@/features/accounts/queries";
-import { listCategoriesFlat, getDefaultCategoryIds } from "@/features/categories/queries";
-import { resolveDefaultAccountId } from "@/features/transactions/lib/resolve-default-account";
-import { listActiveGoals } from "@/features/goals/queries";
+import { listActiveAccounts } from "@/features/accounts/queries";
 import {
   netCashFlowMoM,
   netWorthSnapshot,
@@ -21,7 +18,6 @@ import { TopCategoriesCard } from "@/features/reports/components/top-categories-
 import { UpcomingRenewalsCard } from "@/features/reports/components/upcoming-renewals-card";
 import { EmptyState } from "@/features/reports/components/empty-state";
 import { CronStatusBadge } from "@/features/dashboard/components/cron-status-badge";
-import { QuickAddLauncher } from "@/features/transactions/components/quick-add-launcher";
 import { ENTER, enterDelay } from "@/lib/enter-animation";
 
 export const metadata = { title: "Trang chủ · Personal Finance" };
@@ -31,35 +27,17 @@ export default async function DashboardPage() {
 
   // All independent reads fan out in one round-trip-bounded batch so total
   // latency ≈ the slowest query, not the sum (red-team F14).
-  const [
-    flow,
-    netWorth,
-    netWorthSpark,
-    topCats,
-    renewals,
-    heartbeat,
-    recent,
-    accounts,
-    categories,
-    goals,
-    explicitDefaultAccountId,
-    defaultCategoryByKind,
-  ] = await Promise.all([
-    netCashFlowMoM(user.id),
-    netWorthSnapshot(user.id),
-    netWorthTrend(user.id, 7),
-    topCategoriesThisMonth(user.id, 3),
-    upcomingRenewals(user.id, 7),
-    cronHeartbeat(),
-    listTransactions(user.id, { limit: 8 }),
-    listActiveAccounts(user.id),
-    listCategoriesFlat(user.id),
-    listActiveGoals(user.id),
-    getDefaultAccountId(user.id),
-    getDefaultCategoryIds(user.id),
-  ]);
-
-  const defaultAccountId = resolveDefaultAccountId(explicitDefaultAccountId, accounts) ?? undefined;
+  const [flow, netWorth, netWorthSpark, topCats, renewals, heartbeat, recent, accounts] =
+    await Promise.all([
+      netCashFlowMoM(user.id),
+      netWorthSnapshot(user.id),
+      netWorthTrend(user.id, 7),
+      topCategoriesThisMonth(user.id, 3),
+      upcomingRenewals(user.id, 7),
+      cronHeartbeat(),
+      listTransactions(user.id, { limit: 8 }),
+      listActiveAccounts(user.id),
+    ]);
 
   // First run: no accounts AND no transactions. Gate on accounts too so a user
   // who deleted every transaction but kept an account still sees the metric layout.
@@ -113,14 +91,6 @@ export default async function DashboardPage() {
       <div className={`mt-2 border-t border-border pt-4 ${ENTER}`} style={enterDelay(240)}>
         <CronStatusBadge lastCheckedAt={heartbeat.lastCheckedAt} />
       </div>
-
-      <QuickAddLauncher
-        accounts={accounts}
-        categories={categories}
-        goals={goals}
-        defaultAccountId={defaultAccountId}
-        defaultCategoryByKind={defaultCategoryByKind}
-      />
     </div>
   );
 }

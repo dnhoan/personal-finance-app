@@ -17,6 +17,11 @@ test("unauthenticated request to /accounts redirects to /sign-in", async ({ page
   await expect(page).toHaveURL(/\/sign-in(\?|$)/);
 });
 
+test("unauthenticated request to /add redirects to /sign-in", async ({ page }) => {
+  await page.goto("/add");
+  await expect(page).toHaveURL(/\/sign-in(\?|$)/);
+});
+
 test("transactions route carries its path in ?from for post-login return", async ({ page }) => {
   await page.goto("/transactions");
   await expect(page).toHaveURL(/\/sign-in\?from=%2Ftransactions/);
