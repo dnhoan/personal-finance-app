@@ -1,5 +1,27 @@
 # Project Changelog
 
+## Dedicated /add Capture Page with Numeric Keypad (2026-07-01)
+
+### Changed
+
+- **New add-transaction surface.** Replaced the bottom-sheet quick-add with a dedicated
+  full-screen `/add` route optimized for fastest entry: amount-first with a custom in-app
+  numeric keypad (no OS keyboard), pre-filled context (default account + per-kind default
+  category), and a compact context block for account/category/goal/date/note.
+- **Optimistic save (no wait).** Save writes in a `startTransition`, clears the amount for
+  the next entry immediately, and toasts success. A failed write shows a "Thử lại" toast
+  that re-submits the same payload with the same `clientOpId` (server idempotent → no
+  double-post). Stay-on-page enables rapid multi-entry; the header ✕ returns.
+- **Global add entry point.** The mobile bottom nav gains a docked center ＋ button
+  (2 tabs · ＋ · 2 tabs) linking to `/add`; desktop keeps a corner FAB. Both are hidden on
+  `/add`. Per-page `QuickAddLauncher` mounts removed from dashboard + transactions.
+- **Account-detail quick-add dropped.** The account hero's Add/Transfer pills + embedded
+  sheet were removed; adds now go through the global button. Rename stays in the overflow menu.
+- **Removed components:** `quick-add-sheet.tsx`, `quick-add-launcher.tsx`,
+  `quick-add-amount-field.tsx`. Shared form helpers extracted to
+  `features/transactions/lib/quick-add-form.ts`; keypad logic is a pure, unit-tested reducer
+  (`features/transactions/lib/amount-keypad-reducer.ts`).
+
 ## Remove JSON Full-Backup Export (2026-07-01)
 
 ### Changed
