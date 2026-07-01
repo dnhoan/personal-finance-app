@@ -16,11 +16,6 @@ test("export CSV endpoint is not reachable without a session", async ({ page }) 
   await expect(page).toHaveURL(/\/sign-in(\?|$)/);
 });
 
-test("export JSON endpoint is not reachable without a session", async ({ page }) => {
-  await page.goto("/api/export/json");
-  await expect(page).toHaveURL(/\/sign-in(\?|$)/);
-});
-
 test("settings (export entry point) redirects anonymous users to sign-in", async ({ page }) => {
   await page.goto("/settings");
   await expect(page).toHaveURL(/\/sign-in\?from=%2Fsettings/);

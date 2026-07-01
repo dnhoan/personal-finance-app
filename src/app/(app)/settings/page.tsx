@@ -6,7 +6,6 @@ import {
   Goal,
   HandCoins,
   FileSpreadsheet,
-  FileJson,
   type LucideIcon,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -131,13 +130,6 @@ export default async function SettingsPage() {
             description="Mở bằng Excel hoặc Google Sheets (CSV)"
             icon={FileSpreadsheet}
             tint="green"
-          />
-          <SettingsDownloadRow
-            href="/api/export/json"
-            label="Sao lưu toàn bộ"
-            description="Tất cả dữ liệu của bạn (JSON)"
-            icon={FileJson}
-            tint="navy"
           />
         </Card>
       </section>

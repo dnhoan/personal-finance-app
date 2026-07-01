@@ -67,7 +67,7 @@ const SheetContent = React.forwardRef<
         ref={ref}
         className={cn(
           "fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[90vh] w-full max-w-lg flex-col",
-          "rounded-t-[--radius-lg] border border-border bg-surface p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]",
+          "rounded-t-[--radius-lg] border border-border bg-surface p-3 pb-[max(1.5rem,env(safe-area-inset-bottom))]",
           "shadow-[0_16px_40px_rgba(27,29,35,0.12)] focus:outline-none",
           "duration-300 ease-[cubic-bezier(0,0,0,1)]",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
@@ -101,7 +101,9 @@ const SheetContent = React.forwardRef<
         ) : (
           <DialogPrimitive.Title className="sr-only">Bảng thao tác</DialogPrimitive.Title>
         )}
-        <div className="flex-1 overflow-y-auto overscroll-contain px-2">{children}</div>
+        <div data-sheet-scroll="" className="flex-1 overflow-y-auto overscroll-contain px-2">
+          {children}
+        </div>
       </DialogPrimitive.Content>
     </SheetPortal>
   );

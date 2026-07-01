@@ -4,11 +4,21 @@ import Link from "next/link";
 import type { Route } from "next";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "sonner";
-import { Wallet, ArrowDownToLine, Tag, Target, StickyNote, type LucideIcon } from "lucide-react";
+import {
+  Wallet,
+  ArrowDownToLine,
+  Tag,
+  Target,
+  StickyNote,
+  CalendarDays,
+  type LucideIcon,
+} from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
+import { toIctDateInput } from "@/lib/locale";
 import {
   Select,
   SelectTrigger,
@@ -24,6 +34,7 @@ import { GoalPicker, type GoalPickerOption } from "@/features/goals/components/g
 import { KindToggle, type TxKind } from "./kind-toggle";
 import { QuickAddAmountField } from "./quick-add-amount-field";
 import { createTransaction, createTransfer } from "../actions";
+import { randomUuid } from "@/lib/uuid";
 
 export type AccountOption = { id: string; name: string };
 
@@ -61,8 +72,19 @@ type FormValues = {
   toAccountId: string;
   categoryId: string | null;
   goalId: string | null;
+  occurredAt: string; // ICT calendar date, `YYYY-MM-DD`
   note: string;
 };
+
+// The date field holds an ICT calendar date (`YYYY-MM-DD`); occurredAt on the
+// row is a Date. When the picked day is today we keep `new Date()` so intra-day
+// ordering and the row's time-of-day stay meaningful; a different day is anchored
+// to noon ICT, which reads back as the same calendar date regardless of the
+// viewer's timezone (avoids the UTC-midnight day-drift).
+function occurredAtFromInput(ymd: string): Date {
+  if (!ymd || ymd === toIctDateInput(new Date())) return new Date();
+  return new Date(`${ymd}T12:00:00+07:00`);
+}
 
 // Bottom-sheet quick-add. One submit creates an income/expense row, or — in
 // transfer mode — an atomic linked pair. A fresh clientOpId is minted each open
@@ -110,6 +132,7 @@ export function QuickAddSheet({
         toAccountId: "",
         categoryId: seedCategory(defaultCategoryByKind, defaultKind ?? "expense"),
         goalId: null,
+        occurredAt: toIctDateInput(new Date()),
         note: "",
       },
     });
@@ -118,7 +141,7 @@ export function QuickAddSheet({
 
   React.useEffect(() => {
     if (open) {
-      clientOpId.current = crypto.randomUUID();
+      clientOpId.current = randomUuid();
       setSubmitError(null);
       // Re-seed each open so the pills' chosen account/kind take effect even when
       // the sheet was previously opened with different defaults.
@@ -129,6 +152,7 @@ export function QuickAddSheet({
         toAccountId: "",
         categoryId: seedCategory(defaultCategoryByKind, defaultKind ?? "expense"),
         goalId: null,
+        occurredAt: toIctDateInput(new Date()),
         note: "",
       });
     }
@@ -144,6 +168,7 @@ export function QuickAddSheet({
       return setSubmitError("Nhập số tiền hợp lệ");
     }
     if (!values.accountId) return setSubmitError("Chọn tài khoản");
+    const occurredAt = occurredAtFromInput(values.occurredAt);
     try {
       if (isTransfer) {
         if (!values.toAccountId) return setSubmitError("Chọn tài khoản đích");
@@ -153,7 +178,7 @@ export function QuickAddSheet({
           fromAccountId: values.accountId,
           toAccountId: values.toAccountId,
           amount: values.amount,
-          occurredAt: new Date(),
+          occurredAt,
           note: values.note,
           clientOpId: clientOpId.current,
         });
@@ -164,7 +189,7 @@ export function QuickAddSheet({
           accountId: values.accountId,
           categoryId: values.categoryId,
           goalId: values.goalId,
-          occurredAt: new Date(),
+          occurredAt,
           note: values.note,
           clientOpId: clientOpId.current,
         });
@@ -176,6 +201,7 @@ export function QuickAddSheet({
         toAccountId: "",
         categoryId: seedCategory(defaultCategoryByKind, kind),
         goalId: null,
+        occurredAt: toIctDateInput(new Date()),
         note: "",
       });
       onOpenChange(false);
@@ -218,7 +244,21 @@ export function QuickAddSheet({
 
   return (
     <Sheet open={open} onOpenChange={requestClose}>
-      <SheetContent title="Thêm giao dịch">
+      <SheetContent
+        title="Thêm giao dịch"
+        // Radix auto-focuses the first focusable node (the kind toggle) on open.
+        // Amount is the field the user actually starts with, so redirect focus to
+        // it — same custom control targeted by id as in onSubmit's error path.
+        // preventScroll stops the browser from scrolling the field above the
+        // rising keyboard (which pushed the amount hero out of view); we then pin
+        // the scroll area to the top so the hero stays visible.
+        onOpenAutoFocus={(e) => {
+          e.preventDefault();
+          const amount = document.getElementById("qa-amount");
+          amount?.focus({ preventScroll: true });
+          amount?.closest("[data-sheet-scroll]")?.scrollTo({ top: 0 });
+        }}
+      >
         {accounts.length === 0 ? (
           <div className="flex flex-col gap-3 py-4 text-center">
             <p className="text-fg-muted">Bạn cần tạo tài khoản trước khi ghi giao dịch.</p>
@@ -292,6 +332,24 @@ export function QuickAddSheet({
                 />
               </div>
             )}
+
+            <div className="flex flex-col gap-1.5">
+              <FieldLabel icon={CalendarDays} htmlFor="qa-date">
+                Ngày
+              </FieldLabel>
+              <Controller
+                control={control}
+                name="occurredAt"
+                render={({ field }) => (
+                  <DateInput
+                    id="qa-date"
+                    clearable={false}
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  />
+                )}
+              />
+            </div>
 
             <div className="flex flex-col gap-1.5">
               <FieldLabel icon={StickyNote} htmlFor="qa-note">

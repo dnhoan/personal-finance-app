@@ -15,7 +15,8 @@ type Props = {
 
 // Controlled VND entry. Accepts shorthand ("50k", "1,5tr", "1.500.000"), shows a
 // live `→ 50.000 ₫` preview, and an inline hint when the input is ambiguous.
-// inputmode="decimal" avoids the browser number-spinner formatting.
+// inputmode="text" (not "decimal") so the alpha suffixes (k, tr, ty, chục) are
+// typable on a mobile keyboard — a numeric keypad has no letters.
 export function VndAmountInput({ id, defaultRaw = "", onValueChange, ...aria }: Props) {
   const [raw, setRaw] = React.useState(defaultRaw);
   const [touched, setTouched] = React.useState(false);
@@ -35,7 +36,7 @@ export function VndAmountInput({ id, defaultRaw = "", onValueChange, ...aria }: 
     <div className="flex flex-col gap-1">
       <Input
         id={id}
-        inputMode="decimal"
+        inputMode="text"
         autoComplete="off"
         spellCheck={false}
         placeholder="50k · 1tr · 1,5tr…"

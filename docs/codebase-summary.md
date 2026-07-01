@@ -103,8 +103,7 @@ src/features/
     └── components/ (cron-status-badge, etc.)
 
   export/
-    ├── queries.ts (full user data dump: accounts, transactions, budgets, etc.)
-    └── CSV/JSON streaming via /api/export/* endpoints
+    └── CSV streaming of transactions via /api/export/csv
 
   pwa/
     ├── Serwist 9 service worker (offline-capable, versioned caching)
@@ -138,7 +137,6 @@ src/features/
 
 - `/api/auth/*` — Better Auth endpoints
 - `/api/export/csv` — Stream transactions as CSV (UTF-8 BOM, dd/MM/yyyy dates, formula-injection safe)
-- `/api/export/json` — Full user backup (all entities, user-scoped, no-store cache)
 - `/api/telegram` — grammY webhook (allowlist by chat_id)
 - `/api/cron/renewal-check` — Daily renewal materialization + Telegram alert
 
