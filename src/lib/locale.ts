@@ -47,6 +47,16 @@ export function formatTime(date: Date): string {
  * value `<input type="date">` and date-typed DB columns expect. Built from the
  * ICT calendar parts so it never drifts a day across the UTC boundary.
  */
+/**
+ * `2026-06-15` → `15/06/2026`. Reformats a `<input type="date">` value (already
+ * an ICT calendar date) for VN display without any timezone math. Returns `""`
+ * for a malformed value so callers can fall back to a placeholder.
+ */
+export function formatDateInputDisplay(ymd: string): string {
+  const [y, m, d] = ymd.split("-");
+  return y && m && d ? `${d}/${m}/${y}` : "";
+}
+
 export function toIctDateInput(date: Date): string {
   const parts = new Intl.DateTimeFormat("en-CA", {
     year: "numeric",

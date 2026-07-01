@@ -70,7 +70,9 @@ export function QuickAddAmountField({
 
       <input
         id={id}
-        inputMode="decimal"
+        // Text, not decimal: the value grammar accepts alpha shorthand suffixes
+        // (k, tr, ty, chục), which a numeric mobile keypad can't type.
+        inputMode="text"
         autoComplete="off"
         spellCheck={false}
         placeholder="Nhập số tiền — 50k · 1tr · 1,5tr"

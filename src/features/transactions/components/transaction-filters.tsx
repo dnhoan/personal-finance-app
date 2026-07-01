@@ -9,7 +9,8 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
+import { toIctDateInput } from "@/lib/locale";
 import { RANGE_PRESETS, type RangePreset } from "../date-range";
 import { FilterChip } from "./filter-chip";
 import { FilterSegmented } from "./filter-segmented";
@@ -80,6 +81,22 @@ export function TransactionFilters({
     router.replace(`${pathname}?${params.toString()}` as Route);
   }
 
+  // Selecting "Tùy chỉnh" seeds the range to the current month (1st → today) so
+  // the date inputs open populated instead of blank; existing custom bounds are
+  // preserved when re-selecting.
+  function selectRange(p: RangePreset) {
+    if (p === "custom") {
+      const today = toIctDateInput(new Date());
+      setParams({
+        range: "custom",
+        from: sp.get("from") ?? `${today.slice(0, 8)}01`,
+        to: sp.get("to") ?? today,
+      });
+      return;
+    }
+    setParams({ range: p === "month" ? null : p });
+  }
+
   function clearFilters() {
     setParams({ range: null, kind: null, accountId: null, categoryId: null, from: null, to: null });
   }
@@ -93,11 +110,7 @@ export function TransactionFilters({
       <div className="relative -mx-4">
         <div className="flex gap-2 overflow-x-auto overscroll-x-contain px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {RANGE_PRESETS.map((p) => (
-            <FilterChip
-              key={p}
-              active={range === p}
-              onClick={() => setParams({ range: p === "month" ? null : p })}
-            >
+            <FilterChip key={p} active={range === p} onClick={() => selectRange(p)}>
               {RANGE_LABELS[p]}
             </FilterChip>
           ))}
@@ -110,18 +123,22 @@ export function TransactionFilters({
 
       {range === "custom" && (
         <div className="flex gap-2">
-          <Input
-            type="date"
-            aria-label="Từ ngày"
-            defaultValue={sp.get("from") ?? ""}
-            onChange={(e) => setParams({ from: e.target.value || null })}
-          />
-          <Input
-            type="date"
-            aria-label="Đến ngày"
-            defaultValue={sp.get("to") ?? ""}
-            onChange={(e) => setParams({ to: e.target.value || null })}
-          />
+          <div className="flex-1">
+            <DateInput
+              aria-label="Từ ngày"
+              clearLabel="Xóa từ ngày"
+              value={sp.get("from") ?? ""}
+              onValueChange={(v) => setParams({ from: v || null })}
+            />
+          </div>
+          <div className="flex-1">
+            <DateInput
+              aria-label="Đến ngày"
+              clearLabel="Xóa đến ngày"
+              value={sp.get("to") ?? ""}
+              onValueChange={(v) => setParams({ to: v || null })}
+            />
+          </div>
         </div>
       )}
 
