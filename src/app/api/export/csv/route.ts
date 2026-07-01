@@ -13,7 +13,7 @@ export const maxDuration = 60;
 // GET /api/export/csv?entity=transactions
 // Streams the caller's transactions as a UTF-8-BOM CSV (Excel-friendly, VN dates,
 // formula-injection-safe cells). `entity` defaults to transactions — the only
-// tabular export; the full multi-entity dump is JSON (/api/export/json).
+// tabular export.
 export async function GET(req: Request): Promise<Response> {
   try {
     const { user } = await requireSession();
