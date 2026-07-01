@@ -184,3 +184,63 @@ h2,
 h3 {
   text-wrap: balance;
 }
+
+/* Native date/time fields don't inherit our input typography: WebKit top-aligns
+   the value with its own UA margins and paints a default picker icon, so a
+   type="date" field reads visually out of sync with the text and number inputs
+   that share the same box. Pin the value to the field's own font and vertical
+   center, and tint the picker icon so the control matches every other field in
+   both light and dark. */
+input[type="date"]::-webkit-datetime-edit,
+input[type="time"]::-webkit-datetime-edit,
+input[type="datetime-local"]::-webkit-datetime-edit,
+input[type="month"]::-webkit-datetime-edit {
+  padding: 0;
+  color: inherit;
+}
+input[type="date"]::-webkit-date-and-time-value,
+input[type="time"]::-webkit-date-and-time-value,
+input[type="datetime-local"]::-webkit-date-and-time-value,
+input[type="month"]::-webkit-date-and-time-value {
+  margin: 0;
+  text-align: left;
+}
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+input[type="month"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 0.15s ease;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="time"]::-webkit-calendar-picker-indicator:hover,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover,
+input[type="month"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 0.9;
+}
+
+/* iOS Safari ignores the box height on native date/time fields and renders the
+   value with its own oversized intrinsic sizing, so the field balloons taller
+   and wider than the text and number inputs beside it (see mobile capture).
+   Dropping the UA appearance forces the control back into the shared box and
+   lets height/width flow from the Input component. Scoped to iOS via the
+   -webkit-touch-callout probe so desktop Chrome keeps its calendar picker. */
+@supports (-webkit-touch-callout: none) {
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"],
+  input[type="month"] {
+    -webkit-appearance: none;
+    appearance: none;
+    min-width: 0;
+    min-height: 0;
+  }
+  input[type="date"]::-webkit-date-and-time-value,
+  input[type="time"]::-webkit-date-and-time-value,
+  input[type="datetime-local"]::-webkit-date-and-time-value,
+  input[type="month"]::-webkit-date-and-time-value {
+    line-height: 1.25rem;
+    min-height: 1.25rem;
+  }
+}

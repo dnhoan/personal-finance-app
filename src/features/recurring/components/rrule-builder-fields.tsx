@@ -2,6 +2,7 @@
 import * as React from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { cn } from "@/lib/utils";
 import { toIctDateInput } from "@/lib/locale";
 import {
@@ -187,11 +188,11 @@ export function RruleBuilderFields({
 
           <div className="flex flex-col gap-1.5 min-w-0">
             <Label htmlFor="rule-start">Bắt đầu từ</Label>
-            <Input
+            <DateInput
               id="rule-start"
-              type="date"
               value={state.startDate}
-              onChange={(e) => e.target.value && set({ startDate: e.target.value })}
+              onValueChange={(v) => v && set({ startDate: v })}
+              clearable={false}
               className="max-w-full"
             />
           </div>

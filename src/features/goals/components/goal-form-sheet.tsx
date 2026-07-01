@@ -4,6 +4,7 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import {
   Select,
   SelectTrigger,
@@ -109,11 +110,11 @@ export function GoalFormSheet({
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="goal-date">Hạn (tùy chọn)</Label>
-            <Input
+            <DateInput
               id="goal-date"
-              type="date"
               value={targetDate}
-              onChange={(e) => setTargetDate(e.target.value)}
+              onValueChange={setTargetDate}
+              clearLabel="Xóa hạn"
             />
           </div>
 
