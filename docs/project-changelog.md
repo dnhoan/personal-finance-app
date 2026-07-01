@@ -1,5 +1,15 @@
 # Project Changelog
 
+## Remove JSON Full-Backup Export (2026-07-01)
+
+### Changed
+
+- Removed the JSON full-backup download (`GET /api/export/json`) and its Settings entry
+  ("Sao lưu toàn bộ" / all-data JSON). Route handler, `buildJsonBundle` helper
+  (`src/features/export/lib/json-bundle.ts`), and the JSON endpoint e2e gating test deleted.
+- CSV transactions export (`GET /api/export/csv?entity=transactions`) is unchanged and remains
+  the only data-export surface.
+
 ## Default Account & Category on Quick-Add (2026-06-30)
 
 ### Features Shipped

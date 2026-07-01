@@ -31,9 +31,8 @@ Last updated: 2026-06-30 (Phase 10: PWA Layer, Data Export, Accessibility Polish
      v                            v
 [ Vercel Next.js (Edge/Node Functions, Server Actions) ]
      |                                      |
-     | /api/export/csv                     | /api/export/json
-     | /api/export/json                    v
-     |                            [ User Download (CSV/JSON) ]
+     | /api/export/csv                     v
+     |                            [ User Download (CSV) ]
      v
 [ Neon Postgres (Singapore region) ]
 
@@ -106,7 +105,7 @@ Service Worker (`src/sw/index.ts`, Serwist 9) manages offline capability and per
 
 ## Data Export
 
-User-initiated backup and analysis via REST endpoints:
+User-initiated data export via REST endpoint:
 
 - **CSV Export** (`GET /api/export/csv?entity=transactions`)
   - Streaming response for large datasets
@@ -114,13 +113,9 @@ User-initiated backup and analysis via REST endpoints:
   - VN date format: `dd/MM/yyyy` (ICT timezone)
   - Formula-injection neutralisation: `csv-escape.ts` strips leading `=`, `+`, `@`, `-` per RFC-4180
   - RFC-4180 compliant quoting for commas, newlines, quotes
-- **JSON Export** (`GET /api/export/json`)
-  - Full per-user backup: all entities (accounts, categories, transactions, budgets, goals, debts, recurring)
-  - User-scoped: filters by `user_id`, excludes auth tables (user, session, account, verification)
-  - Cache-Control: no-store (prevents intermediate caching)
-- **Authentication:** Both endpoints require session (`requireSession()`)
+- **Authentication:** Endpoint requires session (`requireSession()`)
 - **Download Headers:** Content-Disposition: attachment for browser download
-- **Settings UI:** Download links on `/settings` page (CSV transactions, JSON backup)
+- **Settings UI:** Download link on `/settings` page (CSV transactions)
 
 ## Analytics & Reporting
 
@@ -199,7 +194,7 @@ src/
     (app)/              # Authed dashboard + features
       reports/          # /reports/cash-flow, /reports/spending, /reports/net-worth
     api/
-      export/           # GET /api/export/csv, GET /api/export/json
+      export/           # GET /api/export/csv
       telegram/route.ts # grammY webhook
       cron/             # Cron endpoints
   components/
