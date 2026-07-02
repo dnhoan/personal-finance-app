@@ -18,9 +18,13 @@ export const createAccountSchema = z.object({
 });
 export type CreateAccountInput = z.infer<typeof createAccountSchema>;
 
-export const renameAccountSchema = z.object({
+// Edit an existing account: name and current balance are mutable; type is not.
+// `currentBalance` is the desired displayed balance; the action back-solves the
+// stored opening balance so the derived balance (opening + transactions) matches.
+export const updateAccountSchema = z.object({
   id: z.string().uuid(),
   name: z.string().trim().min(1, "Tên tài khoản bắt buộc").max(80),
+  currentBalance: z.number().int().min(0).max(MAX_VND),
 });
 
 export const archiveAccountSchema = z.object({ id: z.string().uuid() });

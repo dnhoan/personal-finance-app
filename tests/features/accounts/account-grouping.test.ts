@@ -9,6 +9,7 @@ function account(over: Partial<AccountWithBalance>): AccountWithBalance {
     type: over.type ?? "cash",
     status: over.status ?? "open",
     currency: over.currency ?? "VND",
+    initialBalance: over.initialBalance ?? 0,
     balance: over.balance ?? 0,
     isDefault: over.isDefault ?? false,
   };

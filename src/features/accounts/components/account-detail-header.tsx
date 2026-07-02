@@ -20,7 +20,12 @@ export function AccountDetailHeader({ account }: { account: AccountWithBalance }
   const Icon = meta.icon;
 
   function openRename() {
-    setRenaming({ id: account.id, name: account.name });
+    setRenaming({
+      id: account.id,
+      name: account.name,
+      type: account.type,
+      currentBalance: account.balance,
+    });
   }
 
   return (

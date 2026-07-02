@@ -1,5 +1,18 @@
 # Project Changelog
 
+## Editable Account Current Balance (2026-07-02)
+
+### Features
+
+- **Edit current balance:** The account edit sheet (reached from both the accounts list and the detail header overflow menu) now edits the account's current balance alongside the name. Previously edit was rename-only. The field shows the current (derived) balance; on save the stored opening balance is back-solved so the displayed balance equals the entered value (`new_opening = opening + (target − current)`), leaving transaction history and month stats untouched. Type stays immutable. Applies to all account types (debt/receivable edit the remaining outstanding amount). Overflow menu item relabeled "Sửa tên" → "Sửa".
+
+### Modified Files
+
+- `src/features/accounts/schemas.ts` — `renameAccountSchema` → `updateAccountSchema` (adds `currentBalance`).
+- `src/features/accounts/actions.ts` — `renameAccount` → `updateAccount`: back-solves the opening balance from the target current balance; owner-scoped no-op via `getAccountWithBalance`.
+- `src/features/accounts/queries.ts` — `AccountWithBalance` exposes `initialBalance` (used server-side to back-solve).
+- `src/features/accounts/components/account-form-sheet.tsx` — current-balance input rendered in edit mode; discard guard covers balance changes.
+
 ## Multi-User: Open Google Signup (2026-07-02)
 
 ### Features
