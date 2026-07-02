@@ -5,6 +5,7 @@ import { goals } from "@/lib/db/schema";
 import { requireSession } from "@/lib/auth-session";
 import { createTxSchema, type CreateTxInput } from "../schemas";
 import { insertTxIdempotent } from "../repository";
+import { assertTxRefsOwned } from "../lib/assert-tx-refs-owned";
 import { revalidateTxViews } from "./revalidate";
 
 // Creates a single income/expense row. Idempotent on clientOpId: a retried
@@ -13,6 +14,11 @@ import { revalidateTxViews } from "./revalidate";
 export async function createTransaction(input: CreateTxInput): Promise<{ id: string }> {
   const { user } = await requireSession();
   const data = createTxSchema.parse(input);
+
+  // The account and category are client-supplied ids; verify the requester owns
+  // them before writing, or a forged account_id/category_id could attach this
+  // row to another user's account (cross-tenant IDOR).
+  await assertTxRefsOwned(user.id, data.accountId, data.categoryId ?? null, data.kind);
 
   // A tagged goal must belong to the requester before we link the tx to it,
   // otherwise a forged goal_id could attribute someone else's savings progress.

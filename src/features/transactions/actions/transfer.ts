@@ -2,6 +2,7 @@
 import { requireSession } from "@/lib/auth-session";
 import { transferSchema, type TransferInput } from "../schemas";
 import { insertTransferAtomic } from "../repository";
+import { assertTransferAccountsOwned } from "../lib/assert-tx-refs-owned";
 import { revalidateTxViews } from "./revalidate";
 
 /**
@@ -18,6 +19,10 @@ import { revalidateTxViews } from "./revalidate";
 export async function createTransfer(input: TransferInput): Promise<{ pairId: string }> {
   const { user } = await requireSession();
   const data = transferSchema.parse(input);
+
+  // Both legs are client-supplied account ids; verify the requester owns each
+  // before writing (cross-tenant IDOR guard).
+  await assertTransferAccountsOwned(user.id, data.fromAccountId, data.toAccountId);
 
   const pairId = await insertTransferAtomic(user.id, {
     fromAccountId: data.fromAccountId,
