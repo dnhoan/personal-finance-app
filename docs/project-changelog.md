@@ -1,5 +1,24 @@
 # Project Changelog
 
+## Transaction Tenant-Isolation Hardening (2026-07-02)
+
+### Security
+
+- **Ownership guards on transaction writes.** `createTransaction`, `updateTransaction`, and
+  `createTransfer` now verify the client-supplied `accountId`/`categoryId` (and both transfer
+  legs) belong to the requester before writing, via a new
+  `features/transactions/lib/assert-tx-refs-owned.ts` (mirrors the existing recurring-rule
+  ownership guard). Previously these referenced accounts/categories by id alone; combined with
+  the `ON DELETE RESTRICT` FK on `account_id`, a caller could attach a row to another account —
+  a latent cross-tenant write hole that opening signup would activate.
+- **Per-user idempotency key.** `transactions_client_op_id_uniq` widened from `(client_op_id)`
+  to `(user_id, client_op_id) WHERE client_op_id IS NOT NULL` (migration `0005`), so one user's
+  `clientOpId` can no longer collide with another's and suppress a write. Both
+  `onConflictDoNothing` sites (`insertTxIdempotent`, `insertTransferAtomic`) updated to match.
+- Added `tests/features/transactions/cross-tenant-isolation.test.ts` (rejection of foreign
+  account/category/transfer legs; per-user `clientOpId` namespacing).
+- Defense-in-depth for the current single-user app; first phase of the multi-user migration.
+
 ## Dedicated /add Capture Page with Numeric Keypad (2026-07-01)
 
 ### Changed

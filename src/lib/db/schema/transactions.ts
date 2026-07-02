@@ -62,9 +62,11 @@ export const transactions = pgTable(
     index("transactions_user_month_idx").on(t.userId, t.occurredMonthIct),
     // Backs the goal-progress aggregate SUM(amount) WHERE goal_id = $g AND user_id = $u.
     index("transactions_goal_user_idx").on(t.goalId, t.userId),
-    // Idempotency: at most one row per client-supplied op id.
+    // Idempotency: at most one row per (user, client-supplied op id). Scoped by
+    // user so one user's op id can never collide with another's and suppress a
+    // write — a client-controlled key must not share a global namespace.
     uniqueIndex("transactions_client_op_id_uniq")
-      .on(t.clientOpId)
+      .on(t.userId, t.clientOpId)
       .where(sql`client_op_id IS NOT NULL`),
     // Idempotent materialisation: one instance per (rule, occurrence).
     uniqueIndex("transactions_recurring_occurred_uniq")
