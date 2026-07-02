@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { user } from "@/lib/db/auth-schema";
 import { accounts, recurringRules } from "@/lib/db/schema";
@@ -8,8 +8,9 @@ import { runRenewalCheck } from "@/server/cron/run-renewal-check";
 
 // Runs against a live Neon branch. A DAILY rule has an occurrence inside the
 // 3-day lead window every day, so the alert fires; running twice the same day
-// must send exactly once (notified_at idempotency) and bump the heartbeat both
-// times. sendMail is mocked so no real email is sent.
+// must send exactly once (notified_at idempotency). The runner no longer writes
+// the cron_state heartbeat — that moved to the route so it lands once after the
+// whole user fan-out. sendMail is mocked so no real email is sent.
 const OWNER_ID = `test-renewal-${Date.now()}`;
 const OWNER_EMAIL = `renewal-${Date.now()}@example.test`;
 const NOW = new Date("2026-03-10T03:00:00Z"); // ~10:00 ICT
@@ -17,14 +18,7 @@ const TODAY_ICT = "2026-03-10";
 let accountId: string;
 let ruleId: string;
 
-async function heartbeat(): Promise<string | null> {
-  const r = await db.execute<{ last_renewal_check_at: string | null }>(
-    sql`SELECT last_renewal_check_at FROM cron_state LIMIT 1`,
-  );
-  return r.rows[0]?.last_renewal_check_at ?? null;
-}
-
-describe("runRenewalCheck idempotency + heartbeat", () => {
+describe("runRenewalCheck idempotency", () => {
   beforeAll(async () => {
     await db
       .insert(user)
@@ -62,7 +56,7 @@ describe("runRenewalCheck idempotency + heartbeat", () => {
     await db.delete(user).where(eq(user.id, OWNER_ID));
   });
 
-  it("sends once across two same-day runs and updates the heartbeat each run", async () => {
+  it("sends once across two same-day runs (notified_at idempotency)", async () => {
     const sendMail = vi.fn().mockResolvedValue(undefined);
 
     const first = await runRenewalCheck(db, OWNER_ID, NOW, sendMail);
@@ -70,8 +64,6 @@ describe("runRenewalCheck idempotency + heartbeat", () => {
     expect(sendMail).toHaveBeenCalledTimes(1);
     // Alert routes to the rule owner's account email, not a fixed inbox.
     expect(sendMail).toHaveBeenCalledWith(expect.objectContaining({ to: OWNER_EMAIL }));
-    const hb1 = await heartbeat();
-    expect(hb1).not.toBeNull();
 
     const [afterFirst] = await db
       .select({ notifiedAt: recurringRules.notifiedAt })
@@ -82,8 +74,5 @@ describe("runRenewalCheck idempotency + heartbeat", () => {
     const second = await runRenewalCheck(db, OWNER_ID, NOW, sendMail);
     expect(second.sent).toBe(0);
     expect(sendMail).toHaveBeenCalledTimes(1); // still once — idempotent
-    const hb2 = await heartbeat();
-    expect(hb2).not.toBeNull();
-    expect(new Date(hb2!).getTime()).toBeGreaterThanOrEqual(new Date(hb1!).getTime());
   });
 });

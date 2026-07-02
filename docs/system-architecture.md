@@ -1,26 +1,26 @@
 # System Architecture
 
-Personal finance management web PWA. Single-user, Vietnam locale, VND-only, Vietnamese UI (English deferred Phase 2+).
+Personal finance management web PWA. Multi-user, Vietnam locale, VND-only, Vietnamese UI (English deferred Phase 2+).
 
-Last updated: 2026-06-30 (Phase 10: PWA Layer, Data Export, Accessibility Polish — MVP complete).
+Last updated: 2026-07-02 (Phase 11: Multi-User Migration — Open Google Signup, Per-User Isolation).
 
 ## Tech Stack (Locked)
 
-| Layer     | Pick                             | Why                                                       |
-| --------- | -------------------------------- | --------------------------------------------------------- |
-| Framework | Next.js 15 App Router            | RSC + Server Actions, App Router mature                   |
-| Language  | TypeScript (strict)              | Inference for Drizzle + Zod, end-to-end types             |
-| ORM       | Drizzle                          | Edge-friendly, small bundle (~7 KB), owned migrations     |
-| Database  | Neon Postgres                    | Scale-to-zero, branching, Singapore region                |
-| Auth      | Better Auth                      | Google OAuth + email allowlist via callback               |
-| UI        | shadcn/ui + Tailwind v4          | Copy-not-install, owned components                        |
-| Charts    | Recharts                         | Ships with shadcn/ui charts block                         |
-| Forms     | React Hook Form + Zod            | Same schema on client + server                            |
-| PWA       | Serwist + @serwist/next          | Active successor to next-pwa                              |
-| Bot       | grammY (Telegram)                | TS-first, `webhookCallback("std/http")` serverless-native |
-| Cron      | cron-job.org → Vercel HTTPS      | Free; Vercel Hobby tier no longer runs crons              |
-| Testing   | Vitest (unit) + Playwright (e2e) | Standard combo, MSW for API mocks                         |
-| Hosting   | Vercel (Hobby tier)              | Zero ops, free, SGP edge                                  |
+| Layer     | Pick                             | Why                                                        |
+| --------- | -------------------------------- | ---------------------------------------------------------- |
+| Framework | Next.js 15 App Router            | RSC + Server Actions, App Router mature                    |
+| Language  | TypeScript (strict)              | Inference for Drizzle + Zod, end-to-end types              |
+| ORM       | Drizzle                          | Edge-friendly, small bundle (~7 KB), owned migrations      |
+| Database  | Neon Postgres                    | Scale-to-zero, branching, Singapore region                 |
+| Auth      | Better Auth                      | Google OAuth open signup with `SIGNUP_ENABLED` kill-switch |
+| UI        | shadcn/ui + Tailwind v4          | Copy-not-install, owned components                         |
+| Charts    | Recharts                         | Ships with shadcn/ui charts block                          |
+| Forms     | React Hook Form + Zod            | Same schema on client + server                             |
+| PWA       | Serwist + @serwist/next          | Active successor to next-pwa                               |
+| Bot       | grammY (Telegram)                | TS-first, `webhookCallback("std/http")` serverless-native  |
+| Cron      | cron-job.org → Vercel HTTPS      | Free; Vercel Hobby tier no longer runs crons               |
+| Testing   | Vitest (unit) + Playwright (e2e) | Standard combo, MSW for API mocks                          |
+| Hosting   | Vercel (Hobby tier)              | Zero ops, free, SGP edge                                   |
 
 ## High-Level Topology
 
@@ -39,13 +39,10 @@ Last updated: 2026-06-30 (Phase 10: PWA Layer, Data Export, Accessibility Polish
 [ cron-job.org ] ----daily POST + CRON_SECRET---->  [ /api/cron/renewal-check ]
                                                             |
                                                             v
-                            [ api.telegram.org/bot<token>/sendMessage ]
-                                                            |
-                                                            v
-                                                    [ User's Telegram DM ]
-
-[ Telegram servers ] ----webhook POST + secret header----> [ /api/telegram ]
-                                              (grammY router; allowlist by chat_id)
+                              [ Brevo SMTP relay ]
+                                    |
+                                    v
+                        [ Each user's email address ]
 
 Service Worker Caching Strategy:
   - NetworkOnly: (app)/*, /api/* (always fresh, auth cookies)
@@ -56,11 +53,12 @@ Service Worker Caching Strategy:
 
 ## Auth Boundary
 
-Implemented in Phase 2 (Better Auth `1.6.16`, Google-only). Three enforcement layers:
+Implemented in Phase 2 (Better Auth `1.6.16`, Google-only) and migrated to multi-user in Phase 11. Three enforcement layers:
 
-- **Sign-in allowlist** (`lib/auth.ts`): `databaseHooks.user.create.before` (first sign-in) + `databaseHooks.session.create.before` (every returning sign-in) call the pure `assertAllowlisted()` gate (`lib/auth-allowlist.ts`) — requires `emailVerified === true` and case/whitespace-normalised `email === ALLOWED_EMAIL`. Failure throws `APIError(FORBIDDEN)`; no user row / no session is created. Client routes rejects to `/unauthorized` via `errorCallbackURL`.
+- **Open signup with kill-switch** (`lib/auth.ts`): `databaseHooks.user.create.before` enforces the `SIGNUP_ENABLED` flag (optional, defaults to `true`). When `false`, throws `APIError(FORBIDDEN)` and blocks new user creation without affecting existing sessions. Existing users remain unaffected because the hook fires only for new rows.
 - **Middleware** (`middleware.ts`, edge): cheap session-cookie _presence_ check via `getSessionCookie`; missing → `302 /sign-in?from=<path>`. No DB. Matcher excludes `/api/auth`, `/api/cron` (cookieless, secret-guarded), public auth pages, and PWA assets.
-- **`requireSession()`** (`lib/auth-session.ts`, server-only, React-`cache`d): authoritative per-call check — validates the session server-side AND re-runs the allowlist (catches cookie replay + `ALLOWED_EMAIL` rotation). **Every Server Action / Route Handler that touches data MUST call it first** — middleware does not cover Server Functions.
+- **`requireSession()`** (`lib/auth-session.ts`, server-only, React-`cache`d): authoritative per-call check — validates the session server-side and confirms it belongs to the requesting user. **Every Server Action / Route Handler that touches data MUST call it first** — middleware does not cover Server Functions.
+- **Lazy provisioning** (`lib/db/ensure-user-provisioned.ts`): New users are auto-provisioned on first app-shell render (after `requireSession()`) with default categories and a default "Tiền mặt" (Cash) account, atomically. Idempotent; guarded on active accounts. If all accounts are archived, the default Cash account is re-provisioned on next sign-in.
 - Better Auth's own tables (`user`, `session`, `account`, `verification`) live in `lib/db/auth-schema.ts`. Session cookie: `httpOnly`, `sameSite=lax`, `secure` in prod, 30-day rolling (`updateAge` 1 day).
 - `/api/cron/*` — cookieless (excluded from the middleware matcher); protected by the `Authorization: Bearer <CRON_SECRET>` header (SHA-256-then-`timingSafeEqual`) plus an in-memory per-IP rate limit.
 

@@ -16,7 +16,7 @@ function safeReturnPath(from?: string): string {
   return "/dashboard";
 }
 
-/** Start Google OAuth. Allowed → /dashboard (or `from`); rejected by allowlist → /unauthorized. */
+/** Start Google OAuth. Success → /dashboard (or `from`); an OAuth error → /unauthorized. */
 export async function signInWithGoogle(from?: string): Promise<void> {
   await authClient.signIn.social({
     provider: "google",

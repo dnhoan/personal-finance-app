@@ -1,5 +1,38 @@
 # Project Changelog
 
+## Multi-User: Open Google Signup (2026-07-02)
+
+### Features
+
+- **Open signup:** Removed email allowlist (`ALLOWED_EMAIL` env var removed). Any Google account can now sign in. Each user gets a fully isolated workspace — no shared data between accounts.
+- **`SIGNUP_ENABLED` kill-switch** (optional, default `true`): New environment variable to halt NEW user creation without affecting existing sessions. Non-destructive rollback lever for production.
+- **Lazy first-sign-in provisioning:** New users are auto-seeded on first app-shell render with 10 VN default expense categories + a default "Tiền mặt" (Cash) account, atomically. Idempotent via active-account check. Re-provisions if all accounts are archived.
+- **Cron fan-out:** `/api/cron/renewal-check` now sequentially processes all users with active recurring rules, materializes due instances, and sends email alerts via Brevo SMTP (per-user delivery). Route-level heartbeat written once after completion (only on fully-successful run). Same-day short-circuit prevents duplicate work.
+
+### Auth Changes
+
+- `src/lib/auth.ts`: `databaseHooks.user.create.before` enforces `SIGNUP_ENABLED` flag instead of allowlist.
+- `src/lib/env.ts`: Removed `ALLOWED_EMAIL` validation. Added `SIGNUP_ENABLED` (optional enum, defaults to `true`).
+- Deleted `src/lib/auth-allowlist.ts` (no longer used).
+
+### New/Modified Files
+
+- `src/lib/db/ensure-user-provisioned.ts` — Lazy provisioning trigger, called after `requireSession()` on app-shell render.
+- `src/app/api/cron/renewal-check/route.ts` — Rewritten to fan-out over all users with active rules; same-day idempotency via heartbeat.
+
+### Breaking Changes
+
+- `ALLOWED_EMAIL` env var is removed. If your deployment uses it, delete it before deploying.
+- Users who had previously been blocked by the allowlist can now sign in.
+
+### Notes
+
+- All transaction writes were hardened in the prior commit (2026-07-02) with ownership guards + per-user idempotency keys (defense-in-depth for multi-user).
+- A user who archives ALL accounts is re-provisioned with a default Cash account on next sign-in (app invariant: a fully-empty workspace is not supported).
+- Alerts are now sent to each user's own email (per-user delivery via Brevo SMTP relay).
+
+---
+
 ## Transaction Tenant-Isolation Hardening (2026-07-02)
 
 ### Security
