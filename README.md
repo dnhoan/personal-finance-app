@@ -1,6 +1,6 @@
 # Personal Finance App
 
-A single-user personal finance management **web PWA** for tracking VND finances in Vietnam — mobile-first for daily entry, desktop for weekly/monthly review.
+A multi-user personal finance management **web PWA** for tracking VND finances in Vietnam — mobile-first for daily entry, desktop for weekly/monthly review. Any Google account can sign up; each user gets a fully isolated workspace.
 
 > **Status:** 🚧 In active development. Phase 1 (project scaffold) complete; database schema and features land in later phases. See [Roadmap](#roadmap).
 
@@ -19,14 +19,14 @@ A single-user personal finance management **web PWA** for tracking VND finances 
 | **Data export**   | CSV + JSON, all entities                                                                  |
 | **Email alerts**  | Daily email for upcoming renewals via Brevo SMTP (configurable lead time)                 |
 
-**Out of scope (Phase 2+):** receipt OCR, bank statement import, SMS/email parsing, multi-currency, multi-user, investment tracking, English UI.
+**Out of scope (Phase 2+):** receipt OCR, bank statement import, SMS/email parsing, multi-currency, investment tracking, English UI.
 
 ## Tech Stack
 
 - **Framework:** [Next.js 15](https://nextjs.org/) (App Router) + React 19 + TypeScript (strict)
 - **Styling:** Tailwind CSS v4 (CSS-first `@theme`) + [shadcn/ui](https://ui.shadcn.com/) (Radix primitives)
 - **Database:** [Neon](https://neon.tech/) Postgres (serverless) + [Drizzle ORM](https://orm.drizzle.team/) / drizzle-kit
-- **Auth:** Better Auth — Google OAuth gated by email allowlist (single tenant)
+- **Auth:** Better Auth — Google OAuth open signup with `SIGNUP_ENABLED` kill-switch (multi-user)
 - **Notifications:** Email via Nodemailer over [Brevo](https://www.brevo.com/) SMTP relay
 - **Testing:** [Vitest](https://vitest.dev/) (unit) + [Playwright](https://playwright.dev/) (e2e)
 - **Tooling:** ESLint 9, Prettier, Husky + lint-staged (pre-commit typecheck)
@@ -68,28 +68,29 @@ All variables in `.env.example` are required. The app validates them at startup 
 | `DATABASE_URL`                              | Neon Postgres connection string                          |
 | `BETTER_AUTH_SECRET`                        | Auth signing secret (32+ chars)                          |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth                                             |
-| `ALLOWED_EMAIL`                             | The single allowlisted owner email                       |
+| `SIGNUP_ENABLED`                            | Optional kill-switch for new signups (default `true`)    |
 | `BREVO_SMTP_USER` / `BREVO_SMTP_KEY`        | Brevo SMTP relay credentials                             |
-| `ALERT_FROM_EMAIL`                          | Verified sender (alerts go to the owner's account email) |
+| `ALERT_FROM_EMAIL`                          | Verified sender (alerts go to each user's account email) |
 | `CRON_SECRET`                               | Cron endpoint auth (32+ chars)                           |
 | `NEXT_PUBLIC_APP_URL`                       | Public app URL                                           |
 
 ### Email Alerts (Brevo SMTP)
 
-Daily renewal reminders are sent as email via Brevo's free SMTP relay (300 emails/day — far above a single user's needs). One-time setup:
+Daily renewal reminders are sent as email via Brevo's free SMTP relay (300 emails/day — sufficient for a small user base). One-time setup:
 
 1. Create a free [Brevo](https://www.brevo.com/) account.
 2. **Verify a single sender** — Senders → _Add a sender_ → confirm via the email Brevo sends. This can be your own Gmail; no domain or DNS is required. Use that verified address as `ALERT_FROM_EMAIL`. Brevo rejects sends from unverified senders.
 3. SMTP & API → generate an **SMTP key** → set `BREVO_SMTP_USER` (your login email) and `BREVO_SMTP_KEY`.
 
-Alerts are delivered to the rule owner's account email (`user.email`) — the address you signed in with — so there is no separate destination to configure.
+Alerts are delivered to each user's account email (`user.email`) — the address they signed in with — so there is no separate destination to configure.
 
 ### Google OAuth
 
-Sign-in is Google OAuth gated by a single-email allowlist (`ALLOWED_EMAIL`). In the [Google Cloud Console](https://console.cloud.google.com/) → _APIs & Services → Credentials_ → OAuth 2.0 Client:
+Any Google account can sign in. Set up credentials in the [Google Cloud Console](https://console.cloud.google.com/) → _APIs & Services → Credentials_ → OAuth 2.0 Client:
 
 - **Authorized redirect URI:** `${NEXT_PUBLIC_APP_URL}/api/auth/callback/google` (e.g. `https://<your-app>/api/auth/callback/google`; add `http://localhost:3000/api/auth/callback/google` for local dev).
 - Copy the client id/secret into `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`.
+- **Optional:** Set `SIGNUP_ENABLED=false` in your environment to halt new user creation (existing users remain unaffected).
 
 ### Install as an App (PWA)
 
@@ -143,12 +144,15 @@ src/
 ├── components/ui/       # shadcn/ui components
 └── lib/
     ├── db/              # Drizzle client + schema
+    │   └── ensure-user-provisioned.ts  # Lazy first-sign-in provisioning
     ├── env.ts           # Zod-validated environment config
     └── utils.ts
 drizzle/                 # Migration metadata
 docs/                    # PDR, architecture, design guidelines, journals
 e2e/ · tests/            # Playwright & Vitest suites
 ```
+
+**First-Sign-In:** New users are auto-provisioned on first app-shell render with default categories and a default "Tiền mặt" (Cash) account. Archived accounts are re-provisioned if all active accounts are deleted.
 
 ## Conventions
 

@@ -5,10 +5,13 @@ const envSchema = z.object({
   BETTER_AUTH_SECRET: z.string().min(32),
   GOOGLE_CLIENT_ID: z.string().min(1),
   GOOGLE_CLIENT_SECRET: z.string().min(1),
-  ALLOWED_EMAIL: z
-    .string()
-    .email()
-    .transform((v) => v.toLowerCase()),
+  // Signup kill-switch. Open by default; set to "false" to halt NEW user creation
+  // without touching existing users (the non-destructive multi-user rollback lever).
+  SIGNUP_ENABLED: z
+    .enum(["true", "false"])
+    .optional()
+    .default("true")
+    .transform((v) => v === "true"),
   // Brevo SMTP relay credentials for outbound renewal-alert emails.
   BREVO_SMTP_USER: z.string().min(1),
   BREVO_SMTP_KEY: z.string().min(1),

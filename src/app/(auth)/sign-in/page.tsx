@@ -26,9 +26,7 @@ export default async function SignInPage({
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <SignInButton from={from} />
-        <p className="text-center text-xs text-fg-subtle">
-          Chỉ tài khoản được cấp quyền mới có thể truy cập.
-        </p>
+        <p className="text-center text-xs text-fg-subtle">Đăng nhập bằng Google để bắt đầu.</p>
       </CardContent>
     </Card>
   );

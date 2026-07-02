@@ -16,12 +16,12 @@ export default function UnauthorizedPage() {
           className="pt-3 text-2xl font-semibold text-fg"
           style={{ fontFamily: "var(--font-serif)" }}
         >
-          Không có quyền truy cập
+          Đăng nhập không thành công
         </h1>
       </CardHeader>
       <CardContent className="flex flex-col gap-4 text-center">
         <p className="text-sm text-fg-muted">
-          Tài khoản này không được phép sử dụng ứng dụng. Vui lòng liên hệ chủ sở hữu.
+          Đã xảy ra lỗi khi đăng nhập bằng Google. Vui lòng thử lại.
         </p>
         <Button type="button" variant="outline" onClick={() => void signOutWithCacheClear()}>
           Quay lại đăng nhập

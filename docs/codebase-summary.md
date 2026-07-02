@@ -2,19 +2,20 @@
 
 Personal finance web PWA built with Next.js 15, TypeScript, Drizzle ORM, Neon Postgres, Better Auth, shadcn/ui, Recharts, and Serwist (offline-capable).
 
-Last updated: 2026-06-30
+Last updated: 2026-07-02
 
 ## Project Overview
 
-Single-user Vietnamese personal finance application. Manages transactions, recurring bills, budgets, savings goals, debts/receivables, and provides financial analytics via reports dashboard. Locale: Vietnam (VND, ICT timezone). UI: Vietnamese (English deferred). Deployment: Vercel Hobby.
+Multi-user Vietnamese personal finance application (open Google signup). Each user manages their own transactions, recurring bills, budgets, savings goals, debts/receivables, and financial analytics. Locale: Vietnam (VND, ICT timezone). UI: Vietnamese (English deferred). Deployment: Vercel Hobby.
 
 ## Core Architecture Patterns
 
 ### Authentication & Authorization
 
-- Better Auth 1.6.16 with Google OAuth + email allowlist
+- Better Auth 1.6.16 with Google OAuth open signup; `SIGNUP_ENABLED` kill-switch (optional, default true)
 - Per-call server-side session validation (`requireSession()`) — enforced on all data-touching Server Actions
-- Middleware edge-level cookie check + post-auth allowlist re-verification
+- Middleware edge-level cookie check; validates session ownership
+- Lazy provisioning on first sign-in: new users auto-seeded with default categories + Cash account (idempotent, atomic)
 - All domain queries anchor to `user_id` with FKs cascading on owner delete
 
 ### Data Model Strategy
@@ -115,8 +116,8 @@ src/features/
 
 **Auth Routes** (`(auth)`)
 
-- `/sign-in` — OAuth redirect + allowlist validation
-- `/unauthorized` — access denied fallback
+- `/sign-in` — OAuth redirect
+- `/unauthorized` — access denied fallback (legacy; signup always allowed unless `SIGNUP_ENABLED=false`)
 
 **App Routes** (`(app)`, authed)
 
@@ -138,8 +139,7 @@ src/features/
 
 - `/api/auth/*` — Better Auth endpoints
 - `/api/export/csv` — Stream transactions as CSV (UTF-8 BOM, dd/MM/yyyy dates, formula-injection safe)
-- `/api/telegram` — grammY webhook (allowlist by chat_id)
-- `/api/cron/renewal-check` — Daily renewal materialization + Telegram alert
+- `/api/cron/renewal-check` — Daily renewal materialization + email alert fan-out (per-user, via Brevo SMTP)
 
 **PWA & Offline**
 
@@ -152,21 +152,21 @@ src/features/
 
 ## Tech Stack
 
-| Layer        | Choice                      | Key Details                        |
-| ------------ | --------------------------- | ---------------------------------- |
-| Framework    | Next.js 15 App Router       | RSC + Server Actions               |
-| Language     | TypeScript (strict)         | End-to-end types + inference       |
-| ORM          | Drizzle                     | Owned migrations, ~7 KB bundle     |
-| Database     | Neon Postgres (SGP region)  | Scale-to-zero, branching           |
-| Auth         | Better Auth 1.6.16          | Google OAuth + email allowlist     |
-| UI Framework | shadcn/ui + Tailwind v4     | Copy-not-install, owned components |
-| Charts       | Recharts 3.9.0              | CSS-var theming, auto dark mode    |
-| Forms        | React Hook Form + Zod       | Client/server schema unification   |
-| PWA          | Serwist + @serwist/next     | Active next-pwa successor          |
-| Bot          | grammY (Telegram)           | TS-first, serverless webhook       |
-| Cron         | cron-job.org → Vercel HTTPS | Free; Hobby tier no cron support   |
-| Testing      | Vitest (unit) + Playwright  | MSW for API mocks                  |
-| Hosting      | Vercel Hobby                | Zero ops, free, SGP edge           |
+| Layer        | Choice                      | Key Details                                             |
+| ------------ | --------------------------- | ------------------------------------------------------- |
+| Framework    | Next.js 15 App Router       | RSC + Server Actions                                    |
+| Language     | TypeScript (strict)         | End-to-end types + inference                            |
+| ORM          | Drizzle                     | Owned migrations, ~7 KB bundle                          |
+| Database     | Neon Postgres (SGP region)  | Scale-to-zero, branching                                |
+| Auth         | Better Auth 1.6.16          | Google OAuth open signup + `SIGNUP_ENABLED` kill-switch |
+| UI Framework | shadcn/ui + Tailwind v4     | Copy-not-install, owned components                      |
+| Charts       | Recharts 3.9.0              | CSS-var theming, auto dark mode                         |
+| Forms        | React Hook Form + Zod       | Client/server schema unification                        |
+| PWA          | Serwist + @serwist/next     | Active next-pwa successor                               |
+| Email        | Brevo SMTP relay            | Free tier, per-user alert delivery                      |
+| Cron         | cron-job.org → Vercel HTTPS | Free; Hobby tier no cron support                        |
+| Testing      | Vitest (unit) + Playwright  | MSW for API mocks                                       |
+| Hosting      | Vercel Hobby                | Zero ops, free, SGP edge                                |
 
 ## Database Schema Essentials
 
@@ -212,8 +212,8 @@ src/features/
 
 - `npm install` — Install dependencies
 - `npm run db:push` — Apply Drizzle schema (dev only)
-- `npm run db:seed` — Idempotent seed (categories, cron_state)
-- `.env.local` — Copy `.env.example`, add secrets (ALLOWED_EMAIL, API keys, etc.)
+- `npm run db:seed` — Idempotent backfill seed (categories + default account per user)
+- `.env.local` — Copy `.env.example`, add secrets (API keys, `SIGNUP_ENABLED` optional, etc.)
 
 **Development**
 

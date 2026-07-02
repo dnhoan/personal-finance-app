@@ -49,8 +49,8 @@ function daysBetween(today: string, due: string): number {
  * Each due rule is claimed with a conditional `notified_at` UPDATE *before*
  * sending, so a retry after a send failure cannot duplicate the alert — a rare
  * missed alert is preferred over a duplicate. Each claim runs in its own
- * transaction; one bad send never blocks the rest. A heartbeat UPSERT records the
- * run regardless of how many sent.
+ * transaction; one bad send never blocks the rest. The cron_state heartbeat is
+ * NOT written here — the route writes it once after the whole user fan-out.
  */
 export async function runRenewalCheck(
   database: Db,
@@ -151,13 +151,8 @@ export async function runRenewalCheck(
     }
   }
 
-  // Heartbeat. UPSERT (not bare UPDATE) so it lands even if the singleton row was
-  // never seeded. The dashboard reads this to surface a silently-broken cron.
-  await database.execute(sql`
-    INSERT INTO cron_state (id, last_renewal_check_at)
-    VALUES (true, now())
-    ON CONFLICT (id) DO UPDATE SET last_renewal_check_at = now()
-  `);
-
+  // No heartbeat here: under the multi-user fan-out the route owns the single
+  // cron_state heartbeat and writes it ONCE after the whole loop completes, so a
+  // run truncated mid-fan-out cannot leave a "healthy" timestamp behind.
   return { processed, sent, claimed_but_failed: claimedButFailed };
 }

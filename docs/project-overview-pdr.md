@@ -2,11 +2,11 @@
 
 ## Vision
 
-Single-user personal finance management web PWA. Track VND finances in Vietnam, accessed daily on mobile for entry and weekly/monthly on desktop for review.
+Multi-user personal finance management web PWA. Track VND finances in Vietnam, accessed daily on mobile for entry and weekly/monthly on desktop for review. Any Google account can sign up; each user gets a fully isolated workspace.
 
-## Target User
+## Access Model
 
-Owner only. Single-tenant. Gated by Google OAuth + email allowlist.
+Open multi-user. Any Google account can sign up and gets a fully isolated workspace. Optional `SIGNUP_ENABLED` environment flag (default `true`) acts as a non-destructive rollback lever to halt NEW user creation without affecting existing users.
 
 ## Scope — MVP
 
@@ -31,7 +31,7 @@ Owner only. Single-tenant. Gated by Google OAuth + email allowlist.
 - CSV / Excel statement import (bank statement parsing)
 - SMS / Email parsing
 - Multi-currency
-- Multi-user / shared budgets
+- Shared budgets / family features
 - Investment / brokerage tracking
 - Telegram bot inbound commands (`/add`, `/list`) — architecture must allow trivial addition
 - English UI localization (i18n library such as `next-intl`; UI strings written directly in Vietnamese for MVP)
@@ -43,16 +43,16 @@ Owner only. Single-tenant. Gated by Google OAuth + email allowlist.
 - UI language: Vietnamese (MVP). English deferred to Phase 2+.
 - PWA installable: offline-capable via service worker (read-only auth routes cached, HTML navigations fallback to /offline)
 - Mobile-first responsive; desktop layout supported.
-- Auth: Google OAuth, email allowlist, single user.
+- Auth: Google OAuth, open signup, per-user isolation.
 - Hosting: Vercel Hobby (free) + Neon free tier + cron-job.org free.
 
 ## Success Criteria
 
 - Log a transaction in ≤3 taps on mobile from PWA home screen.
-- Renewal alert arrives via Telegram within 24h of due date.
+- Renewal alert arrives via email within 24h of due date.
 - Monthly over-spending visible at-a-glance on dashboard.
-- CSV + JSON export downloadable from settings at any time.
-- Sign-in works via Google OAuth; non-allowlisted email blocked.
+- CSV export downloadable from settings at any time.
+- Sign-in works via Google OAuth; any account accepted (configurable via `SIGNUP_ENABLED`).
 
 ## Constraints / Decisions
 
@@ -64,22 +64,23 @@ Owner only. Single-tenant. Gated by Google OAuth + email allowlist.
 
 ## MVP Completion Status
 
-All must-have features shipped as of 2026-06-30 (Phase 10):
+All must-have features shipped as of 2026-07-02 (Phase 11 — Multi-User Migration):
 
-- ✅ Transactions (income, expense, transfer; quick-add; VND parser)
+- ✅ Transactions (income, expense, transfer; quick-add; VND parser; per-user isolation)
 - ✅ Accounts (cash, bank, credit card, e-wallet, debt, receivable types)
-- ✅ Categories (hierarchical, 10 seeded VN-aware)
+- ✅ Categories (hierarchical, 10 seeded VN-aware; per-user isolation)
 - ✅ Budgets (monthly per category, progress bars, rollover)
 - ✅ Recurring (RRULE, lazy materialization, edit one vs series)
 - ✅ Savings goals (virtual buckets, progress tracking)
 - ✅ Debts/loans (liability tracking, open→partial→settled lifecycle)
 - ✅ Reports (cash flow MoM, spending drill-down, net worth trend)
-- ✅ Data export (CSV + JSON, all entities, all-time)
-- ✅ Telegram alerts (daily renewal alerts, 3-day lead, configurable)
+- ✅ Data export (CSV, all entities, all-time)
+- ✅ Email alerts (daily renewal alerts, 3-day lead, configurable; per-user delivery)
 - ✅ PWA (offline-capable service worker, manifest, icon set)
 - ✅ Accessibility (WCAG AA audit, axe-core scan, error boundaries)
+- ✅ Multi-user (open Google signup, per-user workspace isolation, kill-switch via `SIGNUP_ENABLED`)
 
-Success criteria: all 5 criteria met (transaction entry ≤3 taps, Telegram alerts within 24h, dashboard overspending visible, export downloadable, OAuth + allowlist sign-in).
+Success criteria: all 5 criteria met (transaction entry ≤3 taps, email alerts within 24h, dashboard overspending visible, export downloadable, OAuth open-signup with kill-switch).
 
 ## References
 
