@@ -123,7 +123,7 @@ src/features/
 
 - `/` — Dashboard (hero, net worth, top categories, upcoming renewals, recent txs, cron badge)
 - `/accounts` — Account list with balance/status
-- `/transactions` — Full transaction history with filters
+- `/transactions` — Full transaction history with filters; tap a row → `/transactions/[id]` read-only detail (hero amount, facts, transfer from→to, edit/delete)
 - `/add` — Dedicated capture screen (numeric keypad, pre-filled context, optimistic save)
 - `/recurring` — Bill/subscription management
 - `/budgets` — Monthly budget tracking

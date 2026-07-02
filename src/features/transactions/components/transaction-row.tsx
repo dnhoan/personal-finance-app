@@ -1,5 +1,7 @@
 "use client";
 import * as React from "react";
+import Link from "next/link";
+import type { Route } from "next";
 import { toast } from "sonner";
 import {
   Coins,
@@ -134,29 +136,37 @@ export function TransactionRow({
     // smooth without a windowing dep. contain-intrinsic-size reserves the ~64px
     // row height so the scrollbar and scroll position stay stable while culled.
     <li className="flex min-h-[64px] items-center gap-3 py-2 [contain-intrinsic-size:auto_64px] [content-visibility:auto]">
-      <span
-        className={cn(
-          "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
-          KIND_ICON_BG[tx.kind],
-        )}
-        style={tx.categoryColor ? { color: tx.categoryColor } : undefined}
-        aria-hidden="true"
+      {/* Tapping the icon/title/amount cluster opens the detail; the actions menu
+          is a sibling (not nested) so its trigger never activates this link. */}
+      <Link
+        href={`/transactions/${tx.id}` as Route}
+        className="flex min-w-0 flex-1 items-center gap-3 self-stretch rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <Icon
-          size={20}
-          strokeWidth={1.75}
-          className={cn(!tx.categoryColor && KIND_ICON_FG[tx.kind])}
-        />
-      </span>
+        <span
+          className={cn(
+            "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
+            KIND_ICON_BG[tx.kind],
+          )}
+          style={tx.categoryColor ? { color: tx.categoryColor } : undefined}
+          aria-hidden="true"
+        >
+          <Icon
+            size={20}
+            strokeWidth={1.75}
+            className={cn(!tx.categoryColor && KIND_ICON_FG[tx.kind])}
+          />
+        </span>
 
-      <div className="min-w-0 flex-1">
-        <p className="truncate font-medium text-fg">{title}</p>
-        <p className="truncate text-sm text-fg-muted">
-          {tx.accountName} · {showDate ? formatDateTime(tx.occurredAt) : formatTime(tx.occurredAt)}
-        </p>
-      </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-medium text-fg">{title}</p>
+          <p className="truncate text-sm text-fg-muted">
+            {tx.accountName} ·{" "}
+            {showDate ? formatDateTime(tx.occurredAt) : formatTime(tx.occurredAt)}
+          </p>
+        </div>
 
-      <span className={cn("shrink-0 font-semibold tabular-nums", amountClass)}>{amountText}</span>
+        <span className={cn("shrink-0 font-semibold tabular-nums", amountClass)}>{amountText}</span>
+      </Link>
       <TransactionRowActions tx={tx} accounts={accounts} onDelete={handleDelete} />
     </li>
   );

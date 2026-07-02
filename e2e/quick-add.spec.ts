@@ -26,3 +26,12 @@ test("transactions route carries its path in ?from for post-login return", async
   await page.goto("/transactions");
   await expect(page).toHaveURL(/\/sign-in\?from=%2Ftransactions/);
 });
+
+// The detail route (tap a row → /transactions/<id>) is a per-user resource; the
+// authed happy path (list → tap → detail fields → back) can't be driven here for
+// the reason above and is covered by the getTransactionDetail integration test.
+// This asserts the new dynamic route is behind the same auth gate as the list.
+test("unauthenticated request to a transaction detail redirects to /sign-in", async ({ page }) => {
+  await page.goto("/transactions/00000000-0000-0000-0000-000000000000");
+  await expect(page).toHaveURL(/\/sign-in(\?|$)/);
+});
