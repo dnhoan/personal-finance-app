@@ -14,8 +14,9 @@ import { archiveAccount, unarchiveAccount, setDefaultAccount } from "../actions"
 const UNDO_WINDOW_MS = 5000;
 
 // Edit/archive overflow menu, shared by the accounts list row and the detail
-// header. `onEdit` opens the rename sheet; `onArchived` (optional) fires after a
-// successful archive so the detail page can navigate back to the list.
+// header. `onEdit` opens the edit sheet (name + opening balance); `onArchived`
+// (optional) fires after a successful archive so the detail page can navigate
+// back to the list.
 export function AccountActionsMenu({
   accountId,
   archived,
@@ -58,7 +59,7 @@ export function AccountActionsMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onSelect={() => onEdit()}>
-          <Pencil size={16} aria-hidden="true" /> Sửa tên
+          <Pencil size={16} aria-hidden="true" /> Sửa
         </DropdownMenuItem>
         {!archived && !isDefault && (
           <DropdownMenuItem

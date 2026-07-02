@@ -10,6 +10,8 @@ export type AccountWithBalance = {
   type: (typeof accountType.enumValues)[number];
   status: (typeof accountStatus.enumValues)[number];
   currency: string;
+  /** The stored opening balance (whole VND) — editable, seeds the edit form. */
+  initialBalance: number;
   /** initialBalance + signed sum of transactions, as a whole-VND number. */
   balance: number;
   /** The user's single default account (quick-add pre-selection). */
@@ -32,11 +34,13 @@ export async function listAccountsWithBalance(userId: string): Promise<AccountWi
     type: AccountWithBalance["type"];
     status: AccountWithBalance["status"];
     currency: string;
+    initial_balance: string;
     balance: string;
     is_default: boolean;
   }>(sql`
     SELECT
       a.id, a.name, a.type, a.status, a.currency, a.is_default,
+      a.initial_balance::text AS initial_balance,
       CASE
         WHEN a.type = 'debt' THEN
           (a.initial_balance - COALESCE(SUM(t.amount) FILTER (WHERE t.kind = 'expense'), 0))::text
@@ -60,6 +64,7 @@ export async function listAccountsWithBalance(userId: string): Promise<AccountWi
     type: r.type,
     status: r.status,
     currency: r.currency,
+    initialBalance: Number(r.initial_balance),
     balance: Number(r.balance),
     isDefault: r.is_default,
   }));
@@ -104,11 +109,13 @@ export const getAccountWithBalance = cache(async function getAccountWithBalance(
     type: AccountWithBalance["type"];
     status: AccountWithBalance["status"];
     currency: string;
+    initial_balance: string;
     balance: string;
     is_default: boolean;
   }>(sql`
     SELECT
       a.id, a.name, a.type, a.status, a.currency, a.is_default,
+      a.initial_balance::text AS initial_balance,
       CASE
         WHEN a.type = 'debt' THEN
           (a.initial_balance - COALESCE(SUM(t.amount) FILTER (WHERE t.kind = 'expense'), 0))::text
@@ -133,6 +140,7 @@ export const getAccountWithBalance = cache(async function getAccountWithBalance(
     type: r.type,
     status: r.status,
     currency: r.currency,
+    initialBalance: Number(r.initial_balance),
     balance: Number(r.balance),
     isDefault: r.is_default,
   };

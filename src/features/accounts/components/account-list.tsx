@@ -33,7 +33,12 @@ export function AccountList({ accounts }: { accounts: AccountWithBalance[] }) {
     setSheetOpen(true);
   }
   function openEdit(account: AccountWithBalance) {
-    setEditing({ id: account.id, name: account.name });
+    setEditing({
+      id: account.id,
+      name: account.name,
+      type: account.type,
+      currentBalance: account.balance,
+    });
     setSheetOpen(true);
   }
 

@@ -4,9 +4,10 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db/client";
 import { accounts } from "@/lib/db/schema";
 import { requireSession } from "@/lib/auth-session";
+import { getAccountWithBalance } from "./queries";
 import {
   createAccountSchema,
-  renameAccountSchema,
+  updateAccountSchema,
   archiveAccountSchema,
   unarchiveAccountSchema,
   setDefaultAccountSchema,
@@ -38,13 +39,33 @@ export async function createAccount(input: CreateAccountInput): Promise<{ id: st
   return { id: row!.id };
 }
 
-export async function renameAccount(input: { id: string; name: string }): Promise<void> {
+// Updates the editable fields of an account: name and current balance. Type stays
+// immutable. `currentBalance` is the desired displayed balance; since balance =
+// opening + transactions (linear in opening for every type), we back-solve the
+// stored opening balance: new_opening = opening + (target − current). The opening
+// balance may land below zero when transactions already exceed the target — that's
+// intentional and never surfaced (only the derived balance is shown).
+export async function updateAccount(input: {
+  id: string;
+  name: string;
+  currentBalance: number;
+}): Promise<void> {
   const { user } = await requireSession();
-  const data = renameAccountSchema.parse(input);
+  const data = updateAccountSchema.parse(input);
+
+  // Owner-scoped read; null when the id isn't the user's — leave it a no-op.
+  const account = await getAccountWithBalance(user.id, data.id);
+  if (!account) return;
+
+  const newInitial = account.initialBalance + (data.currentBalance - account.balance);
 
   await db
     .update(accounts)
-    .set({ name: data.name, updatedAt: new Date() })
+    .set({
+      name: data.name,
+      initialBalance: String(newInitial),
+      updatedAt: new Date(),
+    })
     .where(and(eq(accounts.id, data.id), eq(accounts.userId, user.id)));
 
   revalidateAccountViews();
