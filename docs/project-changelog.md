@@ -1,5 +1,25 @@
 # Project Changelog
 
+## In-App Help Guide + First-Run Welcome (2026-07-02)
+
+### Features
+
+- **`/help` guide:** Always-accessible Vietnamese reference — one card per feature area (transactions/quick-add + VND parser, accounts, categories, budgets, recurring, goals, debts, reports, export, email alerts, PWA install). Reachable from a new Settings → "Trợ giúp" row. Reports tips link the real subpages (`/reports/cash-flow`, `/reports/spending`, `/reports/net-worth`); there is no `/reports` index.
+- **First-run welcome:** One-time bottom sheet mounted in the app shell introduces the app with 3 starter tips + a "Xem hướng dẫn" link to `/help`. Dismissal persists per-device in `localStorage` (`pf.welcome-seen.v1`); it never re-shows on that device. A "Xem lại giới thiệu" button on `/help` re-opens it on demand (independent of the flag) so the intro is never a dead end. Storage-failure path fails closed (treated as seen) — a disabled/private-mode storage never loops the dialog. No DB migration, no new dependency.
+
+### New Files
+
+- `src/features/help/help-content.ts` — shared guide data + `WELCOME_TIP_IDS` teaser subset (one source of truth for page + welcome).
+- `src/features/help/use-welcome-seen.ts` — `localStorage` flag hook + pure `readWelcomeSeen`/`markWelcomeSeen` helpers (node-testable, no jsdom).
+- `src/features/help/components/help-section-card.tsx`, `welcome-dialog.tsx` — presentation + first-run dialog and re-open button.
+- `src/app/(app)/help/page.tsx` — the guide page.
+- `tests/features/help/*.test.ts`, `e2e/help-and-welcome.spec.ts` — content invariants, storage helpers, route auth-gating.
+
+### Modified Files
+
+- `src/app/(app)/settings/page.tsx` — new "Hỗ trợ" group with the "Trợ giúp" row.
+- `src/app/(app)/layout.tsx` — mounts `<WelcomeDialog />` in the shell.
+
 ## Editable Account Current Balance (2026-07-02)
 
 ### Features
