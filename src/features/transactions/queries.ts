@@ -1,7 +1,7 @@
 import "server-only";
 import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { transactions, accounts, categories } from "@/lib/db/schema";
+import { transactions, accounts, categories, goals } from "@/lib/db/schema";
 import type { TxFilter } from "./schemas";
 
 export type TxListItem = {
@@ -22,6 +22,27 @@ export type TxListItem = {
   transferPairId: string | null;
   recurringRuleId: string | null;
 };
+
+// Single source of truth for the row projection the list and detail reads share.
+// Both join account (always present) + category (nullable); detail extends this
+// with a goal name. Kept as one object so a column added here reaches every read.
+const txListSelection = {
+  id: transactions.id,
+  kind: transactions.kind,
+  amount: transactions.amount,
+  occurredAt: transactions.occurredAt,
+  note: transactions.note,
+  merchant: transactions.merchant,
+  accountId: transactions.accountId,
+  accountName: accounts.name,
+  accountType: accounts.type,
+  categoryId: transactions.categoryId,
+  categoryName: categories.name,
+  categoryColor: categories.color,
+  categoryIcon: categories.icon,
+  transferPairId: transactions.transferPairId,
+  recurringRuleId: transactions.recurringRuleId,
+} as const;
 
 const DEFAULT_LIMIT = 100;
 
@@ -46,23 +67,7 @@ export async function listTransactions(
   const conds = filterConditions(userId, filter);
 
   const rows = await db
-    .select({
-      id: transactions.id,
-      kind: transactions.kind,
-      amount: transactions.amount,
-      occurredAt: transactions.occurredAt,
-      note: transactions.note,
-      merchant: transactions.merchant,
-      accountId: transactions.accountId,
-      accountName: accounts.name,
-      accountType: accounts.type,
-      categoryId: transactions.categoryId,
-      categoryName: categories.name,
-      categoryColor: categories.color,
-      categoryIcon: categories.icon,
-      transferPairId: transactions.transferPairId,
-      recurringRuleId: transactions.recurringRuleId,
-    })
+    .select(txListSelection)
     .from(transactions)
     .innerJoin(accounts, eq(accounts.id, transactions.accountId))
     .leftJoin(categories, eq(categories.id, transactions.categoryId))
@@ -112,4 +117,54 @@ export async function summariseTransactions(
   const income = Number(row?.income ?? 0);
   const expense = Number(row?.expense ?? 0);
   return { income, expense, net: income - expense, count: Number(row?.count ?? 0) };
+}
+
+// One transaction's full detail: every list field + the goal name (for the facts
+// chip) + a resolved transfer counterpart. Audit timestamps are intentionally not
+// selected — the detail facts show essentials + goal only.
+export type TxDetail = TxListItem & {
+  goalName: string | null;
+  /** Populated only for transfers: source/destination account names by leg sign. */
+  transfer: { fromAccountName: string; toAccountName: string } | null;
+};
+
+// Server-only single-transaction read for the detail page. Filters by PK + user_id
+// so an unknown or non-owned id returns null (caller maps to notFound(), no leak).
+// For a transfer leg it resolves the paired leg — also scoped to user_id (defence
+// in depth) — to show both accounts and a direction.
+export async function getTransactionDetail(userId: string, id: string): Promise<TxDetail | null> {
+  const [row] = await db
+    .select({ ...txListSelection, goalName: goals.name })
+    .from(transactions)
+    .innerJoin(accounts, eq(accounts.id, transactions.accountId))
+    .leftJoin(categories, eq(categories.id, transactions.categoryId))
+    .leftJoin(goals, eq(goals.id, transactions.goalId))
+    .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
+    .limit(1);
+
+  if (!row) return null;
+
+  const detail: TxDetail = { ...row, amount: Number(row.amount), transfer: null };
+
+  if (detail.kind === "transfer" && detail.transferPairId) {
+    const [mate] = await db
+      .select({ accountName: accounts.name })
+      .from(transactions)
+      .innerJoin(accounts, eq(accounts.id, transactions.accountId))
+      .where(and(eq(transactions.id, detail.transferPairId), eq(transactions.userId, userId)))
+      .limit(1);
+
+    if (mate) {
+      // Signed-storage invariant (actions/transfer.ts): the out-leg is stored
+      // negative (source), the in-leg positive (destination). If the mate is
+      // missing (shouldn't happen), transfer stays null and the UI falls back to
+      // this leg's single account.
+      detail.transfer =
+        detail.amount < 0
+          ? { fromAccountName: detail.accountName, toAccountName: mate.accountName }
+          : { fromAccountName: mate.accountName, toAccountName: detail.accountName };
+    }
+  }
+
+  return detail;
 }

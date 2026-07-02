@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 export function revalidateTxViews(): void {
   revalidatePath("/dashboard");
   revalidatePath("/transactions");
+  // Per-transaction detail page reflects an edit (and must clear on delete).
+  revalidatePath("/transactions/[id]", "page");
   revalidatePath("/accounts");
   // Detail page shows the account's balance, month stats, and tx history, so a
   // tx mutation on any account must refresh it.
