@@ -6,6 +6,7 @@ import {
   Goal,
   HandCoins,
   FileSpreadsheet,
+  HelpCircle,
   type LucideIcon,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -72,6 +73,18 @@ const GROUPS: { label: string; rows: Row[] }[] = [
         description: "Giao dịch lặp lại tự động",
         icon: Repeat,
         tint: "sage",
+      },
+    ],
+  },
+  {
+    label: "Hỗ trợ",
+    rows: [
+      {
+        href: "/help" as Route,
+        label: "Trợ giúp",
+        description: "Hướng dẫn sử dụng ứng dụng",
+        icon: HelpCircle,
+        tint: "navy",
       },
     ],
   },

@@ -209,6 +209,7 @@ src/
     debts/              # Liability/asset tracking
     reports/            # Analytics queries + chart components + net-worth trend
     dashboard/          # Dashboard layout + cron health
+    help/               # In-app guide content + /help page cards + first-run welcome
   lib/
     auth.ts             # Better Auth + allowlist
     auth-client.ts      # Client-side auth utils (cache purge on sign-out)

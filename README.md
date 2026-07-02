@@ -6,18 +6,19 @@ A multi-user personal finance management **web PWA** for tracking VND finances i
 
 ## Features (MVP scope)
 
-| Feature           | Notes                                                                                     |
-| ----------------- | ----------------------------------------------------------------------------------------- |
-| **Transactions**  | Income / expense / transfer; bottom-sheet quick-add; VND shortcut parser (`50k`, `1.5tr`) |
-| **Accounts**      | Cash, Bank, Credit Card, E-Wallet                                                         |
-| **Categories**    | Hierarchical; VN-aware seeded buckets                                                     |
-| **Budgets**       | Monthly per category; progress bars; over-budget indicator; rollover toggle               |
-| **Recurring**     | RRULE rules; lazy next-instance generation; edit one vs series                            |
-| **Savings goals** | Virtual buckets within accounts; target amount + date                                     |
-| **Debts / loans** | Liability type; lifecycle Open → Partial → Settled                                        |
-| **Reports**       | Cash flow, spending by category (drill-down), net worth                                   |
-| **Data export**   | CSV + JSON, all entities                                                                  |
-| **Email alerts**  | Daily email for upcoming renewals via Brevo SMTP (configurable lead time)                 |
+| Feature               | Notes                                                                                     |
+| --------------------- | ----------------------------------------------------------------------------------------- |
+| **Transactions**      | Income / expense / transfer; bottom-sheet quick-add; VND shortcut parser (`50k`, `1.5tr`) |
+| **Accounts**          | Cash, Bank, Credit Card, E-Wallet                                                         |
+| **Categories**        | Hierarchical; VN-aware seeded buckets                                                     |
+| **Budgets**           | Monthly per category; progress bars; over-budget indicator; rollover toggle               |
+| **Recurring**         | RRULE rules; lazy next-instance generation; edit one vs series                            |
+| **Savings goals**     | Virtual buckets within accounts; target amount + date                                     |
+| **Debts / loans**     | Liability type; lifecycle Open → Partial → Settled                                        |
+| **Reports**           | Cash flow, spending by category (drill-down), net worth                                   |
+| **Data export**       | CSV + JSON, all entities                                                                  |
+| **Email alerts**      | Daily email for upcoming renewals via Brevo SMTP (configurable lead time)                 |
+| **Help & onboarding** | In-app Vietnamese guide at `/help` (linked from Settings) + a one-time first-run welcome  |
 
 **Out of scope (Phase 2+):** receipt OCR, bank statement import, SMS/email parsing, multi-currency, investment tracking, English UI.
 

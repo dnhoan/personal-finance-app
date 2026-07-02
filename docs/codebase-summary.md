@@ -110,6 +110,11 @@ src/features/
     ├── Serwist 9 service worker (offline-capable, versioned caching)
     ├── Manifest (standalone, icon set, theme color)
     └── Offline fallback page
+
+  help/
+    ├── help-content.ts (shared VN guide data + WELCOME_TIP_IDS teaser subset)
+    ├── use-welcome-seen.ts (localStorage first-run flag + pure storage helpers)
+    └── components/ (help-section-card, welcome-dialog + re-open button)
 ```
 
 ## Pages & Routes
@@ -133,6 +138,7 @@ src/features/
 - `/reports/cash-flow` — Income vs. expense over time
 - `/reports/spending` — Category drill-down (donut, historical)
 - `/reports/net-worth` — Net worth snapshot
+- `/help` — In-app Vietnamese usage guide (one card per feature); linked from Settings, host of the first-run welcome re-open button
 - `/settings` — Account, appearance, help (sign-out)
 
 **API Routes**
