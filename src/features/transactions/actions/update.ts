@@ -4,6 +4,7 @@ import { db } from "@/lib/db/client";
 import { transactions } from "@/lib/db/schema";
 import { requireSession } from "@/lib/auth-session";
 import { updateTxSchema, type UpdateTxInput } from "../schemas";
+import { assertTxRefsOwned } from "../lib/assert-tx-refs-owned";
 import { revalidateTxViews } from "./revalidate";
 
 // Edits an income/expense row. Transfer legs are intentionally NOT editable this
@@ -21,6 +22,10 @@ export async function updateTransaction(input: UpdateTxInput): Promise<void> {
   if (target.kind === "transfer") {
     throw new Error("Không thể sửa giao dịch chuyển khoản — hãy xóa và tạo lại");
   }
+
+  // The new account/category are client-supplied; verify ownership before moving
+  // the row onto them (cross-tenant IDOR guard, same as create).
+  await assertTxRefsOwned(user.id, data.accountId, data.categoryId ?? null, data.kind);
 
   await db
     .update(transactions)

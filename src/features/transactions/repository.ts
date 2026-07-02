@@ -36,7 +36,7 @@ export async function insertTxIdempotent(userId: string, data: InsertTxData): Pr
       clientOpId: data.clientOpId,
     })
     .onConflictDoNothing({
-      target: transactions.clientOpId,
+      target: [transactions.userId, transactions.clientOpId],
       where: sql`${transactions.clientOpId} is not null`,
     })
     .returning({ id: transactions.id });
@@ -81,7 +81,7 @@ export async function insertTransferAtomic(
         clientOpId: data.clientOpId,
       })
       .onConflictDoNothing({
-        target: transactions.clientOpId,
+        target: [transactions.userId, transactions.clientOpId],
         where: sql`${transactions.clientOpId} is not null`,
       })
       .returning({ id: transactions.id });

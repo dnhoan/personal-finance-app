@@ -1,0 +1,2 @@
+DROP INDEX "transactions_client_op_id_uniq";--> statement-breakpoint
+CREATE UNIQUE INDEX "transactions_client_op_id_uniq" ON "transactions" USING btree ("user_id","client_op_id") WHERE client_op_id IS NOT NULL;

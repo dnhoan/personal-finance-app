@@ -1,4 +1,6 @@
+import { and, eq, ne } from "drizzle-orm";
 import type { Db } from "./client";
+import { accounts } from "./schema/accounts";
 import { categories } from "./schema/categories";
 import { cronState } from "./schema/cron-state";
 
@@ -23,17 +25,46 @@ export const SEED_CATEGORIES: ReadonlyArray<{
   { slug: "dich-vu-cuoc-phi", name: "Dịch vụ & Cước phí", icon: "receipt", color: "#64748b" },
 ];
 
-// Idempotent seed: inserts the category tree for `ownerId` and the single
-// cron_state heartbeat row. Safe to re-run — conflicts are ignored.
-export async function seed(db: Db, ownerId: string): Promise<{ categories: number }> {
-  const rows = SEED_CATEGORIES.map((c) => ({ ...c, kind: "expense" as const, userId: ownerId }));
-  const inserted = await db
-    .insert(categories)
-    .values(rows)
-    .onConflictDoNothing({ target: [categories.userId, categories.slug] })
-    .returning({ id: categories.id });
+// Atomic, idempotent first-sign-in provisioning for `ownerId`: the VN category
+// tree AND a default `Cash` account, in ONE transaction so a new user never ends
+// up half-provisioned (categories but no account would soft-lock the add screen).
+// Safe to re-run — categories upsert on (user, slug); the account is inserted only
+// when the user has no ACTIVE account, so a user who archived the seeded account
+// (which clears is_default) can be re-provisioned, and one who made their own
+// accounts is left alone. The partial-unique accounts_user_default_uniq is the DB
+// backstop against a concurrent double-insert creating two defaults.
+export async function seed(
+  db: Db,
+  ownerId: string,
+): Promise<{ categories: number; account: boolean }> {
+  return db.transaction(async (tx) => {
+    const rows = SEED_CATEGORIES.map((c) => ({ ...c, kind: "expense" as const, userId: ownerId }));
+    const inserted = await tx
+      .insert(categories)
+      .values(rows)
+      .onConflictDoNothing({ target: [categories.userId, categories.slug] })
+      .returning({ id: categories.id });
 
-  await db.insert(cronState).values({ id: true }).onConflictDoNothing();
+    const [activeAccount] = await tx
+      .select({ id: accounts.id })
+      .from(accounts)
+      .where(and(eq(accounts.userId, ownerId), ne(accounts.status, "archived")))
+      .limit(1);
 
-  return { categories: inserted.length };
+    let account = false;
+    if (!activeAccount) {
+      const insertedAccounts = await tx
+        .insert(accounts)
+        .values({ userId: ownerId, name: "Tiền mặt", type: "cash", isDefault: true })
+        .onConflictDoNothing()
+        .returning({ id: accounts.id });
+      // A concurrent seed may have won the partial-unique default race, inserting 0
+      // rows here — reflect what THIS call actually created.
+      account = insertedAccounts.length > 0;
+    }
+
+    await tx.insert(cronState).values({ id: true }).onConflictDoNothing();
+
+    return { categories: inserted.length, account };
+  });
 }

@@ -1,11 +1,11 @@
 /**
- * Seed CLI: populates the owner's VN category tree + cron_state heartbeat row.
+ * Seed CLI: backfills a user's VN category tree + default account (idempotent).
+ * New users are normally provisioned automatically on first sign-in; this is for
+ * backfilling existing users or a manual re-run.
  *
- *   npm run db:seed              # refuses to run against a non-dev DATABASE_URL
- *   npm run db:seed -- --force-prod   # explicit override for a prod host
- *
- * Finds the owner row (created by Better Auth on first allowed sign-in) by
- * ALLOWED_EMAIL, then runs the idempotent seed. Sign in once before seeding.
+ *   npm run db:seed                      # seed ALL users
+ *   npm run db:seed -- --email a@b.com   # seed one user by email
+ *   npm run db:seed -- --force-prod      # allow a prod DATABASE_URL host
  */
 import "./load-env";
 
@@ -33,25 +33,32 @@ function assertSafeTarget(): void {
   if (host.includes("prod")) refuse("DATABASE_URL host looks like production");
 }
 
+// Optional `--email <addr>` seeds a single user; otherwise every user is
+// (idempotently) seeded. Provisioning normally happens on first sign-in — this
+// script is for backfilling existing users or a manual re-run.
+function emailArg(): string | undefined {
+  const i = process.argv.indexOf("--email");
+  return i >= 0 ? process.argv[i + 1]?.trim().toLowerCase() : undefined;
+}
+
 async function main(): Promise<void> {
   assertSafeTarget();
 
-  const [owner] = await db
+  const only = emailArg();
+  const targets = await db
     .select({ id: user.id, email: user.email })
     .from(user)
-    .where(eq(user.email, env.ALLOWED_EMAIL))
-    .limit(1);
+    .where(only ? eq(user.email, only) : undefined);
 
-  if (!owner) {
-    console.error(
-      `Owner not found for ALLOWED_EMAIL=${env.ALLOWED_EMAIL}. ` +
-        `Sign in with Google once to create the user row, then re-run.`,
-    );
+  if (targets.length === 0) {
+    console.error(only ? `No user found for email ${only}.` : "No users to seed.");
     process.exit(1);
   }
 
-  const result = await seed(db, owner.id);
-  console.log(`Seeded owner ${owner.email}: ${result.categories} new categories + cron_state row.`);
+  for (const t of targets) {
+    const result = await seed(db, t.id);
+    console.log(`Seeded ${t.email}: ${result.categories} new categories.`);
+  }
   process.exit(0);
 }
 

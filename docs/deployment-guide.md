@@ -1,7 +1,7 @@
 # Deployment Guide
 
 Operational runbook for the Personal Finance App: CI/CD, production deploy,
-migrations, cron, rollback, and incident response. Single-owner app on free tiers
+migrations, cron, rollback, and incident response. Multi-user app on free tiers
 (Vercel Hobby + Neon free + cron-job.org).
 
 > **The repo is PUBLIC.** Every CI/preview surface is hardened so a fork PR can
@@ -52,17 +52,18 @@ These steps need your accounts and **cannot be automated by code**. Work top to 
 
 - [ ] Create project, import this repo, production branch = `main`.
 - [ ] Set the **function region to Singapore in project settings** (not via `vercel.json` — that key is ignored on Hobby). **Verify by observation** (deployment region in the dashboard).
-- [ ] Env vars — all 11 from `src/lib/env.ts`:
+- [ ] Env vars — all 10 from `src/lib/env.ts`:
 
-  | Var                                                            | Production    | Preview                             |
-  | -------------------------------------------------------------- | ------------- | ----------------------------------- |
-  | `DATABASE_URL`                                                 | prod Neon URL | **preview branch URL** (never prod) |
-  | `BETTER_AUTH_SECRET`                                           | real 32+      | real                                |
-  | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`                    | real          | real                                |
-  | `ALLOWED_EMAIL`                                                | owner email   | owner email                         |
-  | `BOT_TOKEN` / `TELEGRAM_OWNER_USER_ID` / `TELEGRAM_DM_CHAT_ID` | real          | real                                |
-  | `WEBHOOK_SECRET` / `CRON_SECRET`                               | real 32+      | real                                |
-  | `NEXT_PUBLIC_APP_URL`                                          | prod URL      | **stable preview alias URL**        |
+  | Var                                         | Production                 | Preview                             |
+  | ------------------------------------------- | -------------------------- | ----------------------------------- |
+  | `DATABASE_URL`                              | prod Neon URL              | **preview branch URL** (never prod) |
+  | `BETTER_AUTH_SECRET`                        | real 32+                   | real                                |
+  | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | real                       | real                                |
+  | `SIGNUP_ENABLED`                            | `true` (optional, default) | `true`                              |
+  | `BREVO_SMTP_USER` / `BREVO_SMTP_KEY`        | real                       | real                                |
+  | `ALERT_FROM_EMAIL`                          | verified addr              | verified addr                       |
+  | `CRON_SECRET`                               | real 32+                   | real 32+                            |
+  | `NEXT_PUBLIC_APP_URL`                       | prod URL                   | **stable preview alias URL**        |
 
 ### 2.4 Google OAuth + preview alias
 
@@ -74,7 +75,7 @@ These steps need your accounts and **cannot be automated by code**. Work top to 
 ### 2.5 First deploy
 
 - [ ] Run `Migrate production DB` once against the empty prod DB to apply the full migration set (§4).
-- [ ] Push to `main` (or redeploy); confirm prod boots and allowlisted sign-in works.
+- [ ] Push to `main` (or redeploy); confirm prod boots and sign-in works.
 - [ ] Open a test PR; confirm the preview boots and **redirects** unauth routes (sign-in works on the alias, not the ad-hoc URL).
 
 ---
@@ -114,25 +115,18 @@ This makes the manual migrate timing safe by construction, not a race.
 
 ## 5. Cron
 
-The renewal-alert endpoint `/api/cron/renewal-check` is **MVP Phase 9 — not built yet.**
-Do **not** enable a cron job until it exists, for two reasons:
+The renewal-alert endpoint `/api/cron/renewal-check` is implemented (Phase 11). It fans out over all users with active rules, materialize due recurring transactions, and send email alerts via Brevo.
 
-1. **Middleware intercepts `/api/cron/*`.** `src/middleware.ts` only excludes `api/auth`.
-   A cookieless cron call currently gets **307 → `/sign-in` → 200**, so cron-job.org
-   would record **success while nothing runs** (false-green). Phase 9 MUST add
-   `api/cron` to the matcher exclusion so the endpoint returns its own 401/200.
-2. **No auth check exists yet** in code (the SHA-256/`timingSafeEqual`/rate-limit scheme is a contract, not implemented).
+**Setup:**
 
-**Auth contract Phase 9 must implement:** `Authorization: Bearer <CRON_SECRET>`, GET;
-reject missing header → 401; `sha256(provided)` vs `sha256(env)` via `timingSafeEqual` → 401;
-rate-limit → 429; `UPDATE cron_state.last_renewal_check_at` + per-rule `notified_at` BEFORE
-`sendMessage` (at-most-once); `maxDuration = 60`. (`cron_state` table already exists —
-`src/lib/db/schema/cron-state.ts`; only the writer + dashboard widget are pending.)
+- **Authorization:** `POST` with header `Authorization: Bearer <CRON_SECRET>`.
+- **Rate Limit:** Per-IP in-memory limit (protected against unauthenticated floods).
+- **Idempotency:** Same-day completions are short-circuited (heartbeat only written on a fully successful run; failed users keep the day re-triggerable).
 
-**cron-job.org config (apply only after the endpoint + middleware exclusion ship):**
+**cron-job.org config:**
 
-- URL `https://<prod>/api/cron/renewal-check`, method GET, header `Authorization: Bearer <CRON_SECRET>`.
-- Schedule `0 1 * * *` UTC (= 08:00 ICT). Verify desired local time with Phase 9 UX.
+- URL `https://<prod>/api/cron/renewal-check`, method `POST`, header `Authorization: Bearer <CRON_SECRET>`.
+- Schedule `0 9 * * *` with timezone `Asia/Ho_Chi_Minh` (09:00 ICT daily).
 - **Do NOT follow redirects**; treat any non-2xx as failure. Enable failure email to owner.
 
 ---
@@ -181,9 +175,9 @@ Canonical env list lives in `src/lib/env.ts` — that schema is the source of tr
 
 ## 9. Known constraints & hardening (do not regress)
 
-- **C1 — `validateEnv()` fail-fast:** runs at module load (`next.config.ts`, `src/lib/env.ts`). Build/dev/test all need the 11 vars. CI injects throwaway dummies **at job scope**; do not weaken the fail-fast.
+- **C1 — `validateEnv()` fail-fast:** runs at module load (`next.config.ts`, `src/lib/env.ts`). Build/dev/test all need the 10 required vars (plus optional `SIGNUP_ENABLED`). CI injects throwaway dummies **at job scope**; do not weaken the fail-fast.
 - **C2 — unit tests vs DB:** 7 test files hit a live DB. PR CI runs `test:unit` (the 9 pure-logic files, no DB). DB tests = `test:integration`, run only against a real DB (locally, or a future nightly job with a Postgres service / Neon branch). Keep the split when adding tests.
 - **C3 — build-survives rule:** `next build` doesn't connect because every DB page uses a dynamic API (`requireSession()` → `headers()`). **Any new DB-touching page without a dynamic API must add `export const dynamic = 'force-dynamic'`**, or the CI build breaks.
-- **C4 — cron middleware exclusion:** see §5. The endpoint must be added to `src/middleware.ts`'s matcher exclusion before any cron job is enabled.
+- **C4 — cron middleware exclusion:** The `/api/cron` endpoint is excluded from middleware and protected via `Authorization: Bearer <CRON_SECRET>` (see §5).
 - **Public-repo hardening:** the migration check uses an empty Postgres container (no prod data, no Neon key in CI); previews never get the prod DB; gitleaks blocks secrets in YAML. The only job that touches Neon/prod is the manually-dispatched `Migrate production DB`. **Pin all third-party action SHAs** (`neondatabase/create-branch-action`, `gitleaks/*`) before trusting any gate — they are on version tags today for readability.
 - **Region:** set in Vercel project settings and verified by observation, not asserted via `vercel.json`.
