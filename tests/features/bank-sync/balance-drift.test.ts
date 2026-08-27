@@ -83,6 +83,30 @@ describe("balance drift", () => {
     expect(row?.showBadge).toBe(false);
   });
 
+  it("returns lastSyncedAt as a real Date, usable by its consumers", async () => {
+    // Regression guard. `db.execute` hands back a timestamptz as the raw
+    // postgres STRING, and its generic is an unchecked cast — so a query that
+    // claims `Date` compiles and then throws in whatever calls .getTime() on it.
+    // The earlier tests missed this by only checking the null case and by
+    // feeding isSyncStale hand-built Dates instead of query output.
+    const syncedAt = new Date(Date.now() - 2 * DAY);
+    await db
+      .update(bankLinks)
+      .set({ lastBankBalance: "5000000", lastSyncedAt: syncedAt })
+      .where(eq(bankLinks.id, bankLinkId));
+
+    const row = await driftFor(bankLinkId);
+    expect(row?.lastSyncedAt).toBeInstanceOf(Date);
+    expect(row?.lastSyncedAt?.getTime()).toBeCloseTo(syncedAt.getTime(), -3);
+
+    // The two things the badge actually does with it — both throw on a string.
+    expect(() => isSyncStale(row!.lastSyncedAt)).not.toThrow();
+    expect(isSyncStale(row!.lastSyncedAt)).toBe(false);
+    expect(() =>
+      new Intl.DateTimeFormat("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }).format(row!.lastSyncedAt!),
+    ).not.toThrow();
+  });
+
   it("reports zero drift when the bank agrees", async () => {
     await db
       .update(bankLinks)

@@ -19,6 +19,7 @@
 - **A dedicated webhook rate limiter**, not the cron one: the cron limiter allows 10 req/min per IP for a once-daily single-user call, while every user's SePay traffic shares one egress IP. Reusing it would 429 during exactly the busy stretch that matters, and a rejected delivery is lost for good (v1 has no backfill).
 - **Credit-card drift badge is off by default.** Whether SePay reports cards, and whether `accumulated` would mean debt owed or credit available, is unverified. The sign mapping lives in one constant; the raw figure is still shown, but the "you are off by X" conclusion is withheld.
 - **No new environment variables.** Tokens are per-user rows, not config.
+- **`db.execute` returns a timestamptz as a postgres string, never a `Date`.** Its generic is an unchecked cast, so a query that claims `Date` compiles and then throws in whatever calls `.getTime()` on the value. Raw-SQL reads of a timestamp column convert explicitly at the mapping step (`cronHeartbeat` and the drift query both do); the drizzle query builder (`db.select`) maps column types itself and needs no conversion.
 
 ### Migration
 
