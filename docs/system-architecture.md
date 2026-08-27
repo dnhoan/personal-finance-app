@@ -2,7 +2,7 @@
 
 Personal finance management web PWA. Multi-user, Vietnam locale, VND-only, Vietnamese UI (English deferred Phase 2+).
 
-Last updated: 2026-07-02 (Phase 11: Multi-User Migration — Open Google Signup, Per-User Isolation).
+Last updated: 2026-08-27 (SePay bank sync — webhook ingest, pending review inbox, balance drift).
 
 ## Tech Stack (Locked)
 
@@ -36,6 +36,11 @@ Last updated: 2026-07-02 (Phase 11: Multi-User Migration — Open Google Signup,
      v
 [ Neon Postgres (Singapore region) ]
 
+[ SePay ] ----webhook POST + Apikey (per-user)---->  [ /api/webhooks/sepay ]
+                                                            |
+                                                            v
+                                              [ bank_sync_events + transactions ]
+
 [ cron-job.org ] ----daily POST + CRON_SECRET---->  [ /api/cron/renewal-check ]
                                                             |
                                                             v
@@ -45,7 +50,8 @@ Last updated: 2026-07-02 (Phase 11: Multi-User Migration — Open Google Signup,
                         [ Each user's email address ]
 
 Service Worker Caching Strategy:
-  - NetworkOnly: (app)/*, /api/* (always fresh, auth cookies)
+  - NetworkOnly: (app)/*, /api/* (always fresh, auth cookies) — /inbox included
+                 explicitly: it renders bank transfer descriptions
   - CacheFirst: /static, /_next (versioned, persistent)
   - NetworkFirst (3s timeout): HTML navigations → /offline fallback
   - Cache versioning: finance-v{BUILD_ID} (git short SHA)
@@ -56,11 +62,12 @@ Service Worker Caching Strategy:
 Implemented in Phase 2 (Better Auth `1.6.16`, Google-only) and migrated to multi-user in Phase 11. Three enforcement layers:
 
 - **Open signup with kill-switch** (`lib/auth.ts`): `databaseHooks.user.create.before` enforces the `SIGNUP_ENABLED` flag (optional, defaults to `true`). When `false`, throws `APIError(FORBIDDEN)` and blocks new user creation without affecting existing sessions. Existing users remain unaffected because the hook fires only for new rows.
-- **Middleware** (`middleware.ts`, edge): cheap session-cookie _presence_ check via `getSessionCookie`; missing → `302 /sign-in?from=<path>`. No DB. Matcher excludes `/api/auth`, `/api/cron` (cookieless, secret-guarded), public auth pages, and PWA assets.
+- **Middleware** (`middleware.ts`, edge): cheap session-cookie _presence_ check via `getSessionCookie`; missing → `302 /sign-in?from=<path>`. No DB. Matcher excludes `/api/auth`, `/api/cron` and `/api/webhooks` (all cookieless and self-guarded), public auth pages, and PWA assets. A webhook path left inside the matcher would 302 every delivery to `/sign-in`, and SePay would exhaust its 7 retries against a login page leaving no trace.
 - **`requireSession()`** (`lib/auth-session.ts`, server-only, React-`cache`d): authoritative per-call check — validates the session server-side and confirms it belongs to the requesting user. **Every Server Action / Route Handler that touches data MUST call it first** — middleware does not cover Server Functions.
 - **Lazy provisioning** (`lib/db/ensure-user-provisioned.ts`): New users are auto-provisioned on first app-shell render (after `requireSession()`) with default categories and a default "Tiền mặt" (Cash) account, atomically. Idempotent; guarded on active accounts. If all accounts are archived, the default Cash account is re-provisioned on next sign-in.
 - Better Auth's own tables (`user`, `session`, `account`, `verification`) live in `lib/db/auth-schema.ts`. Session cookie: `httpOnly`, `sameSite=lax`, `secure` in prod, 30-day rolling (`updateAge` 1 day).
 - `/api/cron/*` — cookieless (excluded from the middleware matcher); protected by the `Authorization: Bearer <CRON_SECRET>` header (SHA-256-then-`timingSafeEqual`) plus an in-memory per-IP rate limit.
+- `/api/webhooks/*` — cookieless (excluded from the middleware matcher); protected by an `Authorization: Apikey <token>` header carrying a **per-user** token whose SHA-256 digest is stored in `bank_sync_tokens`. Per-user rather than a shared secret because it is the only SePay auth mode that identifies _which_ user an event belongs to. Rejection order is cheapest-first — size cap, header shape, token length, per-IP throttle, then the digest lookup — because this endpoint is publicly documented and resolving a token costs a database round-trip; authenticating first (as `/api/cron` does) would let anonymous callers spend queries at will.
 
 ## Data Model (Summary)
 
@@ -72,10 +79,13 @@ Core entities:
 
 - `accounts` — `type` enum: `cash | bank | credit_card | e_wallet | debt | receivable`. `debt` = liability (you owe); `receivable` = asset (owed to you). `status` enum for debt/receivable lifecycle (open/partial/settled/archived). Balance derived from transactions — spending accounts use signed sum; debt/receivable use `initial_balance − settled` (counting down to zero as obligation clears).
 - `categories` — hierarchical, `parent_id` self-FK (restrict, depth-2 cap enforced in app), unique `(user_id, slug)`, `kind` (income/expense), `archived_at` soft-archive, seed-list 10 VN-aware expense buckets.
-- `transactions` — `kind` enum: `income | expense | transfer`. `transfer_pair_id` self-FK (cascade) links transfer pairs; `client_op_id` partial-unique for retry idempotency; `recurring_rule_id` (set null) links materialised instances; `occurred_month_ict` is a STORED generated column (`date_trunc('month', occurred_at AT TIME ZONE 'Asia/Ho_Chi_Minh')`) so every month-bucketed query reads a uniform value.
+- `transactions` — `kind` enum: `income | expense | transfer`. `source` (`manual | bank_sync`) and `review_status` (`pending | confirmed`) mark bank-synced rows awaiting a category; both default to the pre-existing behaviour so historical rows are untouched. `transfer_pair_id` self-FK (cascade) links transfer pairs; `client_op_id` partial-unique for retry idempotency; `recurring_rule_id` (set null) links materialised instances; `occurred_month_ict` is a STORED generated column (`date_trunc('month', occurred_at AT TIME ZONE 'Asia/Ho_Chi_Minh')`) so every month-bucketed query reads a uniform value.
 - `recurring_rules` — `rrule` string (RFC 5545, with DTSTART embedded), `next_due`, `notified_at` (alert idempotency), `last_materialised_at` (materialisation cursor), `lead_days`, `active`. **Lazy materialisation:** reading `/recurring` or `/transactions` (and the cron renewal check) calls `materialiseDueInstances`, which expands each due rule's occurrences within a 30-day lead window into real `transactions` rows. Idempotent via the `(recurring_rule_id, occurred_at)` partial-unique index; concurrency-safe via a per-rule `pg_advisory_xact_lock`. Occurrences anchor at 12:00 UTC (= 19:00 ICT) so the VN calendar day and `occurred_month_ict` bucket stay deterministic without TZID machinery (VN has no DST). Edit semantics: "this only" detaches the row (`recurring_rule_id` → null); "edit series" mutates the rule forward, never rewriting already-materialised rows.
 - `budgets` — unique `(user_id, category_id, period_month)`, `amount`, rollover toggle.
 - `goals` — `name`, `target_amount`, `target_date`, `account_id`. Virtual savings buckets. Progress is **computed on read** (`SUM(transactions.amount) WHERE goal_id=$g AND user_id=$u`) — no `current_amount` denorm cache. Transactions tag a goal manually (income/expense only; transfers omit). Index `transactions(goal_id, user_id)` backs the read.
+- `bank_sync_tokens` — per-user webhook credential. Only the SHA-256 digest is stored (globally unique — it doubles as the token → user lookup); a partial unique index on `user_id WHERE revoked_at IS NULL` allows exactly one live token per user, so rotation is revoke-then-insert.
+- `bank_links` — maps `(gateway, account_number)` as SePay names it onto an internal account, plus the bank's last reported balance. `gateway` is free text because SePay's bank roster changes. Restricted to `bank`/`credit_card` accounts: `debt`/`receivable` use a different balance formula, and linking one would make the drift check compare incompatible formulas forever.
+- `bank_sync_events` — raw webhook journal. NOT a staging table: matched events write their transaction immediately. It exists for durable dedupe (`(user_id, sepay_id)` unique — deliberately NOT on `transactions`, so deleting a synced row cannot be undone by a retry), for unmatched events that have no `account_id` to write, and for audit. `payload` holds transfer descriptions, so it is never logged or exported and is pruned after 90 days by the renewal cron.
 - `cron_state` — single-row heartbeat (boolean PK + `CHECK(id)`); `last_renewal_check_at` written by the renewal cron, surfaced on dashboard cron-status badge (red warning if >25h stale).
 
 Money fields are `numeric(18,0)` (VND has no fractional cents) and round-trip as
@@ -183,6 +193,66 @@ Reports module (`src/features/reports/`) provides financial insights via time-sc
 - Dark mode: automatic via `:root .dark` selector (no per-chart re-render required)
 - Respects `prefers-reduced-motion`: animations disabled system-wide
 
+## Bank Sync (SePay)
+
+Transactions arrive by webhook and land in the **same** `transactions` table as
+manual entries, marked `source='bank_sync'`, `review_status='pending'`, with no
+category. The user assigns a category in `/inbox`, which flips the row to
+`confirmed`.
+
+### What `pending` means on each surface
+
+The rule: _pending is money that genuinely moved (the bank confirmed it) but has
+not been classified._ So it counts toward balances and cash flow, and is absent
+from the ledger and from anything grouped by category.
+
+| Surface                                                            | Counts pending?                                 |
+| ------------------------------------------------------------------ | ----------------------------------------------- |
+| Account balances, net worth, cash flow, account month stats        | **Yes**                                         |
+| Transaction list, summary, CSV export                              | No                                              |
+| Spending totals + breakdown, category month totals, budgets, goals | No                                              |
+| Transaction detail page                                            | **Yes** — the inbox deep-links to a pending row |
+
+Enforced through one shared `confirmedOnly` predicate for Drizzle reads and an
+explicit `review_status = 'confirmed'` clause in the raw-SQL reports. Sites that
+deliberately omit the filter carry a comment saying why, because a missing filter
+produces silently wrong numbers rather than an error.
+
+**Write-side invariant:** `updateTransaction` sets `review_status='confirmed'`
+whenever it assigns a category to a pending row. Without it, editing a pending
+row from the detail page would leave it categorised yet permanently invisible in
+the ledger — while still counting against its budget.
+
+### Two places the numbers differ on purpose
+
+1. **Drift vs. the account card.** The balance-drift check filters
+   `occurred_at <= now()`; the account card does not. Recurring rules materialise
+   transactions up to 30 days ahead, and a bank cannot know about those, so
+   without the cut every user with a recurring rule would see a permanent phantom
+   mismatch. The drift UI labels its figure "as of today".
+2. **Cash flow vs. spending reports.** Pending rows are in the first and not the
+   second, so the dashboard's totals can exceed the spending report's while rows
+   await review. The dashboard card and `/help` both say so.
+
+### Ingest guarantees
+
+- **Idempotent** across SePay's 7 retries: the journal row is inserted
+  `ON CONFLICT DO NOTHING`; no row returned means "already handled", answer 200 and stop.
+- **Audit-first**: the journal row commits in its own transaction _before_ the
+  ledger write, so a failed insert cannot roll away the only record of the delivery.
+- **Ordering guard**: `last_bank_balance` is only overwritten when the incoming
+  event is newer by its own `transactionDate`, never by arrival time — a delayed
+  retry must not resurrect a stale balance.
+- **Unmatched recovery**: an event matching no link is journalled as `unmatched`
+  and replayed by `reprocessUnmatchedEvents` when a link is added or corrected.
+  Since SePay treats the 200 it already received as final, this replay is what
+  makes answering 200 honest rather than data loss.
+- **Internal transfers** between two linked accounts arrive as two independent
+  webhooks — one income, one expense — and cash-flow reporting only excludes
+  `kind='transfer'`. `mergeAsTransfer` in the inbox rewrites such a pair as a real
+  transfer; it requires exactly equal amounts, because forcing a near-miss through
+  would skew balances by precisely the difference.
+
 ## Module Structure
 
 ```
@@ -195,6 +265,7 @@ src/
       export/           # GET /api/export/csv
       telegram/route.ts # grammY webhook
       cron/             # Cron endpoints
+      webhooks/sepay/   # POST /api/webhooks/sepay (cookieless, per-user Apikey)
   components/
     ui/                 # shadcn/ui primitives
     forms/              # RHF wrappers
@@ -210,6 +281,7 @@ src/
     reports/            # Analytics queries + chart components + net-worth trend
     dashboard/          # Dashboard layout + cron health
     help/               # In-app guide content + /help page cards + first-run welcome
+    bank-sync/          # SePay linking, review inbox, balance drift
   lib/
     auth.ts             # Better Auth + allowlist
     auth-client.ts      # Client-side auth utils (cache purge on sign-out)
@@ -218,6 +290,7 @@ src/
     vnd.ts              # parser + formatter
     telegram.ts         # sendMessage helper
   server/               # server-only utils
+    webhooks/sepay/     # payload schema, ingest, unmatched replay
   sw/
     index.ts            # Serwist 9 service worker (offline, caching strategy)
 public/
