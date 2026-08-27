@@ -6,21 +6,22 @@ A multi-user personal finance management **web PWA** for tracking VND finances i
 
 ## Features (MVP scope)
 
-| Feature               | Notes                                                                                     |
-| --------------------- | ----------------------------------------------------------------------------------------- |
-| **Transactions**      | Income / expense / transfer; bottom-sheet quick-add; VND shortcut parser (`50k`, `1.5tr`) |
-| **Accounts**          | Cash, Bank, Credit Card, E-Wallet                                                         |
-| **Categories**        | Hierarchical; VN-aware seeded buckets                                                     |
-| **Budgets**           | Monthly per category; progress bars; over-budget indicator; rollover toggle               |
-| **Recurring**         | RRULE rules; lazy next-instance generation; edit one vs series                            |
-| **Savings goals**     | Virtual buckets within accounts; target amount + date                                     |
-| **Debts / loans**     | Liability type; lifecycle Open → Partial → Settled                                        |
-| **Reports**           | Cash flow, spending by category (drill-down), net worth                                   |
-| **Data export**       | CSV + JSON, all entities                                                                  |
-| **Email alerts**      | Daily email for upcoming renewals via Brevo SMTP (configurable lead time)                 |
-| **Help & onboarding** | In-app Vietnamese guide at `/help` (linked from Settings) + a one-time first-run welcome  |
+| Feature               | Notes                                                                                                     |
+| --------------------- | --------------------------------------------------------------------------------------------------------- |
+| **Transactions**      | Income / expense / transfer; bottom-sheet quick-add; VND shortcut parser (`50k`, `1.5tr`)                 |
+| **Accounts**          | Cash, Bank, Credit Card, E-Wallet                                                                         |
+| **Categories**        | Hierarchical; VN-aware seeded buckets                                                                     |
+| **Budgets**           | Monthly per category; progress bars; over-budget indicator; rollover toggle                               |
+| **Recurring**         | RRULE rules; lazy next-instance generation; edit one vs series                                            |
+| **Savings goals**     | Virtual buckets within accounts; target amount + date                                                     |
+| **Debts / loans**     | Liability type; lifecycle Open → Partial → Settled                                                        |
+| **Reports**           | Cash flow, spending by category (drill-down), net worth                                                   |
+| **Data export**       | CSV + JSON, all entities                                                                                  |
+| **Email alerts**      | Daily email for upcoming renewals via Brevo SMTP (configurable lead time)                                 |
+| **Help & onboarding** | In-app Vietnamese guide at `/help` (linked from Settings) + a one-time first-run welcome                  |
+| **Bank sync (SePay)** | Webhook sync of transactions + balance; rows arrive pending and enter the ledger once you pick a category |
 
-**Out of scope (Phase 2+):** receipt OCR, bank statement import, SMS/email parsing, multi-currency, investment tracking, English UI.
+**Out of scope (Phase 2+):** receipt OCR, importing historical bank statement files, SMS/email parsing, multi-currency, investment tracking, English UI. (Bank sync is live-forward only — it records transactions from the moment you link an account and never backfills history.)
 
 ## Tech Stack
 
@@ -74,6 +75,17 @@ All variables in `.env.example` are required. The app validates them at startup 
 | `ALERT_FROM_EMAIL`                          | Verified sender (alerts go to each user's account email) |
 | `CRON_SECRET`                               | Cron endpoint auth (32+ chars)                           |
 | `NEXT_PUBLIC_APP_URL`                       | Public app URL                                           |
+
+No SePay variables: the webhook key is a **per-user** value created in the app
+(Settings → Liên kết ngân hàng) and stored as a SHA-256 digest, not configuration.
+
+### Bank sync setup (optional)
+
+1. Create a SePay account and connect your bank account there.
+2. In the app: **Settings → Liên kết ngân hàng** → create a key, copy it and the webhook URL. The key is shown once.
+3. In SePay: add a webhook → paste the URL → choose API-key authentication → paste the key → enable both incoming and outgoing transactions. Each bank account needs its own webhook in SePay, all pointing at the same URL with the same key.
+4. Back in the app, add a link: bank name + account number → the matching app account. One wrong digit and deliveries land in the unmatched queue (recoverable — fix the number and they replay).
+5. New transactions appear under **Chờ phân loại**; they count toward balances immediately but only reach the ledger and category reports once you assign a category.
 
 ### Email Alerts (Brevo SMTP)
 

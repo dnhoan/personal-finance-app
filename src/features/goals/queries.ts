@@ -13,6 +13,8 @@ export async function getGoalProgress(goalId: string, userId: string): Promise<n
   const rows = await db.execute<{ progress: string }>(sql`
     SELECT COALESCE(SUM(amount), 0)::text AS progress
     FROM transactions
+    -- No review_status filter needed: a goal tag is applied by hand, and the
+    -- webhook never sets goal_id, so pending rows cannot appear here.
     WHERE goal_id = ${goalId} AND user_id = ${userId}
   `);
   return Number(rows.rows[0]?.progress ?? 0);

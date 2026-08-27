@@ -38,9 +38,13 @@ function withOtherBucket(slices: SpendingSlice[]): SpendingSlice[] {
   ];
 }
 
+// Shared predicate for the header total and both breakdown levels, so the total
+// can never drift from the slices below it. `review_status` is filtered here
+// rather than per-query for the same reason.
 const RANGE_FILTER = (userId: string, range: DateRange) => sql`
   t.user_id = ${userId}
   AND t.kind = 'expense'
+  AND t.review_status = 'confirmed'
   AND (t.occurred_at AT TIME ZONE 'Asia/Ho_Chi_Minh')::date
       BETWEEN ${range.from}::date AND ${range.to}::date
 `;

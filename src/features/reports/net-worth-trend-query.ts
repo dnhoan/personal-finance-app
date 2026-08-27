@@ -65,6 +65,8 @@ export async function netWorthTrend(userId: string, months = 12): Promise<NetWor
       FROM months m
       CROSS JOIN acct a
       LEFT JOIN transactions t ON t.account_id = a.id AND t.user_id = a.user_id
+      -- Deliberately NOT filtered on review_status: a pending row is real money
+      -- the bank already moved, so every month bucket must include it.
       GROUP BY m.month_start, a.id, a.type, a.initial_balance
     )
     SELECT

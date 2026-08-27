@@ -10,6 +10,9 @@ import {
   budgets,
   goals,
   cronState,
+  bankSyncTokens,
+  bankLinks,
+  bankSyncEvents,
 } from "@/lib/db/schema";
 
 // Round-trips one row through every domain table against a live Neon branch:
@@ -232,5 +235,143 @@ describe("schema round-trip", () => {
 
   it("rejects a second cron_state row (singleton CHECK)", async () => {
     await expect(db.execute(sql`INSERT INTO cron_state (id) VALUES (false)`)).rejects.toThrow();
+  });
+
+  it("defaults a transaction to manual + confirmed", async () => {
+    const acct = await ownerAccount();
+    const tx = row(
+      await db
+        .insert(transactions)
+        .values({
+          userId: OWNER_ID,
+          accountId: acct.id,
+          kind: "expense",
+          amount: "25000",
+          occurredAt: new Date("2026-06-12T05:00:00Z"),
+        })
+        .returning(),
+    );
+    // The migration is additive: every pre-existing row reads as a confirmed
+    // manual entry, so nothing changes until the webhook writes otherwise.
+    expect(tx.source).toBe("manual");
+    expect(tx.reviewStatus).toBe("confirmed");
+  });
+
+  it("allows only one unrevoked bank sync token per user", async () => {
+    const first = row(
+      await db
+        .insert(bankSyncTokens)
+        .values({ userId: OWNER_ID, tokenHash: `hash-a-${Date.now()}`, label: "SePay chính" })
+        .returning(),
+    );
+    expect(first.revokedAt).toBeNull();
+
+    await expect(
+      db.insert(bankSyncTokens).values({ userId: OWNER_ID, tokenHash: `hash-b-${Date.now()}` }),
+    ).rejects.toThrow();
+
+    // Revoking releases the slot — rotation is revoke-then-insert.
+    await db
+      .update(bankSyncTokens)
+      .set({ revokedAt: new Date() })
+      .where(eq(bankSyncTokens.id, first.id));
+    const second = row(
+      await db
+        .insert(bankSyncTokens)
+        .values({ userId: OWNER_ID, tokenHash: `hash-c-${Date.now()}` })
+        .returning(),
+    );
+    expect(second.revokedAt).toBeNull();
+  });
+
+  it("round-trips a bank link and rejects a duplicate (gateway, account number)", async () => {
+    const acct = await ownerAccount();
+    const link = row(
+      await db
+        .insert(bankLinks)
+        .values({
+          userId: OWNER_ID,
+          accountId: acct.id,
+          gateway: "Vietcombank",
+          accountNumber: "0123456789",
+        })
+        .returning(),
+    );
+    expect(link.lastBankBalance).toBeNull();
+    expect(link.lastSyncedAt).toBeNull();
+
+    await expect(
+      db.insert(bankLinks).values({
+        userId: OWNER_ID,
+        accountId: acct.id,
+        gateway: "Vietcombank",
+        accountNumber: "0123456789",
+      }),
+    ).rejects.toThrow();
+  });
+
+  it("dedupes bank sync events on (user, sepay id)", async () => {
+    const sepayId = `sepay-${Date.now()}`;
+    await db
+      .insert(bankSyncEvents)
+      .values({ userId: OWNER_ID, sepayId, status: "received", payload: { id: sepayId } });
+
+    // SePay retries the same event up to 7 times; the second write must not land.
+    await expect(
+      db
+        .insert(bankSyncEvents)
+        .values({ userId: OWNER_ID, sepayId, status: "received", payload: { id: sepayId } }),
+    ).rejects.toThrow();
+
+    const rows = await db
+      .select()
+      .from(bankSyncEvents)
+      .where(and(eq(bankSyncEvents.userId, OWNER_ID), eq(bankSyncEvents.sepayId, sepayId)));
+    expect(rows).toHaveLength(1);
+    expect(row(rows).transactionId).toBeNull();
+  });
+
+  it("nulls a bank sync event's transaction id when the transaction is deleted", async () => {
+    const acct = await ownerAccount();
+    const tx = row(
+      await db
+        .insert(transactions)
+        .values({
+          userId: OWNER_ID,
+          accountId: acct.id,
+          kind: "income",
+          amount: "500000",
+          occurredAt: new Date("2026-06-13T05:00:00Z"),
+          source: "bank_sync",
+          reviewStatus: "pending",
+        })
+        .returning(),
+    );
+    expect(tx.source).toBe("bank_sync");
+    expect(tx.reviewStatus).toBe("pending");
+
+    const sepayId = `sepay-del-${Date.now()}`;
+    const event = row(
+      await db
+        .insert(bankSyncEvents)
+        .values({
+          userId: OWNER_ID,
+          sepayId,
+          status: "imported",
+          payload: { id: sepayId },
+          transactionId: tx.id,
+        })
+        .returning(),
+    );
+    expect(event.transactionId).toBe(tx.id);
+
+    await db.delete(transactions).where(eq(transactions.id, tx.id));
+    const after = row(
+      await db.select().from(bankSyncEvents).where(eq(bankSyncEvents.id, event.id)),
+    );
+    // ON DELETE SET NULL keeps the audit row: `imported` + NULL reads as
+    // "the user deleted it", which is why skipped_zero_amount is a separate status.
+    expect(after.transactionId).toBeNull();
+    expect(after.status).toBe("imported");
   });
 });

@@ -1,6 +1,10 @@
 import { and, eq, sql } from "drizzle-orm";
-import { db } from "@/lib/db/client";
+import { db, type Db } from "@/lib/db/client";
 import { transactions } from "@/lib/db/schema";
+
+// Either the pooled client or an open transaction handle — lets the pair writer
+// below run standalone or inside a caller's larger transaction.
+type DbExecutor = Db | Parameters<Parameters<Db["transaction"]>[0]>[0];
 
 // Pure DB operations for transactions — no session/auth (callers pass userId).
 // Kept free of "server-only" so the idempotency + transfer-atomicity logic can
@@ -68,47 +72,59 @@ export async function insertTransferAtomic(
   userId: string,
   data: InsertTransferData,
 ): Promise<string> {
-  return db.transaction(async (tx) => {
-    const [out] = await tx
-      .insert(transactions)
-      .values({
-        userId,
-        accountId: data.fromAccountId,
-        kind: "transfer",
-        amount: String(-data.amount), // out leg negative
-        occurredAt: data.occurredAt,
-        note: data.note,
-        clientOpId: data.clientOpId,
-      })
-      .onConflictDoNothing({
-        target: [transactions.userId, transactions.clientOpId],
-        where: sql`${transactions.clientOpId} is not null`,
-      })
-      .returning({ id: transactions.id });
+  return db.transaction((tx) => writeTransferPair(tx, userId, data));
+}
 
-    // Idempotent retry: out-leg already exists → return the persisted pair.
-    if (!out) return findIdByClientOpId(userId, data.clientOpId);
+/**
+ * The transfer-pair invariant itself, written against a caller-supplied
+ * transaction handle.
+ *
+ * Split out from `insertTransferAtomic` so a caller that must do more work in
+ * the SAME transaction — merging two pending bank-synced rows into a transfer,
+ * which has to delete both rows and create the pair atomically — can reuse this
+ * rather than hand-rolling a second copy of the sign and back-link rules.
+ */
+export async function writeTransferPair(
+  tx: DbExecutor,
+  userId: string,
+  data: InsertTransferData,
+): Promise<string> {
+  const [out] = await tx
+    .insert(transactions)
+    .values({
+      userId,
+      accountId: data.fromAccountId,
+      kind: "transfer",
+      amount: String(-data.amount), // out leg negative
+      occurredAt: data.occurredAt,
+      note: data.note,
+      clientOpId: data.clientOpId,
+    })
+    .onConflictDoNothing({
+      target: [transactions.userId, transactions.clientOpId],
+      where: sql`${transactions.clientOpId} is not null`,
+    })
+    .returning({ id: transactions.id });
 
-    const [inc] = await tx
-      .insert(transactions)
-      .values({
-        userId,
-        accountId: data.toAccountId,
-        kind: "transfer",
-        amount: String(data.amount), // in leg positive
-        occurredAt: data.occurredAt,
-        note: data.note,
-        transferPairId: out.id,
-      })
-      .returning({ id: transactions.id });
+  // Idempotent retry: out-leg already exists → return the persisted pair.
+  if (!out) return findIdByClientOpId(userId, data.clientOpId);
 
-    await tx
-      .update(transactions)
-      .set({ transferPairId: inc!.id })
-      .where(eq(transactions.id, out.id));
+  const [inc] = await tx
+    .insert(transactions)
+    .values({
+      userId,
+      accountId: data.toAccountId,
+      kind: "transfer",
+      amount: String(data.amount), // in leg positive
+      occurredAt: data.occurredAt,
+      note: data.note,
+      transferPairId: out.id,
+    })
+    .returning({ id: transactions.id });
 
-    return out.id;
-  });
+  await tx.update(transactions).set({ transferPairId: inc!.id }).where(eq(transactions.id, out.id));
+
+  return out.id;
 }
 
 async function findIdByClientOpId(userId: string, clientOpId: string): Promise<string> {

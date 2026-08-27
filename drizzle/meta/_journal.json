@@ -43,6 +43,13 @@
       "when": 1782928386296,
       "tag": "0005_opposite_mother_askani",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1787817075973,
+      "tag": "0006_sudden_lilandra",
+      "breakpoints": true
     }
   ]
 }

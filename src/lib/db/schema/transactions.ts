@@ -15,7 +15,7 @@ import { accounts } from "./accounts";
 import { categories } from "./categories";
 import { goals } from "./goals";
 import { recurringRules } from "./recurring-rules";
-import { transactionKind } from "./enums";
+import { transactionKind, transactionSource, transactionReviewStatus } from "./enums";
 import { timestamps } from "./timestamps";
 
 // Core ledger. Transfers are ONE pair of rows linked via `transferPairId` (self-FK);
@@ -54,6 +54,14 @@ export const transactions = pgTable(
       onDelete: "set null",
     }),
     clientOpId: uuid("client_op_id"),
+    // Bank-sync provenance and review gate. Both default to the pre-existing
+    // behaviour, so every historical row reads as a confirmed manual entry and
+    // nothing changes until the webhook starts writing `bank_sync`/`pending`.
+    // No index on either column: transactions_user_occurred_at_idx already leads
+    // with the (user, occurred_at) pair that both the ledger and the review inbox
+    // scan, and the pending row count is expected to stay in the tens.
+    source: transactionSource("source").notNull().default("manual"),
+    reviewStatus: transactionReviewStatus("review_status").notNull().default("confirmed"),
     ...timestamps,
   },
   (t) => [

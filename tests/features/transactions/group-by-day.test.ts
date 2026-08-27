@@ -16,6 +16,7 @@ function tx(
     accountName: "Tiền mặt",
     accountType: "cash",
     categoryId: null,
+    reviewStatus: "confirmed",
     categoryName: null,
     categoryColor: null,
     categoryIcon: null,

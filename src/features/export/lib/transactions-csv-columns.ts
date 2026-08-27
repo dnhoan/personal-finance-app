@@ -2,6 +2,7 @@ import "server-only";
 import { and, asc, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { transactions, accounts, categories } from "@/lib/db/schema";
+import { confirmedOnly } from "@/features/transactions/lib/review-status-filter";
 import { formatVnd } from "@/lib/vnd";
 import type { CsvColumn } from "./csv-stream";
 
@@ -48,19 +49,24 @@ export const txCsvColumns: CsvColumn<TxExportRow>[] = [
 // volume (≤10k rows) this stays well within the function time budget, and the CSV
 // builder still chunks the encode so response bytes flush incrementally.
 export async function loadUserTransactionsForExport(userId: string): Promise<TxExportRow[]> {
-  return db
-    .select({
-      occurredAt: transactions.occurredAt,
-      kind: transactions.kind,
-      amount: transactions.amount,
-      merchant: transactions.merchant,
-      note: transactions.note,
-      categoryName: categories.name,
-      accountName: accounts.name,
-    })
-    .from(transactions)
-    .innerJoin(accounts, eq(accounts.id, transactions.accountId))
-    .leftJoin(categories, eq(categories.id, transactions.categoryId))
-    .where(and(eq(transactions.userId, userId)))
-    .orderBy(asc(transactions.occurredAt), asc(transactions.id));
+  return (
+    db
+      .select({
+        occurredAt: transactions.occurredAt,
+        kind: transactions.kind,
+        amount: transactions.amount,
+        merchant: transactions.merchant,
+        note: transactions.note,
+        categoryName: categories.name,
+        accountName: accounts.name,
+      })
+      .from(transactions)
+      .innerJoin(accounts, eq(accounts.id, transactions.accountId))
+      .leftJoin(categories, eq(categories.id, transactions.categoryId))
+      // Pending bank-sync rows have no category yet, so they would export as a
+      // blank-category line the user never chose to record. They arrive in the CSV
+      // once confirmed.
+      .where(and(eq(transactions.userId, userId), confirmedOnly))
+      .orderBy(asc(transactions.occurredAt), asc(transactions.id))
+  );
 }

@@ -1,5 +1,33 @@
 # Project Changelog
 
+## SePay Bank Sync — Webhook Ingest + Review Inbox (2026-08-27)
+
+### Features
+
+- **Bank sync via SePay webhook:** Transactions arrive at `POST /api/webhooks/sepay` and land in the existing `transactions` table as `source='bank_sync'`, `review_status='pending'`, with no category. Pending rows **count toward balances, net worth and cash flow** (the money really moved) but stay out of the transaction list, CSV export, and every category-based report until reviewed. Authentication is a **per-user** `Authorization: Apikey <token>` — the only SePay auth mode that identifies which user an event belongs to; only the SHA-256 digest is stored, and the raw token is shown exactly once.
+- **Self-service setup** at Settings → Liên kết ngân hàng: generate/rotate/revoke the key, copy the webhook URL, and map `(bank, account number)` onto an app account. Only `bank`/`credit_card` accounts are linkable — `debt`/`receivable` use a different balance formula, and linking one would make drift detection compare incompatible formulas forever.
+- **Review inbox** at `/inbox`: one-tap category chips from the user's most-used categories, bulk assign with an undo toast, per-row delete, and a nav badge on the Giao dịch tab (no fifth tab). Bulk assignment writes exactly two columns, which is what makes undo possible without per-row snapshots.
+- **`mergeAsTransfer`:** an internal transfer between two linked accounts arrives as two independent webhooks — one income, one expense — which cash-flow reporting counts as real income and real spending. Selecting both in the inbox rewrites them as a genuine transfer pair. Requires exactly equal amounts: a near-miss is usually a fee, and forcing it through would skew balances by precisely the difference.
+- **Unmatched recovery:** an event matching no link is journalled as `unmatched` and replayed automatically when a link is added or corrected, plus a manual retry in the inbox banner. SePay treats the 200 it already sent as final, so this replay is what makes answering 200 honest instead of silent data loss.
+- **Balance drift:** compares the bank's reported balance against the computed one, showing causes ordered by likelihood — with "your opening balance is wrong" deliberately **last**, since acting on it rewrites `initial_balance`, which every historical net-worth bucket reads.
+
+### Notable Decisions
+
+- **Dedupe lives on `bank_sync_events`, not `transactions`.** If the key sat on the ledger row, deleting a synced transaction would free it and the next retry would resurrect a ghost.
+- **The journal row commits before the ledger write**, in its own transaction, so a failed insert cannot roll away the only record of a delivery.
+- **`occurred_at <= now()` in the drift query only.** Recurring rules materialise up to 30 days ahead; a bank cannot know about those, so without the cut every user with a recurring rule would see a permanent phantom mismatch. Drift and the account card therefore differ on purpose, and the UI says "as of today".
+- **A dedicated webhook rate limiter**, not the cron one: the cron limiter allows 10 req/min per IP for a once-daily single-user call, while every user's SePay traffic shares one egress IP. Reusing it would 429 during exactly the busy stretch that matters, and a rejected delivery is lost for good (v1 has no backfill).
+- **Credit-card drift badge is off by default.** Whether SePay reports cards, and whether `accumulated` would mean debt owed or credit available, is unverified. The sign mapping lives in one constant; the raw figure is still shown, but the "you are off by X" conclusion is withheld.
+- **No new environment variables.** Tokens are per-user rows, not config.
+
+### Migration
+
+- `drizzle/0006_sudden_lilandra.sql` — additive only (no `DROP`, no `ALTER TYPE`): adds `transactions.source` + `transactions.review_status` (defaulting to the pre-existing behaviour so historical rows are unchanged) and creates `bank_sync_tokens`, `bank_links`, `bank_sync_events`.
+
+### Tests
+
+- 5 DB-backed suites (`pending-visibility`, `link-actions`, `webhook-ingest`, `inbox-actions`, `balance-drift`) plus unit suites for the token, payload schema, and rate limiter. One e2e spec covers the webhook's auth rejection and confirms the route is not swallowed by the middleware matcher.
+
 ## In-App Help Guide + First-Run Welcome (2026-07-02)
 
 ### Features

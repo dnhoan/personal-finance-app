@@ -63,6 +63,9 @@ export async function netCashFlowMoM(userId: string): Promise<NetCashFlowMoM> {
       COALESCE(SUM(amount) FILTER (WHERE kind = 'income'  AND occurred_month_ict = ${PREVIOUS_MONTH_ICT}), 0)::text  AS prev_income,
       COALESCE(SUM(amount) FILTER (WHERE kind = 'expense' AND occurred_month_ict = ${PREVIOUS_MONTH_ICT}), 0)::text AS prev_expense
     FROM transactions
+    -- Deliberately NOT filtered on review_status: a pending row is real money the
+    -- bank already moved, so it must sit inside this total. Only category-based
+    -- reporting excludes it.
     WHERE user_id = ${userId}
       AND kind <> 'transfer'
       AND occurred_month_ict IN (${CURRENT_MONTH_ICT}, ${PREVIOUS_MONTH_ICT})
@@ -127,6 +130,8 @@ export async function topCategoriesThisMonth(userId: string, limit = 3): Promise
     FROM transactions t
     JOIN categories c ON c.id = t.category_id
     JOIN categories root ON root.id = COALESCE(c.parent_id, c.id)
+    -- No review_status filter needed: pending rows carry no category, so the
+    -- INNER JOIN on categories already drops them.
     WHERE t.user_id = ${userId}
       AND t.kind = 'expense'
       AND t.occurred_month_ict = ${CURRENT_MONTH_ICT}
@@ -239,6 +244,9 @@ export async function cashFlowSeries(
            COALESCE(SUM(amount) FILTER (WHERE kind = 'income'), 0)::text  AS income,
            COALESCE(SUM(amount) FILTER (WHERE kind = 'expense'), 0)::text AS expense
     FROM transactions
+    -- Deliberately NOT filtered on review_status: a pending row is real money the
+    -- bank already moved, so it must sit inside this total. Only category-based
+    -- reporting excludes it.
     WHERE user_id = ${userId}
       AND kind <> 'transfer'
       AND ${rangeFilter}

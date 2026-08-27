@@ -1,6 +1,7 @@
 "use client";
 import * as React from "react";
 import Link from "next/link";
+import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import {
   ChevronLeft,
@@ -97,6 +98,8 @@ export function TransactionDetailHeader({
     });
   }
 
+  const isPending = tx.reviewStatus === "pending";
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
@@ -156,6 +159,26 @@ export function TransactionDetailHeader({
         >
           {amountText}
         </p>
+
+        {/* A pending row is reachable here by design — the inbox deep-links to
+            it — so the page has to say why it is missing from the ledger, rather
+            than presenting it as an ordinary transaction. */}
+        {isPending ? (
+          <div className="mt-4 flex flex-col items-center gap-2">
+            <span className="rounded-full bg-warning/15 px-3 py-1 text-xs font-semibold text-warning">
+              Chờ phân loại
+            </span>
+            <p className="max-w-xs text-xs text-fg-muted">
+              Đã tính vào số dư, nhưng chưa vào sổ giao dịch và báo cáo cho tới khi có danh mục.
+            </p>
+            <Link
+              href={"/inbox" as Route}
+              className="rounded-md px-3 py-1.5 text-sm font-semibold text-primary hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              Phân loại ngay →
+            </Link>
+          </div>
+        ) : null}
       </section>
 
       {/* Recurring-rule instances open the plain edit sheet here (edits just this

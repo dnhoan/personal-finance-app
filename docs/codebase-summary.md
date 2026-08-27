@@ -51,6 +51,18 @@ Multi-user Vietnamese personal finance application (open Google signup). Each us
 ```
 src/features/
 
+  bank-sync/
+    ├── queries.ts, actions.ts, schemas.ts (SePay link + token management)
+    ├── lib/token.ts (CSPRNG token + SHA-256 digest; raw value never stored)
+    ├── inbox-queries.ts, inbox-actions.ts, inbox-schemas.ts (review queue,
+    │     bulk confirm + undo, mergeAsTransfer)
+    ├── balance-drift.ts (bank vs. computed balance; as-of-today cut)
+    ├── balance-drift-types.ts (pure shape + staleness helper, no DB import so
+    │     the badge stays client-safe)
+    └── components/ (bank-sync-setup-card, bank-link-form-sheet, bank-link-row,
+          webhook-token-reveal, inbox-list, inbox-row, inbox-bulk-bar,
+          unmatched-events-notice, balance-drift-badge, pending-review-card)
+
   accounts/
     ├── queries.ts, actions.ts, schemas.ts
     ├── account-grouping.ts (balance rollup + net-worth aggregation)

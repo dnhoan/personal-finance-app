@@ -4,6 +4,30 @@ import { sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import type { accountStatus, accountType } from "@/lib/db/schema";
 
+/**
+ * The account-balance formula, as one SQL fragment.
+ *
+ * Extracted because three call sites now need it — the list, the single-account
+ * read, and the bank-balance drift check — and three hand-copied CASE
+ * expressions would be guaranteed to drift apart. Every caller must join
+ * `accounts a` and `transactions t` and group by `a.id`.
+ *
+ * Deliberately NOT filtered on review_status: a pending row is real money the
+ * bank already moved, so it belongs in the balance. Only category-based
+ * reporting excludes it.
+ */
+export const ACCOUNT_BALANCE_EXPR = sql`
+      CASE
+        WHEN a.type = 'debt' THEN
+          (a.initial_balance - COALESCE(SUM(t.amount) FILTER (WHERE t.kind = 'expense'), 0))
+        WHEN a.type = 'receivable' THEN
+          (a.initial_balance - COALESCE(SUM(t.amount) FILTER (WHERE t.kind = 'income'), 0))
+        ELSE
+          (a.initial_balance + COALESCE(SUM(
+            CASE t.kind WHEN 'income' THEN t.amount WHEN 'expense' THEN -t.amount ELSE t.amount END
+          ), 0))
+      END`;
+
 export type AccountWithBalance = {
   id: string;
   name: string;
@@ -41,18 +65,12 @@ export async function listAccountsWithBalance(userId: string): Promise<AccountWi
     SELECT
       a.id, a.name, a.type, a.status, a.currency, a.is_default,
       a.initial_balance::text AS initial_balance,
-      CASE
-        WHEN a.type = 'debt' THEN
-          (a.initial_balance - COALESCE(SUM(t.amount) FILTER (WHERE t.kind = 'expense'), 0))::text
-        WHEN a.type = 'receivable' THEN
-          (a.initial_balance - COALESCE(SUM(t.amount) FILTER (WHERE t.kind = 'income'), 0))::text
-        ELSE
-          (a.initial_balance + COALESCE(SUM(
-            CASE t.kind WHEN 'income' THEN t.amount WHEN 'expense' THEN -t.amount ELSE t.amount END
-          ), 0))::text
-      END AS balance
+      ${ACCOUNT_BALANCE_EXPR}::text AS balance
     FROM accounts a
     LEFT JOIN transactions t ON t.account_id = a.id AND t.user_id = a.user_id
+    -- Deliberately NOT filtered on review_status: a pending row is real money the
+    -- bank already moved, so it must sit inside the balance. Only category-based
+    -- reporting excludes it.
     WHERE a.user_id = ${userId}
     GROUP BY a.id
     ORDER BY a.created_at ASC
@@ -116,18 +134,12 @@ export const getAccountWithBalance = cache(async function getAccountWithBalance(
     SELECT
       a.id, a.name, a.type, a.status, a.currency, a.is_default,
       a.initial_balance::text AS initial_balance,
-      CASE
-        WHEN a.type = 'debt' THEN
-          (a.initial_balance - COALESCE(SUM(t.amount) FILTER (WHERE t.kind = 'expense'), 0))::text
-        WHEN a.type = 'receivable' THEN
-          (a.initial_balance - COALESCE(SUM(t.amount) FILTER (WHERE t.kind = 'income'), 0))::text
-        ELSE
-          (a.initial_balance + COALESCE(SUM(
-            CASE t.kind WHEN 'income' THEN t.amount WHEN 'expense' THEN -t.amount ELSE t.amount END
-          ), 0))::text
-      END AS balance
+      ${ACCOUNT_BALANCE_EXPR}::text AS balance
     FROM accounts a
     LEFT JOIN transactions t ON t.account_id = a.id AND t.user_id = a.user_id
+    -- Deliberately NOT filtered on review_status: a pending row is real money the
+    -- bank already moved, so it must sit inside the balance. Only category-based
+    -- reporting excludes it.
     WHERE a.user_id = ${userId} AND a.id = ${id}
     GROUP BY a.id
   `);
@@ -146,6 +158,33 @@ export const getAccountWithBalance = cache(async function getAccountWithBalance(
   };
 });
 
+export type AccountPendingSummary = { count: number; total: number };
+
+// Pending bank-sync rows on one account: how many, and how much they move the
+// balance by (income positive, expense negative).
+//
+// The account page needs this because its two halves disagree on purpose — the
+// hero balance counts pending rows, the history list below it does not. Without
+// a line saying so, the page reads as "the balance dropped 300k and there is no
+// transaction for it", which looks like a bug.
+export async function getAccountPendingSummary(
+  userId: string,
+  id: string,
+): Promise<AccountPendingSummary> {
+  const rows = await db.execute<{ count: string; total: string }>(sql`
+    SELECT COUNT(*)::text AS count,
+           COALESCE(SUM(
+             CASE kind WHEN 'income' THEN amount WHEN 'expense' THEN -amount ELSE amount END
+           ), 0)::text AS total
+    FROM transactions
+    WHERE user_id = ${userId}
+      AND account_id = ${id}
+      AND review_status = 'pending'
+  `);
+  const r = rows.rows[0];
+  return { count: Number(r?.count ?? 0), total: Number(r?.total ?? 0) };
+}
+
 export type AccountMonthStats = { moneyIn: number; moneyOut: number };
 
 // Money in/out for one account in the current ICT month. Filters on the generated
@@ -157,6 +196,9 @@ export async function getAccountMonthStats(userId: string, id: string): Promise<
       COALESCE(SUM(amount) FILTER (WHERE kind = 'income'), 0)::text  AS money_in,
       COALESCE(SUM(amount) FILTER (WHERE kind = 'expense'), 0)::text AS money_out
     FROM transactions
+    -- Deliberately NOT filtered on review_status: a pending row is real money the
+    -- bank already moved, so it must sit inside this total. Only category-based
+    -- reporting excludes it.
     WHERE user_id = ${userId}
       AND account_id = ${id}
       AND occurred_month_ict = date_trunc('month', now() AT TIME ZONE 'Asia/Ho_Chi_Minh')::date

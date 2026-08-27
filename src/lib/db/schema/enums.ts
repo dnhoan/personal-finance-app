@@ -23,3 +23,16 @@ export const transactionKind = pgEnum("transaction_kind", ["income", "expense", 
 // Categories are typed income or expense (no transfer — transfers carry no
 // category). Budgets only apply to expense categories.
 export const categoryKind = pgEnum("category_kind", ["income", "expense"]);
+
+// Where a transaction row came from. `bank_sync` rows are written by the SePay
+// webhook; `manual` covers user entry and recurring materialisation (both already
+// carry a category, so they need no review).
+export const transactionSource = pgEnum("transaction_source", ["manual", "bank_sync"]);
+
+// Review state. `pending` means real money moved (the bank confirmed it) but no
+// category is assigned yet: it COUNTS toward balances and cash flow, but is hidden
+// from the ledger, CSV export, and every category-based report.
+export const transactionReviewStatus = pgEnum("transaction_review_status", [
+  "pending",
+  "confirmed",
+]);
