@@ -5,6 +5,7 @@ import { cronState } from "@/lib/db/schema/cron-state";
 import { verifyCronSecret } from "@/server/auth/verify-cron-secret";
 import { allowRequest } from "@/server/cron/rate-limit";
 import { runRenewalCheck } from "@/server/cron/run-renewal-check";
+import { pruneBankSyncEvents } from "@/server/cron/prune-bank-sync-events";
 import { logger, formatError } from "@/lib/logger";
 
 // Nodemailer (net/tls) requires the Node runtime — must NOT be Edge.
@@ -87,6 +88,17 @@ export async function POST(req: Request): Promise<Response> {
     }
   }
 
+  // Retention pass for the webhook journal. Placed after the fan-out and outside
+  // the per-user loop because it is global cleanup, and run before the heartbeat
+  // so a failure here also leaves the day re-triggerable.
+  let prunedEvents = 0;
+  try {
+    prunedEvents = (await pruneBankSyncEvents(db, now)).deleted;
+  } catch (err) {
+    // Retention is housekeeping — never let it suppress the alert run's result.
+    logger.error("cron", "bank-sync event retention failed", { error: formatError(err) });
+  }
+
   // Heartbeat only on a clean completion (no failed users). UPSERT so it lands
   // even if the singleton row was never seeded. Leaving it unwritten on a partial
   // run keeps the day re-triggerable and surfaces the degradation on the dashboard.
@@ -104,5 +116,6 @@ export async function POST(req: Request): Promise<Response> {
     sent,
     claimed_but_failed: claimedButFailed,
     failed_users: failedUsers,
+    pruned_events: prunedEvents,
   });
 }

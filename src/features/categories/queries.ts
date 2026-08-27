@@ -91,6 +91,7 @@ export async function totalExpenseForMonth(userId: string, monthKey: string): Pr
     FROM transactions
     WHERE user_id = ${userId}
       AND kind = 'expense'
+      AND review_status = 'confirmed'
       AND occurred_month_ict = ${monthStartDate(monthKey)}
   `);
   return Number(rows.rows[0]?.total ?? 0);

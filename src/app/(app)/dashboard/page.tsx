@@ -18,6 +18,8 @@ import { TopCategoriesCard } from "@/features/reports/components/top-categories-
 import { UpcomingRenewalsCard } from "@/features/reports/components/upcoming-renewals-card";
 import { EmptyState } from "@/features/reports/components/empty-state";
 import { CronStatusBadge } from "@/features/dashboard/components/cron-status-badge";
+import { pendingReviewSummary } from "@/features/bank-sync/inbox-queries";
+import { PendingReviewCard } from "@/features/bank-sync/components/pending-review-card";
 import { ENTER, enterDelay } from "@/lib/enter-animation";
 
 export const metadata = { title: "Trang chủ · Personal Finance" };
@@ -27,7 +29,7 @@ export default async function DashboardPage() {
 
   // All independent reads fan out in one round-trip-bounded batch so total
   // latency ≈ the slowest query, not the sum (red-team F14).
-  const [flow, netWorth, netWorthSpark, topCats, renewals, heartbeat, recent, accounts] =
+  const [flow, netWorth, netWorthSpark, topCats, renewals, heartbeat, recent, accounts, pending] =
     await Promise.all([
       netCashFlowMoM(user.id),
       netWorthSnapshot(user.id),
@@ -37,6 +39,7 @@ export default async function DashboardPage() {
       cronHeartbeat(),
       listTransactions(user.id, { limit: 8 }),
       listActiveAccounts(user.id),
+      pendingReviewSummary(user.id),
     ]);
 
   // First run: no accounts AND no transactions. Gate on accounts too so a user
@@ -62,6 +65,12 @@ export default async function DashboardPage() {
         <>
           <div className={ENTER} style={enterDelay(60)}>
             <HeroNetCashFlow flow={flow.current} previous={flow.previous} />
+          </div>
+
+          {/* Sits directly under the hero because it explains why the hero's
+              figures and the spending reports can disagree while rows are pending. */}
+          <div className={ENTER} style={enterDelay(90)}>
+            <PendingReviewCard count={pending.count} total={pending.total} />
           </div>
 
           <section

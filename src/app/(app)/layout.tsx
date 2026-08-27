@@ -4,6 +4,7 @@ import { DesktopAddFab } from "@/components/app-shell/desktop-add-fab";
 import { Toaster } from "@/components/ui/toaster";
 import { WelcomeDialog } from "@/features/help/components/welcome-dialog";
 import { requireSession } from "@/lib/auth-session";
+import { countPendingTransactions } from "@/features/bank-sync/inbox-queries";
 import { ensureUserProvisioned } from "@/lib/db/ensure-user-provisioned";
 
 // Server-side gate for the whole app shell. Middleware already blocked anonymous
@@ -24,6 +25,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // brand-new user. No-op (one indexed lookup) for already-provisioned users.
   await ensureUserProvisioned(userId);
 
+  // Drives the nav badge. Cheap indexed count, and it is 0 for anyone who has not
+  // connected a bank — which is every user until they do.
+  const pendingCount = await countPendingTransactions(userId);
+
   return (
     <div className="min-h-screen">
       <a
@@ -38,7 +43,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       >
         {children}
       </main>
-      <BottomNav />
+      <BottomNav pendingCount={pendingCount} />
       <DesktopAddFab />
       <Toaster />
       <WelcomeDialog />

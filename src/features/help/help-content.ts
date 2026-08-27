@@ -9,6 +9,7 @@ import {
   BarChart3,
   FileSpreadsheet,
   Bell,
+  Landmark,
   Smartphone,
   type LucideIcon,
 } from "lucide-react";
@@ -139,6 +140,50 @@ export const HELP_SECTIONS: HelpSection[] = [
     tips: [
       { text: "Vào Cài đặt → Dữ liệu để xuất giao dịch dạng CSV." },
       { text: "Mở file bằng Excel hoặc Google Sheets." },
+    ],
+  },
+  {
+    id: "bank-sync",
+    icon: Landmark,
+    title: "Liên kết ngân hàng (SePay)",
+    summary: "Tự động ghi giao dịch từ ngân hàng, bạn chỉ cần chọn danh mục.",
+    tips: [
+      {
+        term: "Bước 1",
+        text: "Tạo tài khoản SePay và thêm tài khoản ngân hàng của bạn ở đó.",
+      },
+      {
+        term: "Bước 2",
+        text: "Vào Cài đặt → Liên kết ngân hàng, bấm Tạo khoá, rồi copy khoá và URL webhook. Khoá chỉ hiện một lần.",
+      },
+      {
+        term: "Bước 3",
+        text: "Ở SePay, thêm một webhook mới: dán URL, chọn xác thực bằng API key, dán khoá, và bật nhận cả tiền vào lẫn tiền ra. Mỗi tài khoản ngân hàng cần một webhook riêng, nhưng dùng chung URL và khoá này.",
+      },
+      {
+        term: "Bước 4",
+        text: "Quay lại ứng dụng, thêm liên kết: chọn ngân hàng và số tài khoản, rồi chọn ví tương ứng trong ứng dụng. Sai một chữ số là giao dịch không vào đúng ví.",
+      },
+      {
+        term: "Bước 5",
+        text: "Giao dịch mới sẽ vào mục Chờ phân loại. Chọn danh mục thì nó mới hiện ở màn Giao dịch.",
+      },
+      {
+        term: "Số dư và báo cáo lệch nhau?",
+        text: "Giao dịch chờ phân loại đã được tính vào số dư nhưng chưa vào báo cáo theo danh mục. Vì vậy khi còn giao dịch chờ, tổng chi ở Trang chủ có thể lớn hơn ở Báo cáo chi tiêu. Phân loại hết là hai số khớp lại.",
+      },
+      {
+        term: "Không có lịch sử cũ",
+        text: "Chỉ đồng bộ từ lúc liên kết trở đi. Giao dịch trước đó vẫn phải nhập tay.",
+      },
+      {
+        term: "Ngân hàng chỉ báo tiền vào",
+        text: "Một số ngân hàng không báo giao dịch tiền ra. Khi đó các khoản chi vẫn phải nhập tay, và mục Đối chiếu ngân hàng sẽ giúp bạn phát hiện.",
+      },
+      {
+        term: "Chuyển tiền giữa hai tài khoản của bạn",
+        text: 'Sẽ về thành hai giao dịch riêng (một thu, một chi). Chọn cả hai trong mục Chờ phân loại rồi bấm "Đây là chuyển khoản nội bộ" để ghép. Không ghép thì báo cáo dòng tiền tính nhầm chúng là thu nhập và chi tiêu thật.',
+      },
     ],
   },
   {

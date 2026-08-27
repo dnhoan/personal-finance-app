@@ -16,6 +16,13 @@ describe("middleware matcher excludes the cron endpoint", () => {
     expect(matcher.test("/api/auth/callback/google")).toBe(false);
   });
 
+  // Same failure shape as cron: SePay authenticates with its own Apikey header
+  // and sends no cookie, so a redirect here would swallow every delivery — and
+  // its 7 retries — with nothing logged to diagnose from.
+  it("does NOT match /api/webhooks/*", () => {
+    expect(matcher.test("/api/webhooks/sepay")).toBe(false);
+  });
+
   it("still matches protected app routes", () => {
     expect(matcher.test("/dashboard")).toBe(true);
     expect(matcher.test("/transactions")).toBe(true);

@@ -17,7 +17,10 @@ const TABS: { href: Route; label: string; icon: LucideIcon }[] = [
 const LEFT_TABS = TABS.slice(0, 2);
 const RIGHT_TABS = TABS.slice(2);
 
-export function BottomNav() {
+// `pendingCount` rides on the Giao dịch tab rather than a tab of its own: the bar
+// holds four tabs plus the docked add button, and inserting a fifth is an
+// information-architecture change touching every screen.
+export function BottomNav({ pendingCount = 0 }: { pendingCount?: number }) {
   const pathname = usePathname();
 
   // The /add capture screen is full-height and owns its own close affordance; the
@@ -31,7 +34,12 @@ export function BottomNav() {
     >
       <ul className="mx-auto flex max-w-3xl items-stretch">
         {LEFT_TABS.map((tab) => (
-          <NavTab key={tab.href} tab={tab} pathname={pathname} />
+          <NavTab
+            key={tab.href}
+            tab={tab}
+            pathname={pathname}
+            badge={tab.href === "/transactions" ? pendingCount : 0}
+          />
         ))}
 
         {/* Docked center add button — raised above the bar, links to the capture
@@ -54,7 +62,7 @@ export function BottomNav() {
         </li>
 
         {RIGHT_TABS.map((tab) => (
-          <NavTab key={tab.href} tab={tab} pathname={pathname} />
+          <NavTab key={tab.href} tab={tab} pathname={pathname} badge={0} />
         ))}
       </ul>
     </nav>
@@ -64,9 +72,11 @@ export function BottomNav() {
 function NavTab({
   tab: { href, label, icon: Icon },
   pathname,
+  badge,
 }: {
   tab: { href: Route; label: string; icon: LucideIcon };
   pathname: string;
+  badge: number;
 }) {
   const active = pathname === href || pathname.startsWith(`${href}/`);
   return (
@@ -85,7 +95,18 @@ function NavTab({
           active ? "text-primary" : "text-fg-subtle hover:text-fg",
         )}
       >
-        <Icon size={22} strokeWidth={active ? 2 : 1.75} aria-hidden="true" />
+        <span className="relative">
+          <Icon size={22} strokeWidth={active ? 2 : 1.75} aria-hidden="true" />
+          {badge > 0 ? (
+            <span
+              aria-hidden="true"
+              className="absolute -right-2.5 -top-1 min-w-[18px] rounded-full bg-warning px-1 text-[10px] font-semibold leading-[18px] text-white"
+            >
+              {badge > 99 ? "99+" : badge}
+            </span>
+          ) : null}
+        </span>
+        {badge > 0 ? <span className="sr-only">{badge} giao dịch chờ phân loại</span> : null}
         {label}
       </Link>
     </li>

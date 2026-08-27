@@ -27,8 +27,10 @@ const serwist = new Serwist({
   runtimeCaching: [
     {
       // Authenticated app views must never be cached — they hold user data.
+      // /inbox especially: it renders bank transfer descriptions, which the rest
+      // of the system is careful never to log or export.
       matcher: ({ url }) =>
-        /^\/(dashboard|accounts|transactions|budgets|goals|debts|reports|settings)/.test(
+        /^\/(dashboard|accounts|transactions|budgets|goals|debts|reports|settings|inbox)/.test(
           url.pathname,
         ),
       handler: new NetworkOnly(),

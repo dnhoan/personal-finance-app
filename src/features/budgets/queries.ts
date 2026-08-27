@@ -64,6 +64,8 @@ export async function listBudgets(
     LEFT JOIN (
       SELECT category_id, SUM(amount) AS spent
       FROM transactions
+      -- No review_status filter needed: pending rows have no category, and the
+      -- join below matches on category_id, which NULL never satisfies.
       WHERE user_id = ${userId} AND kind = 'expense' AND occurred_month_ict = ${month}
       GROUP BY category_id
     ) sp ON sp.category_id = b.category_id

@@ -55,6 +55,9 @@ export async function listDebtsWithBalance(userId: string): Promise<DebtsView> {
       ), 0)::text AS paid
     FROM accounts a
     LEFT JOIN transactions t ON t.account_id = a.id AND t.user_id = a.user_id
+    -- Deliberately NOT filtered on review_status: a pending row is real money the
+    -- bank already moved, so it must sit inside the balance. Only category-based
+    -- reporting excludes it.
     WHERE a.user_id = ${userId}
       AND a.type IN ('debt', 'receivable')
       AND a.status <> 'archived'

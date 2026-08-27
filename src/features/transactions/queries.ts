@@ -2,6 +2,7 @@ import "server-only";
 import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { transactions, accounts, categories, goals } from "@/lib/db/schema";
+import { confirmedOnly } from "./lib/review-status-filter";
 import type { TxFilter } from "./schemas";
 
 export type TxListItem = {
@@ -21,12 +22,14 @@ export type TxListItem = {
   categoryIcon: string | null;
   transferPairId: string | null;
   recurringRuleId: string | null;
+  reviewStatus: "pending" | "confirmed";
 };
 
 // Single source of truth for the row projection the list and detail reads share.
+// Exported so the review inbox projects rows identically instead of cloning the shape.
 // Both join account (always present) + category (nullable); detail extends this
 // with a goal name. Kept as one object so a column added here reaches every read.
-const txListSelection = {
+export const txListSelection = {
   id: transactions.id,
   kind: transactions.kind,
   amount: transactions.amount,
@@ -42,6 +45,9 @@ const txListSelection = {
   categoryIcon: categories.icon,
   transferPairId: transactions.transferPairId,
   recurringRuleId: transactions.recurringRuleId,
+  // The ledger only ever shows confirmed rows, but the detail page and the review
+  // inbox both open pending ones and must be able to say so.
+  reviewStatus: transactions.reviewStatus,
 } as const;
 
 const DEFAULT_LIMIT = 100;
@@ -49,7 +55,10 @@ const DEFAULT_LIMIT = 100;
 // Shared WHERE builder so the list, page, and aggregate queries always filter
 // on identical conditions.
 function filterConditions(userId: string, filter: TxFilter) {
-  const conds = [eq(transactions.userId, userId)];
+  // Pending bank-sync rows are hidden from the ledger and its summary until the
+  // user categorises them in the inbox. getTransactionDetail deliberately does
+  // NOT go through here — the inbox deep-links straight to a pending row.
+  const conds = [eq(transactions.userId, userId), confirmedOnly];
   if (filter.from) conds.push(gte(transactions.occurredAt, filter.from));
   if (filter.to) conds.push(lte(transactions.occurredAt, filter.to));
   if (filter.kind) conds.push(eq(transactions.kind, filter.kind));

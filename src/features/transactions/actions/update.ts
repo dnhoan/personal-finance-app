@@ -1,5 +1,5 @@
 "use server";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { transactions } from "@/lib/db/schema";
 import { requireSession } from "@/lib/auth-session";
@@ -37,6 +37,12 @@ export async function updateTransaction(input: UpdateTxInput): Promise<void> {
       occurredAt: data.occurredAt,
       note: data.note?.trim() || null,
       merchant: data.merchant?.trim() || null,
+      // Giving a bank-synced row a category IS the act of reviewing it — the
+      // detail page can open a pending row, and its edit sheet lands here. Without
+      // this, the row would keep a category yet stay invisible in the ledger and
+      // the export forever, while still counting against its budget. Clearing the
+      // category leaves it pending, so it stays in the inbox.
+      reviewStatus: data.categoryId ? "confirmed" : sql`review_status`,
       updatedAt: new Date(),
     })
     .where(and(eq(transactions.id, data.id), eq(transactions.userId, user.id)));

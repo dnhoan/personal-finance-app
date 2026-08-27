@@ -19,10 +19,13 @@ export const config = {
   // public auth pages. /api/auth must be excluded so the OAuth callback
   // round-trips; /api/cron must be excluded because cron-job.org sends no session
   // cookie — that route is guarded by the CRON_SECRET bearer check instead, so a
-  // cookie redirect here would make the endpoint permanently unreachable. The PWA
+  // cookie redirect here would make the endpoint permanently unreachable.
+  // /api/webhooks is excluded for the same reason: SePay posts with no session
+  // cookie and authenticates with its own Apikey header, and a 302 there would
+  // burn all 7 delivery retries without leaving a trace to debug from. The PWA
   // shell files (sw.js, manifest.json, /offline) must stay public so an anonymous
   // or offline client can install the worker and reach the offline fallback.
   matcher: [
-    "/((?!_next/static|_next/image|api/auth|api/cron|sign-in|unauthorized|offline|sw.js|manifest.json|icons|favicon.ico|manifest.webmanifest|icon|apple-icon|robots.txt|sitemap.xml).*)",
+    "/((?!_next/static|_next/image|api/auth|api/cron|api/webhooks|sign-in|unauthorized|offline|sw.js|manifest.json|icons|favicon.ico|manifest.webmanifest|icon|apple-icon|robots.txt|sitemap.xml).*)",
   ],
 };

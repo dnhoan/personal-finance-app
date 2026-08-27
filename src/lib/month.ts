@@ -32,6 +32,22 @@ export function currentIctMonth(now: Date = new Date()): string {
   return ymd.slice(0, 7); // "YYYY-MM"
 }
 
+/**
+ * Parses SePay's "YYYY-MM-DD HH:mm:ss" timestamp, which is Vietnam wall-clock
+ * time carrying NO offset.
+ *
+ * The +07:00 is attached explicitly because Vietnam has no DST, so the offset is
+ * a constant. Letting a UTC server parse the bare string instead shifts every
+ * transaction 7 hours and drops late-night ones into the wrong
+ * `occurred_month_ict` bucket — a silent month-boundary error in every report.
+ *
+ * Returns an Invalid Date for malformed input rather than throwing; callers
+ * validate with `Number.isNaN(result.getTime())`.
+ */
+export function parseIctDateTime(value: string): Date {
+  return new Date(`${value.replace(" ", "T")}+07:00`);
+}
+
 /** Validates an arbitrary string as a month key, falling back to the current month. */
 export function parseMonthKey(value: string | undefined, now: Date = new Date()): string {
   return value && MONTH_KEY_RE.test(value) ? value : currentIctMonth(now);
