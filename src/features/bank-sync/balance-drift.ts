@@ -55,7 +55,11 @@ export async function getBalanceDrift(userId: string): Promise<BalanceDrift[]> {
     gateway: string;
     account_number: string;
     last_bank_balance: string | null;
-    last_synced_at: Date | null;
+    // Raw driver value, NOT a Date: db.execute returns a timestamptz as the
+    // postgres string ("2026-08-27 10:31:51.964017+00"). The generic on
+    // db.execute is an unchecked cast, so claiming Date here compiles fine and
+    // then fails at runtime in whatever treats it as one.
+    last_synced_at: string | null;
     derived_balance: string;
   }>(sql`
     SELECT bl.id AS bank_link_id,
@@ -97,7 +101,7 @@ export async function getBalanceDrift(userId: string): Promise<BalanceDrift[]> {
       gateway: r.gateway,
       accountNumber: r.account_number,
       lastBankBalance,
-      lastSyncedAt: r.last_synced_at,
+      lastSyncedAt: r.last_synced_at === null ? null : new Date(r.last_synced_at),
       derivedBalance,
       drift,
       showBadge: drift !== null && DRIFT_BADGE_ENABLED[r.account_type],

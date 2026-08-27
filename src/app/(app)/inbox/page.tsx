@@ -8,6 +8,7 @@ import {
 } from "@/features/bank-sync/inbox-queries";
 import { InboxList } from "@/features/bank-sync/components/inbox-list";
 import { UnmatchedEventsNotice } from "@/features/bank-sync/components/unmatched-events-notice";
+import { BackLink } from "@/components/app-shell/back-link";
 import { ENTER, enterDelay } from "@/lib/enter-animation";
 
 export const metadata = { title: "Chờ phân loại · Personal Finance" };
@@ -36,9 +37,7 @@ export default async function InboxPage() {
   return (
     <div className="flex flex-col gap-5">
       <header className={ENTER}>
-        <h1 className="text-2xl font-semibold text-fg" style={{ fontFamily: "var(--font-serif)" }}>
-          Chờ phân loại
-        </h1>
+        <BackLink href="/transactions" label="Chờ phân loại" />
         <p className="mt-1 text-sm text-fg-muted">
           Giao dịch từ ngân hàng đã được tính vào số dư, nhưng chưa vào sổ và báo cáo cho tới khi
           bạn chọn danh mục.
