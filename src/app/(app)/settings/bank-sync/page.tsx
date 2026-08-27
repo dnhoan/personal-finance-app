@@ -3,6 +3,7 @@ import { env } from "@/lib/env";
 import { getBankSyncSettings, listLinkableAccounts } from "@/features/bank-sync/queries";
 import { getBalanceDrift } from "@/features/bank-sync/balance-drift";
 import { BankSyncSetupCard } from "@/features/bank-sync/components/bank-sync-setup-card";
+import { BackLink } from "@/components/app-shell/back-link";
 import { ENTER, enterDelay } from "@/lib/enter-animation";
 
 export const metadata = { title: "Liên kết ngân hàng · Personal Finance" };
@@ -24,9 +25,7 @@ export default async function BankSyncSettingsPage() {
   return (
     <div className="flex flex-col gap-7">
       <header className={ENTER}>
-        <h1 className="text-2xl font-semibold text-fg" style={{ fontFamily: "var(--font-serif)" }}>
-          Liên kết ngân hàng
-        </h1>
+        <BackLink href="/settings" label="Liên kết ngân hàng" />
         <p className="mt-1 text-sm text-fg-muted">
           Tự động ghi giao dịch từ ngân hàng qua SePay. Giao dịch về sẽ chờ bạn chọn danh mục.
         </p>
