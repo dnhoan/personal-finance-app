@@ -1,7 +1,8 @@
 "use client";
 import * as React from "react";
 import { Loader2 } from "lucide-react";
-import type { TxListItem } from "../queries";
+import type { TxLedgerItem } from "../queries";
+import type { TxEditOptions } from "../lib/to-editable-tx";
 import type { TxFilter } from "../schemas";
 import { groupTransactionsByDay } from "../lib/group-by-day";
 import { loadMoreTransactions } from "../actions";
@@ -20,12 +21,12 @@ export function TransactionLedger({
   initialItems,
   initialHasMore,
   filter,
-  accounts,
+  editOptions,
 }: {
-  initialItems: TxListItem[];
+  initialItems: TxLedgerItem[];
   initialHasMore: boolean;
   filter: LedgerFilter;
-  accounts: { id: string; name: string }[];
+  editOptions: TxEditOptions;
 }) {
   const [items, setItems] = React.useState(initialItems);
   const [hasMore, setHasMore] = React.useState(initialHasMore);
@@ -51,7 +52,7 @@ export function TransactionLedger({
 
   return (
     <div className="flex flex-col gap-4">
-      <TransactionDayGroups groups={groupTransactionsByDay(items)} accounts={accounts} />
+      <TransactionDayGroups groups={groupTransactionsByDay(items)} editOptions={editOptions} />
       {hasMore && (
         <button
           type="button"

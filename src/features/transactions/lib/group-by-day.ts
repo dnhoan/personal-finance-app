@@ -2,7 +2,7 @@ import { formatDate } from "@/lib/locale";
 import type { TxListItem } from "../queries";
 import { ictDateKey, relativeDayLabel } from "./relative-day-label";
 
-export type DayGroup = {
+export type DayGroup<T extends TxListItem = TxListItem> = {
   /** Stable ICT `YYYY-MM-DD` — React key + merge key, locale-independent. */
   key: string;
   /** Relative display label (`Hôm nay` / `Hôm qua` / weekday / `DD/MM/YYYY`). */
@@ -11,7 +11,7 @@ export type DayGroup = {
   dateLabel: string;
   /** Net signed contribution for the day: +income, −expense, transfers excluded. */
   subtotal: number;
-  items: TxListItem[];
+  items: T[];
 };
 
 // Signed display contribution of a row toward a day's net:
@@ -26,12 +26,12 @@ function dayContribution(tx: TxListItem): number {
 // Buckets a newest-first list into per-ICT-day groups, preserving order. The
 // input is already sorted DESC, so first-seen day order == display order. Each
 // group carries a relative label and a net subtotal (transfers excluded).
-export function groupTransactionsByDay(
-  transactions: TxListItem[],
+export function groupTransactionsByDay<T extends TxListItem>(
+  transactions: T[],
   now: Date = new Date(),
-): DayGroup[] {
-  const groups: DayGroup[] = [];
-  const byKey = new Map<string, DayGroup>();
+): DayGroup<T>[] {
+  const groups: DayGroup<T>[] = [];
+  const byKey = new Map<string, DayGroup<T>>();
   for (const tx of transactions) {
     const key = ictDateKey(tx.occurredAt);
     let group = byKey.get(key);

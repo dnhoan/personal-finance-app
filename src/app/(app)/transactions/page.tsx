@@ -77,7 +77,7 @@ export default async function TransactionsPage({
           initialItems={page.items}
           initialHasMore={page.hasMore}
           filter={filter}
-          accounts={accounts}
+          editOptions={{ accounts, categories }}
         />
       </div>
     </div>

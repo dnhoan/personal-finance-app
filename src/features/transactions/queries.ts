@@ -1,5 +1,6 @@
 import "server-only";
 import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/lib/db/client";
 import { transactions, accounts, categories, goals } from "@/lib/db/schema";
 import { confirmedOnly } from "./lib/review-status-filter";
@@ -50,6 +51,22 @@ export const txListSelection = {
   reviewStatus: transactions.reviewStatus,
 } as const;
 
+// Ledger rows carry what the edit sheet needs on top of the shared projection:
+// the transfer counterpart's account (to prefill Từ/Đến), the goal tag (to warn
+// that a transfer drops it) and the row's provenance (bank-synced rows keep their
+// account). Kept OUT of txListSelection on purpose — the review inbox reuses that
+// projection without the counterpart join and must not reference its alias.
+export type TxLedgerItem = TxListItem & {
+  goalId: string | null;
+  source: "manual" | "bank_sync";
+  /** Counterpart leg's account; null for non-transfers or a broken pair. */
+  transferMateAccountId: string | null;
+  transferMateAccountName: string | null;
+};
+
+const mate = alias(transactions, "mate");
+const mateAccount = alias(accounts, "mate_account");
+
 const DEFAULT_LIMIT = 100;
 
 // Shared WHERE builder so the list, page, and aggregate queries always filter
@@ -72,14 +89,31 @@ function filterConditions(userId: string, filter: TxFilter) {
 export async function listTransactions(
   userId: string,
   filter: TxFilter = {},
-): Promise<TxListItem[]> {
+): Promise<TxLedgerItem[]> {
   const conds = filterConditions(userId, filter);
 
   const rows = await db
-    .select(txListSelection)
+    .select({
+      ...txListSelection,
+      goalId: transactions.goalId,
+      source: transactions.source,
+      transferMateAccountId: mate.accountId,
+      transferMateAccountName: mateAccount.name,
+    })
     .from(transactions)
     .innerJoin(accounts, eq(accounts.id, transactions.accountId))
     .leftJoin(categories, eq(categories.id, transactions.categoryId))
+    // Counterpart must be same-user AND point back at this row (mutual link);
+    // anything else reads as a broken pair (null) and the UI hides Edit.
+    .leftJoin(
+      mate,
+      and(
+        eq(mate.id, transactions.transferPairId),
+        eq(mate.userId, transactions.userId),
+        eq(mate.transferPairId, transactions.id),
+      ),
+    )
+    .leftJoin(mateAccount, eq(mateAccount.id, mate.accountId))
     .where(and(...conds))
     // `id` is a deterministic tie-break so OFFSET paging (load-more) never skips
     // or repeats a row when several share an `occurredAt` (transfer legs, quick-adds
@@ -91,7 +125,7 @@ export async function listTransactions(
   return rows.map((r) => ({ ...r, amount: Number(r.amount) }));
 }
 
-export type TxPage = { items: TxListItem[]; hasMore: boolean };
+export type TxPage = { items: TxLedgerItem[]; hasMore: boolean };
 
 // Paginated read for "load more": fetches one extra row beyond the requested
 // limit to know whether more exist, then trims it. Avoids the false "more" that
@@ -132,9 +166,20 @@ export async function summariseTransactions(
 // chip) + a resolved transfer counterpart. Audit timestamps are intentionally not
 // selected — the detail facts show essentials + goal only.
 export type TxDetail = TxListItem & {
+  goalId: string | null;
   goalName: string | null;
-  /** Populated only for transfers: source/destination account names by leg sign. */
-  transfer: { fromAccountName: string; toAccountName: string } | null;
+  source: "manual" | "bank_sync";
+  /**
+   * Populated only for transfers: source/destination account names by leg sign,
+   * plus the counterpart's account for the edit sheet. `mateAccountId` is null
+   * when the counterpart does not link back (broken pair → not editable).
+   */
+  transfer: {
+    fromAccountName: string;
+    toAccountName: string;
+    mateAccountId: string | null;
+    mateAccountName: string;
+  } | null;
 };
 
 // Server-only single-transaction read for the detail page. Filters by PK + user_id
@@ -143,7 +188,12 @@ export type TxDetail = TxListItem & {
 // in depth) — to show both accounts and a direction.
 export async function getTransactionDetail(userId: string, id: string): Promise<TxDetail | null> {
   const [row] = await db
-    .select({ ...txListSelection, goalName: goals.name })
+    .select({
+      ...txListSelection,
+      goalId: transactions.goalId,
+      goalName: goals.name,
+      source: transactions.source,
+    })
     .from(transactions)
     .innerJoin(accounts, eq(accounts.id, transactions.accountId))
     .leftJoin(categories, eq(categories.id, transactions.categoryId))
@@ -157,7 +207,11 @@ export async function getTransactionDetail(userId: string, id: string): Promise<
 
   if (detail.kind === "transfer" && detail.transferPairId) {
     const [mate] = await db
-      .select({ accountName: accounts.name })
+      .select({
+        accountId: transactions.accountId,
+        accountName: accounts.name,
+        pairId: transactions.transferPairId,
+      })
       .from(transactions)
       .innerJoin(accounts, eq(accounts.id, transactions.accountId))
       .where(and(eq(transactions.id, detail.transferPairId), eq(transactions.userId, userId)))
@@ -168,10 +222,15 @@ export async function getTransactionDetail(userId: string, id: string): Promise<
       // negative (source), the in-leg positive (destination). If the mate is
       // missing (shouldn't happen), transfer stays null and the UI falls back to
       // this leg's single account.
-      detail.transfer =
+      const names =
         detail.amount < 0
           ? { fromAccountName: detail.accountName, toAccountName: mate.accountName }
           : { fromAccountName: mate.accountName, toAccountName: detail.accountName };
+      detail.transfer = {
+        ...names,
+        mateAccountId: mate.pairId === detail.id ? mate.accountId : null,
+        mateAccountName: mate.accountName,
+      };
     }
   }
 

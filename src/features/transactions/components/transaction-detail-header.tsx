@@ -29,6 +29,7 @@ import { formatVnd } from "@/lib/vnd";
 import { cn } from "@/lib/utils";
 import type { TxDetail } from "../queries";
 import { deleteTransaction } from "../actions";
+import { toEditableTx, type TxEditOptions } from "../lib/to-editable-tx";
 import { TransactionEditSheet } from "./transaction-edit-sheet";
 
 // Account-type icon fallback (used when a tx has no category and isn't a transfer).
@@ -61,12 +62,13 @@ const MINUS = "−"; // U+2212, not a hyphen — per design guidelines.
 // neutral/sign-less). Edit/Delete reuse the existing sheet + server action.
 export function TransactionDetailHeader({
   tx,
-  accounts,
+  editOptions,
 }: {
   tx: TxDetail;
-  accounts: { id: string; name: string }[];
+  editOptions: TxEditOptions;
 }) {
   const router = useRouter();
+  const editable = React.useMemo(() => toEditableTx(tx), [tx]);
   const [editOpen, setEditOpen] = React.useState(false);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
   const [, startTransition] = React.useTransition();
@@ -117,9 +119,8 @@ export function TransactionDetailHeader({
             <MoreVertical size={18} aria-hidden="true" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {/* Transfers are view-only (consistent with the list, which hides Edit
-                for transfers). */}
-            {!isTransfer && (
+            {/* Hidden only for a transfer whose counterpart can't be resolved. */}
+            {editable && (
               <DropdownMenuItem onSelect={() => setEditOpen(true)}>
                 <Pencil size={16} aria-hidden="true" /> Sửa
               </DropdownMenuItem>
@@ -184,18 +185,10 @@ export function TransactionDetailHeader({
       {/* Recurring-rule instances open the plain edit sheet here (edits just this
           transaction). The this-instance-vs-series EditInstanceDialog lives only on
           the row menu — an intentional asymmetry between the list and the detail. */}
-      {!isTransfer && (
+      {editable && (
         <TransactionEditSheet
-          tx={{
-            id: tx.id,
-            kind: tx.kind as "income" | "expense",
-            amount: Math.abs(tx.amount),
-            accountId: tx.accountId,
-            categoryId: tx.categoryId,
-            note: tx.note,
-            occurredAt: tx.occurredAt,
-          }}
-          accounts={accounts}
+          tx={editable}
+          options={editOptions}
           open={editOpen}
           onOpenChange={setEditOpen}
         />
