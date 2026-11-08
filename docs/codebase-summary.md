@@ -2,7 +2,7 @@
 
 Personal finance web PWA built with Next.js 15, TypeScript, Drizzle ORM, Neon Postgres, Better Auth, shadcn/ui, Recharts, and Serwist (offline-capable).
 
-Last updated: 2026-07-02
+Last updated: 2026-11-08 (edit transaction: category picker, Chi/Thu/Chuyển kind switch incl. transfer)
 
 ## Project Overview
 
@@ -79,7 +79,33 @@ src/features/
     ├── queries.ts, actions.ts, schemas.ts
     ├── transaction-kind.ts (income/expense/transfer classification)
     ├── transfer-pairing.ts (bidirectional linking logic)
-    └── components/ (transaction-list, add/ capture screen + numeric keypad, etc.)
+    ├── repository.ts (create/transfer writes, shared ref-ownership checks)
+    ├── repository-update-transaction.ts (edit orchestrator: one db.transaction,
+    │     lock → guard → route on locked kind)
+    ├── repository-kind-transition.ts (lockTxForEdit + 4 branches: updateSingle,
+    │     convertToTransfer, convertTransferToSingle, updateTransferPair)
+    ├── lib/assert-tx-edit-allowed.ts (edit guards: ownership, archived, debt/receivable,
+    │     bank-backed legs, bank-linked accounts)
+    ├── lib/tx-edit-rejection.ts (TxEditRejection: expected refusal → user-facing message)
+    ├── lib/to-editable-tx.ts + lib/transaction-edit-form-state.ts (row → form state)
+    └── components/ (transaction-list, transaction-edit-sheet + transaction-edit-fields,
+          kind-toggle with disabledKinds, add/ capture screen + numeric keypad, etc.)
+
+  transactions — edit flow (`updateTransaction`, actions/update.ts):
+    1. Thin server action: requireSession → zod `updateTxSchema` (discriminated union on
+       `kind`) → `updateTransactionInDb` → `{ ok }`, or `{ ok:false, message }` for TxEditRejection.
+    2. Inside one db.transaction: `SELECT … FOR UPDATE` on the opened row R and its mate M,
+       in id order. Nothing is read outside the lock.
+    3. Route on R's locked kind: income/expense → updateSingle; income/expense → transfer
+       → convertToTransfer (inserts manual mirror); transfer → single → convertTransferToSingle
+       (unlink, then delete M); transfer → transfer → updateTransferPair.
+    4. R always keeps its id. `occurredAt` is not editable. `merchant` omitted = keep.
+    Guards run before any write: ownership of every id; archived account/category refused
+    unless the row already uses it; debt/receivable cannot change kind (transfer → transfer
+    with unchanged accounts is allowed); bank-backed legs keep their account and cannot be
+    deleted; no manual leg may land on a bank-linked account opposite a bank-backed leg.
+    `txListSelection` is unchanged (the inbox reuses it). `TxLedgerItem` and `TxDetail`
+    add goalId / source / transfer mate account through a separate alias join.
 
   recurring/
     ├── queries.ts, actions.ts, schemas.ts
@@ -140,7 +166,7 @@ src/features/
 
 - `/` — Dashboard (hero, net worth, top categories, upcoming renewals, recent txs, cron badge)
 - `/accounts` — Account list with balance/status
-- `/transactions` — Full transaction history with filters; tap a row → `/transactions/[id]` read-only detail (hero amount, facts, transfer from→to, edit/delete)
+- `/transactions` — Full transaction history with filters; tap a row → `/transactions/[id]` detail (hero amount, facts, transfer from→to, edit/delete via the edit sheet)
 - `/add` — Dedicated capture screen (numeric keypad, pre-filled context, optimistic save)
 - `/recurring` — Bill/subscription management
 - `/budgets` — Monthly budget tracking
