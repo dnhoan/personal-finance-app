@@ -1,4 +1,4 @@
-import { formatDate } from "@/lib/locale";
+import { formatDate, formatTime } from "@/lib/locale";
 
 // Relative day labels for day-grouped transaction headers. Compares on ICT
 // calendar dates (not raw ms) so labels never drift across the UTC boundary.
@@ -58,4 +58,12 @@ export function relativeDayLabel(date: Date, now: Date = new Date()): string {
   if (ago === 1) return "Hôm qua";
   if (ago >= 2 && ago <= 6) return VI_WEEKDAY[ictWeekdayFormatter.format(date)] ?? formatDate(date);
   return formatDate(date);
+}
+
+/**
+ * Relative day + ICT time for surfaces without a day header (the review inbox):
+ * `Hôm nay 09:30`, `Hôm qua 21:15`, `Thứ 3 08:00`, `12/06/2026 08:00`.
+ */
+export function relativeDayTimeLabel(date: Date, now: Date = new Date()): string {
+  return `${relativeDayLabel(date, now)} ${formatTime(date)}`;
 }

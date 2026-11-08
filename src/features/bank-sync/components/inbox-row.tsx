@@ -4,6 +4,7 @@ import { Trash2 } from "lucide-react";
 import { formatVnd } from "@/lib/vnd";
 import { cn } from "@/lib/utils";
 import { getCategoryIcon } from "@/features/categories/category-icons";
+import { relativeDayTimeLabel } from "@/features/transactions/lib/relative-day-label";
 import type { CategoryPickerOption } from "@/features/categories/components/category-picker";
 import type { PendingTxItem } from "../inbox-queries";
 
@@ -35,6 +36,7 @@ export function InboxRow({
   onDelete: () => void;
 }) {
   const income = tx.kind === "income";
+  const occurredAt = new Date(tx.occurredAt);
   const quick = suggestions.filter((c) => c.kind === tx.kind).slice(0, QUICK_LIMIT);
 
   return (
@@ -58,11 +60,31 @@ export function InboxRow({
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <div className="flex items-baseline justify-between gap-2">
           <span
-            className={cn("font-semibold tabular-nums", income ? "text-income" : "text-expense")}
+            className={cn(
+              "shrink-0 whitespace-nowrap font-semibold tabular-nums",
+              income ? "text-income" : "text-expense",
+            )}
           >
             {income ? "+" : MINUS} {formatVnd(Math.abs(tx.amount))}
           </span>
-          <span className="shrink-0 text-xs text-fg-subtle">{tx.gateway ?? tx.accountName}</span>
+          {/* When the money moved — a bank line is often only recognisable by its
+              time. On a narrow screen only the bank/account name truncates; the
+              amount and time always stay whole. suppressHydrationWarning: the
+              relative day is computed from the clock, which can differ between
+              server render and hydration. */}
+          <span className="flex min-w-0 items-baseline gap-1 text-xs text-fg-subtle">
+            <span className="truncate" title={tx.gateway ?? tx.accountName}>
+              {tx.gateway ?? tx.accountName}
+            </span>
+            <span aria-hidden="true">·</span>
+            <time
+              className="shrink-0 whitespace-nowrap"
+              dateTime={occurredAt.toISOString()}
+              suppressHydrationWarning
+            >
+              {relativeDayTimeLabel(occurredAt)}
+            </time>
+          </span>
         </div>
 
         {tx.note ? (
