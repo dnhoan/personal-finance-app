@@ -1,7 +1,7 @@
 "use server";
 import { requireSession } from "@/lib/auth-session";
 import { txFilterSchema } from "../schemas";
-import { listTransactionsPage, type TxListItem } from "../queries";
+import { listTransactionsPage, type TxLedgerItem } from "../queries";
 import { TRANSACTIONS_PAGE_SIZE } from "../lib/page-size";
 
 // Loads the next page of transactions for the client ledger's "Tải thêm" button.
@@ -11,7 +11,7 @@ import { TRANSACTIONS_PAGE_SIZE } from "../lib/page-size";
 export async function loadMoreTransactions(input: {
   filter: unknown;
   offset: number;
-}): Promise<{ items: TxListItem[]; hasMore: boolean }> {
+}): Promise<{ items: TxLedgerItem[]; hasMore: boolean }> {
   const { user } = await requireSession();
   const filter = txFilterSchema.parse(input.filter);
   const offset = Math.max(0, Math.floor(Number(input.offset) || 0));

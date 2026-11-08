@@ -4,7 +4,7 @@ import { transactions } from "@/lib/db/schema";
 
 // Either the pooled client or an open transaction handle — lets the pair writer
 // below run standalone or inside a caller's larger transaction.
-type DbExecutor = Db | Parameters<Parameters<Db["transaction"]>[0]>[0];
+export type DbExecutor = Db | Parameters<Parameters<Db["transaction"]>[0]>[0];
 
 // Pure DB operations for transactions — no session/auth (callers pass userId).
 // Kept free of "server-only" so the idempotency + transfer-atomicity logic can

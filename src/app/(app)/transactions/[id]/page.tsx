@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { requireSession } from "@/lib/auth-session";
 import { getTransactionDetail } from "@/features/transactions/queries";
 import { listActiveAccounts } from "@/features/accounts/queries";
+import { listCategoriesFlat } from "@/features/categories/queries";
 import { TransactionDetailHeader } from "@/features/transactions/components/transaction-detail-header";
 import { TransactionDetailFacts } from "@/features/transactions/components/transaction-detail-facts";
 import { ENTER, enterDelay } from "@/lib/enter-animation";
@@ -24,16 +25,17 @@ export default async function TransactionDetailPage({ params }: { params: Promis
   const { user } = await requireSession();
   const { id } = await params;
 
-  const [tx, accounts] = await Promise.all([
+  const [tx, accounts, categories] = await Promise.all([
     getTransactionDetail(user.id, id),
     listActiveAccounts(user.id),
+    listCategoriesFlat(user.id),
   ]);
   if (!tx) notFound();
 
   return (
     <div className="flex flex-col gap-5">
       <div className={ENTER}>
-        <TransactionDetailHeader tx={tx} accounts={accounts} />
+        <TransactionDetailHeader tx={tx} editOptions={{ accounts, categories }} />
       </div>
       <div className={ENTER} style={enterDelay(60)}>
         <TransactionDetailFacts tx={tx} />

@@ -58,6 +58,10 @@ export const HELP_SECTIONS: HelpSection[] = [
         term: "Xem & sửa",
         text: "Chạm một giao dịch để mở chi tiết, sửa hoặc xóa.",
       },
+      {
+        term: "Đổi loại & danh mục",
+        text: "Khi sửa, có thể đổi danh mục hoặc chuyển giữa Chi / Thu / Chuyển — kể cả sửa cả hai phía của một chuyển khoản. Không áp dụng cho tài khoản nợ / cho vay; giao dịch đồng bộ ngân hàng luôn giữ tài khoản gốc.",
+      },
     ],
   },
   {

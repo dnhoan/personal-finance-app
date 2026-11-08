@@ -1,5 +1,41 @@
 # Project Changelog
 
+## Edit Transaction: Category Picker + Kind Switch incl. Transfer (2026-11-08)
+
+### Features
+
+- **Category picker** in the edit sheet, filtered to the row's kind (`CategoryPicker`, active categories only).
+- **Three-way kind toggle** Chi / Thu / Chuyển (`KindToggle`). Switching kind resets the category to `null` so nothing carries over silently.
+- **Transfers are editable.** Income/expense → transfer inserts a manual mirror leg; transfer → income/expense deletes it; transfer → transfer updates both legs' accounts, amount and note. Changing to a transfer clears category, goal and recurring link, and warns first.
+- **Merchant is preserved** when the field is omitted from the request. Previously every save wiped it.
+- **Date is not editable** (out of scope). Round-tripping ICT time through the form shifted hours and months and collided with the recurring unique index.
+
+### Behaviour
+
+- `updateTransaction` takes a discriminated union on `kind`. Expected refusals return `{ ok: false, message }` (`TxEditRejection`) so their Vietnamese copy survives production error masking; anything unexpected still throws.
+- The opened row keeps its `id` on every branch, so no redirect is needed and bank-sync event links stay valid.
+- One `db.transaction` locks both legs `FOR UPDATE` in id order, guards, then routes on the locked kind. A double-tap Chi → Chuyển therefore becomes an idempotent transfer → transfer edit, not a second mirror.
+- **Guards:** ownership on every id; archived accounts/categories refused unless already in use; debt/receivable accounts cannot change kind (a transfer touching one may still change amount/note); bank-backed legs keep their account and cannot be deleted; no manual leg may land on a bank-linked account opposite a bank-backed leg.
+
+### Fixes
+
+- Inbox `undoBulkConfirm` skips transfer rows (it previously pushed transfer legs back to pending).
+- Inbox `mergeAsTransfer` requires both rows to still be pending before deleting either, so a concurrent edit is not overwritten (`Giao dịch vừa thay đổi`).
+- Edit sheet no longer resets while open when data revalidates, and a Chuyển prefill carries the account the user changed to.
+- `revalidateTxViews` also revalidates `/inbox`.
+
+### Notable Decisions
+
+- **`txListSelection` is unchanged.** The edit flow needs `goalId`, `source` and the transfer mate account, so these were added to `TxLedgerItem` / `TxDetail` through a separate alias join. The inbox reuses `txListSelection`, and adding a mate column there broke `/inbox` SQL.
+- **Bank-backed detection at edit time** does not rely on `source` alone. Merged transfer pairs write both legs as `manual` with events on the out-leg, so a leg is also bank-backed when it has an event, or when its pair has events and its account is bank-linked. No migration.
+- **Accepted risk:** a lock-fallback deadlock is theoretically possible (the mirror leg was created moments earlier). Postgres aborts one side with `40P01`, which surfaces as the generic error.
+
+### Tests
+
+- `tests/features/transactions/kind-transition.test.ts` — integration suite (18 cases) over every branch, guard and the race path, against a Neon branch.
+- `tests/features/transactions/to-editable-tx.test.ts` — unit tests for the row → form mapping.
+- `inbox-actions` undo test and `detail-query` updated for the new fields.
+
 ## SePay Bank Sync — Webhook Ingest + Review Inbox (2026-08-27)
 
 ### Features

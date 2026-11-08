@@ -8,6 +8,7 @@ import {
   listActiveAccounts,
 } from "@/features/accounts/queries";
 import { listTransactions } from "@/features/transactions/queries";
+import { listCategoriesFlat } from "@/features/categories/queries";
 import { AccountDetailHeader } from "@/features/accounts/components/account-detail-header";
 import { AccountMonthStats } from "@/features/accounts/components/account-month-stats";
 import { AccountPendingNotice } from "@/features/accounts/components/account-pending-notice";
@@ -36,11 +37,12 @@ export default async function AccountDetailPage({ params }: { params: Promise<Pa
   const account = await getAccountWithBalance(user.id, id);
   if (!account) notFound();
 
-  const [stats, pending, transactions, accounts, drifts] = await Promise.all([
+  const [stats, pending, transactions, accounts, categories, drifts] = await Promise.all([
     getAccountMonthStats(user.id, id),
     getAccountPendingSummary(user.id, id),
     listTransactions(user.id, { accountId: id }),
     listActiveAccounts(user.id),
+    listCategoriesFlat(user.id),
     getBalanceDrift(user.id),
   ]);
 
@@ -70,7 +72,10 @@ export default async function AccountDetailPage({ params }: { params: Promise<Pa
         <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-fg-muted">
           Lịch sử
         </p>
-        <GroupedTransactionList transactions={transactions} accounts={accounts} />
+        <GroupedTransactionList
+          transactions={transactions}
+          editOptions={{ accounts, categories }}
+        />
       </section>
     </div>
   );

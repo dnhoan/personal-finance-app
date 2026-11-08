@@ -12,12 +12,16 @@ const OPTIONS: { value: TxKind; label: string; icon: LucideIcon; activeText: str
 
 // 3-segment pill bound to a controlled value. Switching to "transfer" is what
 // swaps the category field for the from/to account fields upstream.
+// `disabledKinds` greys out segments the caller can't offer (e.g. the edit sheet
+// on a debt account, where a transfer conversion is not allowed).
 export function KindToggle({
   value,
   onChange,
+  disabledKinds,
 }: {
   value: TxKind;
   onChange: (kind: TxKind) => void;
+  disabledKinds?: TxKind[];
 }) {
   return (
     <div
@@ -27,15 +31,17 @@ export function KindToggle({
     >
       {OPTIONS.map(({ value: v, label, icon: Icon, activeText }) => {
         const active = value === v;
+        const disabled = disabledKinds?.includes(v) ?? false;
         return (
           <button
             key={v}
             type="button"
             role="radio"
             aria-checked={active}
+            disabled={disabled}
             onClick={() => onChange(v)}
             className={cn(
-              "flex min-h-[44px] items-center justify-center gap-1.5 rounded-sm text-sm font-medium transition-colors",
+              "flex min-h-[44px] items-center justify-center gap-1.5 rounded-sm text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40",
               active ? cn("bg-surface shadow-sm", activeText) : "text-fg-muted hover:text-fg",
             )}
           >

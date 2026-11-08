@@ -2,7 +2,7 @@
 
 Personal finance management web PWA. Multi-user, Vietnam locale, VND-only, Vietnamese UI (English deferred Phase 2+).
 
-Last updated: 2026-08-27 (SePay bank sync — webhook ingest, pending review inbox, balance drift).
+Last updated: 2026-11-08 (edit transaction — kind switch incl. transfer, edit guards; bank-sync write invariant clarified).
 
 ## Tech Stack (Locked)
 
@@ -218,10 +218,12 @@ explicit `review_status = 'confirmed'` clause in the raw-SQL reports. Sites that
 deliberately omit the filter carry a comment saying why, because a missing filter
 produces silently wrong numbers rather than an error.
 
-**Write-side invariant:** `updateTransaction` sets `review_status='confirmed'`
-whenever it assigns a category to a pending row. Without it, editing a pending
-row from the detail page would leave it categorised yet permanently invisible in
-the ledger — while still counting against its budget.
+**Write-side invariant:** the edit path (`updateTransactionInDb`, behind the
+`updateTransaction` action) sets `review_status='confirmed'` whenever it assigns a
+category to a pending row. Without it, editing a pending row from the detail page
+would leave it categorised yet permanently invisible in the ledger — while still
+counting against its budget. A pending row converted to a transfer is confirmed
+too, and keeps its own account.
 
 ### Two places the numbers differ on purpose
 

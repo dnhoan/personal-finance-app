@@ -233,6 +233,26 @@ describe("inbox actions", () => {
       expect(row?.categoryId).toBe(expenseCat);
       expect(row?.reviewStatus).toBe("confirmed");
     });
+
+    it("never sends a bank row that was edited into a transfer leg back to pending", async () => {
+      const [leg] = await db
+        .insert(transactions)
+        .values({
+          userId: OWNER_ID,
+          accountId: bankA,
+          kind: "transfer",
+          amount: "-60000",
+          occurredAt: thisMonthAt(9),
+          source: "bank_sync",
+          reviewStatus: "confirmed",
+        })
+        .returning({ id: transactions.id });
+
+      const { reverted } = await undoBulkConfirm({ ids: [leg!.id] });
+      expect(reverted).toBe(0);
+      const [row] = await db.select().from(transactions).where(eq(transactions.id, leg!.id));
+      expect(row?.reviewStatus).toBe("confirmed");
+    });
   });
 
   describe("mergeAsTransfer", () => {

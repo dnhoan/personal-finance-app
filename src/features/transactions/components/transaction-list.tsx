@@ -1,23 +1,24 @@
-import type { TxListItem } from "../queries";
+import type { TxLedgerItem } from "../queries";
+import type { TxEditOptions } from "../lib/to-editable-tx";
 import { TransactionRow } from "./transaction-row";
 import { TransactionsEmptyState } from "./transactions-empty-state";
 
 // Flat, server-rendered transaction list with a calm empty state — used by the
-// dashboard "recent" section. `accounts` is forwarded to each row's edit sheet.
+// dashboard "recent" section. `editOptions` is forwarded to each row's edit sheet.
 // (The main transactions screen uses the grouped TransactionLedger instead.)
 export function TransactionList({
   transactions,
-  accounts,
+  editOptions,
 }: {
-  transactions: TxListItem[];
-  accounts: { id: string; name: string }[];
+  transactions: TxLedgerItem[];
+  editOptions: TxEditOptions;
 }) {
   if (transactions.length === 0) return <TransactionsEmptyState />;
 
   return (
     <ul className="divide-y divide-border">
       {transactions.map((tx) => (
-        <TransactionRow key={tx.id} tx={tx} accounts={accounts} />
+        <TransactionRow key={tx.id} tx={tx} editOptions={editOptions} />
       ))}
     </ul>
   );

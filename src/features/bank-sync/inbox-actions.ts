@@ -1,5 +1,5 @@
 "use server";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, ne } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { categories, transactions, bankSyncEvents } from "@/lib/db/schema";
 import { requireSession } from "@/lib/auth-session";
@@ -152,6 +152,9 @@ export async function undoBulkConfirm(input: { ids: string[] }): Promise<{ rever
         eq(transactions.userId, user.id),
         eq(transactions.reviewStatus, "confirmed"),
         eq(transactions.source, "bank_sync"),
+        // A bank-synced row later edited into a transfer leg has no category to
+        // undo; sending it back to pending would strand a transfer in the inbox.
+        ne(transactions.kind, "transfer"),
       ),
     )
     .returning({ id: transactions.id });
@@ -237,11 +240,22 @@ export async function mergeAsTransfer(input: MergeAsTransferInput): Promise<{ pa
   // One transaction: the pending rows disappear and the pair appears together,
   // so a failure can never leave the ledger short by one leg.
   const pairId = await db.transaction(async (tx) => {
-    await tx
+    // Re-check "still pending" at delete time: the rows were read outside this
+    // transaction, and an edit in between (e.g. turning one into a transfer)
+    // must not be silently deleted and overwritten by the merge.
+    const deleted = await tx
       .delete(transactions)
       .where(
-        and(inArray(transactions.id, [incoming.id, outgoing.id]), eq(transactions.userId, user.id)),
-      );
+        and(
+          inArray(transactions.id, [incoming.id, outgoing.id]),
+          eq(transactions.userId, user.id),
+          eq(transactions.reviewStatus, "pending"),
+        ),
+      )
+      .returning({ id: transactions.id });
+    if (deleted.length !== 2) {
+      throw new Error("Giao dịch vừa thay đổi — vui lòng tải lại Hộp thư");
+    }
 
     const outLegId = await writeTransferPair(tx, user.id, {
       fromAccountId: outgoing.accountId,

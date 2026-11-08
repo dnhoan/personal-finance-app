@@ -17,4 +17,7 @@ export function revalidateTxViews(): void {
   // tx mutation (tag a goal, pay down a debt) must refresh those surfaces too.
   revalidatePath("/goals");
   revalidatePath("/debts");
+  // An edit can move a pending bank row out of the review inbox (categorised or
+  // turned into a transfer), so the inbox list and its badge must refresh too.
+  revalidatePath("/inbox");
 }

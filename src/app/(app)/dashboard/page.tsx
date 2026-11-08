@@ -92,7 +92,7 @@ export default async function DashboardPage() {
             >
               Giao dịch gần đây
             </SectionTitle>
-            <TransactionList transactions={recent} accounts={accounts} />
+            <TransactionList transactions={recent} editOptions={{ accounts, categories: [] }} />
           </section> */}
         </>
       )}
