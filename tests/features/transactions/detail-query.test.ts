@@ -142,17 +142,22 @@ describe("getTransactionDetail", () => {
   });
 
   it("resolves transfer from/to accounts by leg sign", async () => {
+    // Out-leg: counterpart is the savings in-leg, so its account is the savings account.
     const fromOut = await getTransactionDetail(A_ID, transferOutId);
-    expect(fromOut?.transfer).toEqual({
+    expect(fromOut?.transfer).toMatchObject({
       fromAccountName: "A ngân hàng",
       toAccountName: "A tiết kiệm",
+      mateAccountId: aSavings,
+      mateAccountName: "A tiết kiệm",
     });
 
-    // The in-leg (positive) resolves to the same direction.
+    // The in-leg (positive) resolves to the same direction; its counterpart is checking.
     const fromIn = await getTransactionDetail(A_ID, transferInId);
-    expect(fromIn?.transfer).toEqual({
+    expect(fromIn?.transfer).toMatchObject({
       fromAccountName: "A ngân hàng",
       toAccountName: "A tiết kiệm",
+      mateAccountId: aChecking,
+      mateAccountName: "A ngân hàng",
     });
   });
 });
