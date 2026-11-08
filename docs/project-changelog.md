@@ -1,5 +1,10 @@
 # Project Changelog
 
+## Review Inbox: Transaction Time (2026-11-08)
+
+- Each pending row in `/inbox` now shows when the money moved next to the bank/account name: `Hôm nay 09:30`, `Hôm qua 21:15`, weekday (`Thứ 3 08:00`), or `DD/MM/YYYY HH:mm`, all in ICT. New helper `relativeDayTimeLabel` in `src/features/transactions/lib/relative-day-label.ts`; no query change (`occurredAt` was already loaded).
+- Top line layout: amount and time never wrap; only a long bank/account name truncates (full name in `title`).
+
 ## Edit Transaction: Category Picker + Kind Switch incl. Transfer (2026-11-08)
 
 ### Features
