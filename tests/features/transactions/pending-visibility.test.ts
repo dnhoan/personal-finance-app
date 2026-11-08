@@ -244,7 +244,6 @@ describe("pending transactions are counted but not listed", () => {
         kind: "expense",
         amount: 300_000,
         accountId: bankId,
-        occurredAt: thisMonthAt(11),
         note: "Chưa phân loại",
       });
 
@@ -264,7 +263,6 @@ describe("pending transactions are counted but not listed", () => {
         amount: 300_000,
         accountId: bankId,
         categoryId: catId,
-        occurredAt: thisMonthAt(11),
       });
 
       const [row] = await db

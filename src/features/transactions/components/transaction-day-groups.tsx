@@ -2,6 +2,8 @@ import { Card } from "@/components/ui/card";
 import { formatVnd } from "@/lib/vnd";
 import { cn } from "@/lib/utils";
 import type { DayGroup } from "../lib/group-by-day";
+import type { TxLedgerItem } from "../queries";
+import type { TxEditOptions } from "../lib/to-editable-tx";
 import { TransactionRow } from "./transaction-row";
 
 const MINUS = "−"; // U+2212, not a hyphen — per design guidelines.
@@ -22,11 +24,11 @@ function DaySubtotal({ subtotal }: { subtotal: number }) {
 // in a Card (account detail); the main list stays card-less / full-bleed.
 export function TransactionDayGroups({
   groups,
-  accounts,
+  editOptions,
   card = false,
 }: {
-  groups: DayGroup[];
-  accounts: { id: string; name: string }[];
+  groups: DayGroup<TxLedgerItem>[];
+  editOptions: TxEditOptions;
   card?: boolean;
 }) {
   return (
@@ -39,7 +41,7 @@ export function TransactionDayGroups({
         const rows = (
           <ul className="divide-y divide-border">
             {group.items.map((tx) => (
-              <TransactionRow key={tx.id} tx={tx} accounts={accounts} showDate={false} />
+              <TransactionRow key={tx.id} tx={tx} editOptions={editOptions} showDate={false} />
             ))}
           </ul>
         );

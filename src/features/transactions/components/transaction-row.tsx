@@ -17,7 +17,8 @@ import { getCategoryIcon } from "@/features/categories/category-icons";
 import { formatVnd } from "@/lib/vnd";
 import { formatDateTime, formatTime } from "@/lib/locale";
 import { cn } from "@/lib/utils";
-import type { TxListItem } from "../queries";
+import type { TxLedgerItem } from "../queries";
+import type { TxEditOptions } from "../lib/to-editable-tx";
 import { deleteTransaction } from "../actions";
 import { TransactionRowActions } from "./transaction-row-actions";
 
@@ -25,7 +26,7 @@ import { TransactionRowActions } from "./transaction-row-actions";
 // actually commits server-side.
 const UNDO_WINDOW_MS = 5000;
 
-const ACCOUNT_ICON: Record<TxListItem["accountType"], LucideIcon> = {
+const ACCOUNT_ICON: Record<TxLedgerItem["accountType"], LucideIcon> = {
   cash: Coins,
   bank: Landmark,
   credit_card: CreditCard,
@@ -38,12 +39,12 @@ const ACCOUNT_ICON: Record<TxListItem["accountType"], LucideIcon> = {
 // green/red tint so the list reads as a flow of money down the left edge before
 // any number is parsed; transfers stay neutral. The glyph keeps the category color
 // on top (set via inline `color`), so category identity survives the tint.
-const KIND_ICON_BG: Record<TxListItem["kind"], string> = {
+const KIND_ICON_BG: Record<TxLedgerItem["kind"], string> = {
   income: "bg-income-soft",
   expense: "bg-expense-soft",
   transfer: "bg-surface-muted",
 };
-const KIND_ICON_FG: Record<TxListItem["kind"], string> = {
+const KIND_ICON_FG: Record<TxLedgerItem["kind"], string> = {
   income: "text-income",
   expense: "text-expense",
   transfer: "text-transfer",
@@ -53,18 +54,18 @@ const MINUS = "−"; // U+2212, not a hyphen — per design guidelines.
 
 // 64px display row: tinted icon circle, title + meta stack, colored amount right.
 // Amounts are stored signed for transfers; display uses the magnitude + a sign
-// derived from kind (transfers are sign-less / neutral). `accounts` feeds the
-// row's edit sheet (income/expense rows only).
+// derived from kind (transfers are sign-less / neutral). `editOptions` feeds the
+// row's edit sheet.
 export function TransactionRow({
   tx,
-  accounts,
+  editOptions,
   // Surfaces with a day header (the grouped ledger) pass `false` to show time
   // only — the date already lives in the header. Flat surfaces (dashboard) keep
   // the full date+time so the day isn't lost.
   showDate = true,
 }: {
-  tx: TxListItem;
-  accounts: { id: string; name: string }[];
+  tx: TxLedgerItem;
+  editOptions: TxEditOptions;
   showDate?: boolean;
 }) {
   const [, startTransition] = React.useTransition();
@@ -167,7 +168,7 @@ export function TransactionRow({
 
         <span className={cn("shrink-0 font-semibold tabular-nums", amountClass)}>{amountText}</span>
       </Link>
-      <TransactionRowActions tx={tx} accounts={accounts} onDelete={handleDelete} />
+      <TransactionRowActions tx={tx} editOptions={editOptions} onDelete={handleDelete} />
     </li>
   );
 }

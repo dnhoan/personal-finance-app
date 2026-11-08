@@ -1,4 +1,5 @@
-import type { TxListItem } from "../queries";
+import type { TxLedgerItem } from "../queries";
+import type { TxEditOptions } from "../lib/to-editable-tx";
 import { groupTransactionsByDay } from "../lib/group-by-day";
 import { TransactionDayGroups } from "./transaction-day-groups";
 import { TransactionsEmptyState } from "./transactions-empty-state";
@@ -8,14 +9,18 @@ import { TransactionsEmptyState } from "./transactions-empty-state";
 // TransactionDayGroups so rows + grouping never diverge from the main list.
 export function GroupedTransactionList({
   transactions,
-  accounts,
+  editOptions,
 }: {
-  transactions: TxListItem[];
-  accounts: { id: string; name: string }[];
+  transactions: TxLedgerItem[];
+  editOptions: TxEditOptions;
 }) {
   if (transactions.length === 0) return <TransactionsEmptyState />;
 
   return (
-    <TransactionDayGroups groups={groupTransactionsByDay(transactions)} accounts={accounts} card />
+    <TransactionDayGroups
+      groups={groupTransactionsByDay(transactions)}
+      editOptions={editOptions}
+      card
+    />
   );
 }

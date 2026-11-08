@@ -29,19 +29,51 @@ export const createTxSchema = z.object({
 });
 export type CreateTxInput = z.infer<typeof createTxSchema>;
 
-// Editing is for income/expense rows only this round (transfer-pair edit is
-// out of scope — delete + re-create instead). No clientOpId: edits are not retried.
-export const updateTxSchema = z.object({
+// Edit payload, discriminated on the TARGET kind. The server compares it with the
+// row's current (locked) kind to pick one of four transitions: income<->expense,
+// income/expense -> transfer, transfer -> income/expense, transfer -> transfer.
+// `occurredAt` is deliberately not editable (the row keeps its timestamp).
+// `merchant` omitted = keep the stored value; "" = clear it. No clientOpId:
+// edits are not retried. Members stay plain ZodObjects (discriminatedUnion
+// rejects refined members) — the cross-field check lives on the union.
+const updateBase = {
   id: uuid,
-  kind: z.enum(["income", "expense"]),
   amount,
+  note: z.string().trim().max(500).optional().or(z.literal("")),
+  merchant: z.string().trim().max(200).optional(),
+};
+const updateIncomeTx = z.object({
+  ...updateBase,
+  kind: z.literal("income"),
   accountId: uuid,
   categoryId: uuid.nullish(),
-  occurredAt: z.coerce.date(),
-  note: z.string().trim().max(500).optional().or(z.literal("")),
-  merchant: z.string().trim().max(200).optional().or(z.literal("")),
 });
-export type UpdateTxInput = z.infer<typeof updateTxSchema>;
+const updateExpenseTx = z.object({
+  ...updateBase,
+  kind: z.literal("expense"),
+  accountId: uuid,
+  categoryId: uuid.nullish(),
+});
+const updateTransferTx = z.object({
+  ...updateBase,
+  kind: z.literal("transfer"),
+  fromAccountId: uuid,
+  toAccountId: uuid,
+});
+
+export const updateTxSchema = z
+  .discriminatedUnion("kind", [updateIncomeTx, updateExpenseTx, updateTransferTx])
+  .superRefine((v, ctx) => {
+    if (v.kind === "transfer" && v.fromAccountId === v.toAccountId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["toAccountId"],
+        message: "Tài khoản nguồn và đích phải khác nhau",
+      });
+    }
+  });
+export type UpdateTxInput = z.input<typeof updateTxSchema>;
+export type UpdateTxData = z.output<typeof updateTxSchema>;
 
 export const deleteTxSchema = z.object({ id: uuid });
 
